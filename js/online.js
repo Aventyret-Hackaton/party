@@ -81,7 +81,7 @@ async function createOnline() {
   if (needName($("setupErr"))) return;
   $("setupNext").disabled = true;
   try {
-    enterGame(await api("POST", "/api/games", { name: myName(), city: $("onCity").value, players: S.players, dir: S.dir, order: S.order, cat: S.cat }));
+    enterGame(await api("POST", "/api/games", { name: myName(), city: await locate(), players: S.players, dir: S.dir, order: S.order, cat: S.cat }));
   } catch (e) {
     $("setupErr").textContent = onlineError(e);
     if (e.code === "pw") $("onPw").focus();
@@ -91,7 +91,7 @@ async function createOnline() {
 async function joinOnline(id, btn) {
   if (needName($("onlineErr"))) return;
   btn.disabled = true;
-  try { enterGame(await api("POST", `/api/games/${id}/join`, { name: myName(), city: $("onCity").value })); }
+  try { enterGame(await api("POST", `/api/games/${id}/join`, { name: myName(), city: await locate() })); }
   catch (e) { $("onlineErr").textContent = onlineError(e); $("onlineErr").dataset.from = "join"; btn.disabled = false; loadOpenList(); }
 }
 
@@ -149,6 +149,7 @@ function renderLobby() {
   $("lobbyNote").textContent = t("waitFull", { m: g.max });
 }
 $("lobbyLeave").onclick = () => { leaveOnline(); show("s-home"); };
+$("waitHome").onclick = () => { leaveOnline(); show("s-home"); };
 
 function handleGame() {
   const g = ON.game;
@@ -164,37 +165,61 @@ function handleGame() {
     }
     return;
   }
+  // Värden vecklar ut och bestämmer om gubben ska sparas. De andra väntar och får sedan se den, eller får veta att den raderades.
+  if (!isHost()) {
+    if (g.status === "saved") {
+      if (ON.view !== "stage") {
+        ON.view = "stage";
+        notify(t("notifyDoneTitle"), t("notifyDoneBody"), "done-" + g.id);
+        openStage({ parts: g.parts || [], dir: g.dir, home: g.home, by: g.players.map(p => p.name).join(", "), staff: g.face?.name || "", name: g.name || "", mid: true }, { canUnfold: false, again: null });
+        playShow();
+      }
+      return;
+    }
+    if (g.status === "deleted") clearInterval(ON.timer);
+    if (ON.view !== "end") { ON.view = "end"; show("s-wait"); }
+    renderWait();
+    return;
+  }
   if (g.status === "done" || g.status === "revealed") {
     if (ON.view !== "stage") {
       ON.view = "stage";
-      notify(t("notifyDoneTitle"), t("notifyDoneBody"), "done-" + g.id);
       const id = g.id;
       ON.stageRec = { parts: g.parts || [], dir: g.dir, home: g.home, by: g.players.map(p => p.name).join(", "), staff: g.face?.name || "", name: g.name || "", mid: true };
       openStage(ON.stageRec, {
         canUnfold: isHost() && g.status === "done",
         onUnfoldClick: () => api("POST", `/api/games/${id}/reveal`).then(s => ON && applyGame(s)).catch(() => {}),
         afterShow: async rec => {
-          if (!isHost() || ON?.game?.name) return;
           const r = await aiName(rec);
+          rec.what = r.what;
           setStageName(r.name);
-          const gid = await saveGallery({ name: r.name, what: r.what, dir: rec.dir, parts: rec.parts.map(s => ({ s })), home: rec.home, names: ON.game.players.map(p => p.name), staff: rec.staff, mode: "online", createdAt: new Date().toISOString() });
-          if (ON) api("POST", `/api/games/${id}/name`, { name: r.name, what: r.what, galleryId: gid || "" }).then(s => ON && applyGame(s)).catch(() => {});
         },
-        onRename: async name => {
-          if (!ON) return;
-          await api("POST", `/api/games/${id}/name`, { name }).catch(() => {});
-          if (ON?.game?.galleryId) await renameGallery(ON.game.galleryId, name);
+        decide: {
+          keep: async name => {
+            const rec = ST.rec;
+            const gid = await saveGallery({ name, what: rec.what || "", dir: rec.dir, parts: rec.parts.map(s => ({ s })), home: rec.home, names: ON.game.players.map(p => p.name), staff: rec.staff, mode: "online", createdAt: new Date().toISOString() });
+            const s = await api("POST", `/api/games/${id}/save`, { name, what: rec.what || "", galleryId: gid || "" });
+            if (ON) applyGame(s);
+          },
+          drop: async () => { const s = await api("POST", `/api/games/${id}/discard`); if (ON) applyGame(s); }
         },
         again: null
       });
     }
-    if (g.status === "revealed" && !ON.showStarted) { ON.showStarted = true; playShow(); }
-    if (g.name && ST && ST.shown && ST.rec.name !== g.name) setStageName(g.name);
   }
+  if (g.status === "revealed" && !ON.showStarted) { ON.showStarted = true; playShow(); }
 }
 function renderWait() {
-  const g = ON?.game; if (!g || g.status !== "drawing") return;
-  $("waitProg").innerHTML = Array.from({ length: g.n }, (_, i) => `<span class="${i < g.current ? "done" : ""}"></span>`).join("");
+  const g = ON?.game; if (!g || g.status === "lobby") return;
+  const end = g.status !== "drawing", gone = g.status === "deleted";
+  $("waitHead").textContent = t(gone ? "droppedTitle" : end ? "decideTitle" : "waitTitle");
+  $("waitHome").hidden = !gone;
+  $("waitProg").innerHTML = Array.from({ length: g.n }, (_, i) => `<span class="${end || i < g.current ? "done" : ""}"></span>`).join("");
+  if (end) {
+    $("waitText").textContent = t(gone ? "hostDropped" : "hostDeciding", { name: nameOf(g.hostId) });
+    $("waitMine").textContent = "";
+    return;
+  }
   $("waitText").textContent = t("waitTurn", { name: nameOf(g.turns[g.current]), part: lc(t(partKey(g.dir, g.n, g.current))) });
   const mine = g.turns.map((u, i) => u === meId() && i > g.current ? lc(t(partKey(g.dir, g.n, i))) : null).filter(Boolean);
   $("waitMine").textContent = mine.length ? t("yourNext", { parts: mine.join(", ") }) : (g.turns.includes(meId()) ? "" : t("noTurn"));

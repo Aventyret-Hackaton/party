@@ -7,8 +7,7 @@ function applyI18n() {
   document.querySelectorAll("[data-ph]").forEach(el => el.placeholder = t(el.dataset.ph));
   $("soundBtn").textContent = soundOn ? "♪ " + t("soundOn") : t("soundOff");
   $("soundBtn").setAttribute("aria-pressed", soundOn);
-  fillCitySelect($("citySel"), $("citySel").value);
-  fillCitySelect($("onCity"), $("onCity").value);
+  renderWhere();
   renderSetupChips();
   if (currentScreen === "s-names") renderNameInputs();
   if (currentScreen === "s-draw") renderDrawTexts(), buildPalette(), syncTools();
@@ -31,6 +30,4 @@ ls.onchange = () => { lang = ls.value; try { localStorage.setItem("vg-lang", lan
 $("soundBtn").onclick = () => { soundOn = !soundOn; try { localStorage.setItem("vg-sound", soundOn ? "on" : "off"); } catch (e) {} if (soundOn) ac(); applyI18n(); };
 $("brand").onclick = () => { leaveOnline(); show("s-home"); };
 
-fillCitySelect($("citySel"), DEFAULT_CITY[lang]);
-fillCitySelect($("onCity"), DEFAULT_CITY[lang]);
 applyI18n();

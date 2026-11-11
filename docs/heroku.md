@@ -33,6 +33,10 @@ Nyckeln sparas i webbläsaren (`localStorage`). Servern kontrollerar allt som sk
 
 Onlinespelet sköts av `online-server.js`, inte längre av claude.ai. Man väljer **Online** under *Var spelar ni?* och ser då en lista med öppna omgångar. Man kan gå med i en omgång eller starta en egen. En omgång startar automatiskt när alla platser är fyllda. Spelet frågar servern om läget varannan sekund.
 
+När gubben är ritad vecklar värden ut den och väljer **Spara** (med namnet i rutan) eller **Radera**. De andra väntar under tiden. Sparas gubben får alla se den, raderas den får de andra bara veta det.
+
+Var spelarna är tar spelet reda på genom att be webbläsaren om platsen. Säger man nej bor gubben på Påskön för den spelaren.
+
 - Omgångarna ligger bara i serverns minne. Vid en deploy eller omstart avbryts de omgångar som pågår just då.
 - En spelare som stänger sidan i väntrummet tas bort efter 25 sekunder. Stänger värden sidan försvinner omgången.
 - Gamla omgångar städas bort efter tre timmar.

@@ -46,7 +46,7 @@ function renderSetupChips() {
   $("setupNext").textContent = online ? t("createBtn") : t("next");
   syncOpenList();
 }
-$("goSetup").onclick = () => { S.online = ""; $("setupErr").textContent = ""; $("onlineErr").textContent = ""; renderSetupChips(); show("s-setup"); };
+$("goSetup").onclick = () => { locate(); S.online = ""; $("setupErr").textContent = ""; $("onlineErr").textContent = ""; renderSetupChips(); show("s-setup"); };
 $("setupNext").onclick = () => {
   if (S.mode === "room") { renderNameInputs(); show("s-names"); }
   else createOnline();
@@ -74,13 +74,14 @@ function renderNameInputs() {
     box.append(l, inp);
   }
 }
-$("namesGo").onclick = () => {
+$("namesGo").onclick = async () => {
   const names = [...$("nameInputs").querySelectorAll("input")].map((i, n) => i.value.trim() || t("player", { n: n + 1 }));
+  await locate();
   startRoom(names);
 };
 function startRoom(names) {
   Object.assign(G, {
-    mode: "room", dir: S.dir, n: S.parts, cat: S.cat, home: $("citySel").value,
+    mode: "room", dir: S.dir, n: S.parts, cat: S.cat, home: HERE.key || EASTER_ISLAND,
     names, assign: makeAssign(S.parts, names.map((_, i) => i), S.order === "random"), idx: 0, parts: [],
     face: S.cat === "staff" && faces.length ? faces[Math.floor(Math.random() * faces.length)] : null,
     name: "", galleryId: null
@@ -112,11 +113,14 @@ function roomStage() {
     canUnfold: true,
     afterShow: async rec => {
       const r = await aiName(rec);
+      rec.what = r.what;
       setStageName(r.name);
-      G.name = r.name;
-      G.galleryId = await saveGallery({ name: r.name, what: r.what, dir: G.dir, parts: G.parts.map(s => ({ s })), home: G.home, names: G.names, staff: G.face?.name || "", mode: "room", createdAt: new Date().toISOString() });
     },
-    onRename: async name => { G.name = name; if (G.galleryId) await renameGallery(G.galleryId, name); },
+    // Spara med namnet i rutan, eller radera (då sparas ingenting)
+    decide: {
+      keep: async name => { G.name = name; G.galleryId = await saveGallery({ name, what: ST.rec.what || "", dir: G.dir, parts: G.parts.map(s => ({ s })), home: G.home, names: G.names, staff: G.face?.name || "", mode: "room", createdAt: new Date().toISOString() }); },
+      drop: async () => {}
+    },
     again: () => startRoom(G.names)
   });
 }

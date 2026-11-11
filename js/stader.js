@@ -26,7 +26,7 @@ const CITIES = [
 ["São Paulo","BR","sa",-23.55,-46.63],["Rio de Janeiro","BR","sa",-22.91,-43.17],["Brasília","BR","sa",-15.79,-47.88],["Manaus","BR","sa",-3.12,-60.02],["Buenos Aires","AR","sa",-34.6,-58.38],
 ["Santiago","CL","sa",-33.45,-70.67],["Lima","PE","sa",-12.05,-77.04],["Bogotá","CO","sa",4.71,-74.07],["Quito","EC","sa",-0.18,-78.47],["Puerto Ayora","EC","sa",-0.74,-90.31],["Caracas","VE","sa",10.48,-66.9],["Montevideo","UY","sa",-34.9,-56.16],["La Paz","BO","sa",-16.5,-68.15],
 ["Sydney","AU","oc",-33.87,151.21],["Melbourne","AU","oc",-37.81,144.96],["Brisbane","AU","oc",-27.47,153.03],["Perth","AU","oc",-31.95,115.86],["Alice Springs","AU","oc",-23.7,133.88],
-["Auckland","NZ","oc",-36.85,174.76],["Wellington","NZ","oc",-41.29,174.78],["Suva","FJ","oc",-18.14,178.44],["Nouméa","NC","oc",-22.28,166.46],["Papeete","PF","oc",-17.54,-149.57],["Port Moresby","PG","oc",-9.44,147.18]
+["Auckland","NZ","oc",-36.85,174.76],["Wellington","NZ","oc",-41.29,174.78],["Suva","FJ","oc",-18.14,178.44],["Nouméa","NC","oc",-22.28,166.46],["Papeete","PF","oc",-17.54,-149.57],["Rapa Nui","CL","oc",-27.15,-109.43],["Port Moresby","PG","oc",-9.44,147.18]
 ];
 const CONTS = ["eu","as","af","na","sa","oc"];
 const cityKey = c => c[0] + "|" + c[1];
@@ -35,7 +35,12 @@ const DEFAULT_CITY = { sv:"Stockholm|SE", en:"London|GB", fr:"Paris|FR", es:"Mad
 function countryName(cc) {
   try { return new Intl.DisplayNames([lang], { type: "region" }).of(cc) || cc; } catch (e) { return cc; }
 }
-function placeLabel(key) { const c = findCity(key); return c ? `${c[0]}, ${countryName(c[1])}` : ""; }
+// Påskön: dit flyttar gubben för den som inte delar sin plats (js/plats.js)
+const EASTER_ISLAND = "Rapa Nui|CL";
+function placeLabel(key) {
+  const c = findCity(key); if (!c) return "";
+  return `${key === EASTER_ISLAND ? t("easterIsland") : c[0]}, ${countryName(c[1])}`;
+}
 
 // Mittpunkt på jordklotet, sedan närmaste stad i listan (alltid på land)
 function midpointCity(keys) {

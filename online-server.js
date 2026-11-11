@@ -13,8 +13,10 @@
 //   POST /api/games/:id/join         – gå med {name, city}
 //   POST /api/games/:id/leave        – lämna väntrummet
 //   POST /api/games/:id/part         – skicka in sin del {i, s}
-//   POST /api/games/:id/reveal       – värden vecklar ut
-//   POST /api/games/:id/name         – sätt gubbens namn {name, what, galleryId}
+//   POST /api/games/:id/reveal       – värden vecklar ut (bara värden ser gubben)
+//   POST /api/games/:id/save         – värden sparar gubben {name, what, galleryId}, alla får se den
+//   POST /api/games/:id/discard      – värden raderar gubben, de andra får veta det
+// Läget (status): lobby → drawing → done → revealed → saved eller deleted.
 //   POST /api/games/:id/push         – spara spelarens push-prenumeration, se push-server.js
 // Spelarens id och nyckel skickas i rubrikerna X-Player och X-Key.
 
@@ -112,7 +114,8 @@ function stateFor(g, me) {
   };
   // Bara den som ska rita nästa del får se remsan från förra delen
   if (g.status === "drawing" && g.turns[g.current] === me.id && g.current > 0) out.prev = g.parts[g.current - 1] || [];
-  if (g.status === "done" || g.status === "revealed") out.parts = g.parts;
+  // Medan värden bestämmer om gubben ska sparas ser bara värden den. Raderas den får ingen annan se den.
+  if (g.status === "saved" || ((g.status === "done" || g.status === "revealed") && me.id === g.hostId)) out.parts = g.parts;
   return out;
 }
 
@@ -159,7 +162,7 @@ module.exports = function makeGamesApi({ send, readJson, str, cleanStroke }) {
       return true;
     }
 
-    const m = p.match(/^\/api\/games\/([A-Z]{4})(?:\/(join|leave|part|reveal|name|push))?$/);
+    const m = p.match(/^\/api\/games\/([A-Z]{4})(?:\/(join|leave|part|reveal|save|discard|push))?$/);
     if (!m) { deny(req, res, 404, "Finns inte."); return true; }
     const g = games.get(m[1]), action = m[2];
     if (!g) { deny(req, res, 404, "Omgången finns inte längre."); return true; }
@@ -201,7 +204,7 @@ module.exports = function makeGamesApi({ send, readJson, str, cleanStroke }) {
       if (!Array.isArray(b.s) || b.s.length > 3000) { deny(req, res, 400, "Delen gick inte att läsa."); return true; }
       g.parts[g.current] = b.s.map(cleanStroke).filter(Boolean);
       g.current++;
-      if (g.current >= g.n) { g.status = "done"; pushAll(g, "done"); }
+      if (g.current >= g.n) g.status = "done";   // notisen "gubben är klar" skickas först när värden har sparat den
       touch(g);
       send(req, res, 200, stateFor(g, me));
       return true;
@@ -217,12 +220,20 @@ module.exports = function makeGamesApi({ send, readJson, str, cleanStroke }) {
       send(req, res, ok ? 200 : 400, ok ? { ok: true } : { error: "Prenumerationen gick inte att läsa." });
       return true;
     }
-    if (action === "name") {
+    if (action === "save" || action === "discard") {
       const b = await readJson(req) || {};
+      if (me.id !== g.hostId) { deny(req, res, 403, "Bara värden bestämmer."); return true; }
       if (g.status !== "revealed" && g.status !== "done") { deny(req, res, 409, "Gubben är inte klar än."); return true; }
-      if (b.name) g.name = str(b.name, 80);
-      if (b.what) g.what = str(b.what, 60);
-      if (b.galleryId && me.id === g.hostId) g.galleryId = str(b.galleryId, 40);
+      if (action === "save") {
+        g.status = "saved";
+        g.name = str(b.name, 80);
+        g.what = str(b.what, 60);
+        g.galleryId = str(b.galleryId, 40);
+        pushAll(g, "done");
+      } else {
+        g.status = "deleted";
+        g.parts = [];
+      }
       touch(g);
       send(req, res, 200, stateFor(g, me));
       return true;

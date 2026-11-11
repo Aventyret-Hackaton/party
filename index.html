@@ -54,8 +54,8 @@
     <div id="onlineWho" hidden>
       <div class="lbl"><label for="onName" data-i="yourName"></label></div>
       <input type="text" id="onName" maxlength="30" autocomplete="nickname">
-      <div class="lbl"><label for="onCity" data-i="whereMe"></label></div>
-      <select id="onCity" style="width:100%"></select>
+      <div class="lbl" data-i="whereMe"></div>
+      <p class="where-now"></p>
       <p class="fine" data-i="whereOnline"></p>
       <div id="pwRow" hidden>
         <div class="lbl"><label for="onPw" data-i="onlinePw"></label></div>
@@ -82,8 +82,8 @@
     <div class="lbl" data-i="category"></div><div class="chips" id="c-cat"></div>
     <p class="fine" id="catHint"></p>
     <div id="roomCity">
-      <div class="lbl"><label for="citySel" data-i="whereRoom"></label></div>
-      <select id="citySel" style="width:100%"></select>
+      <div class="lbl" data-i="whereRoom"></div>
+      <p class="where-now"></p>
       <p class="fine" data-i="whereRoomHint"></p>
     </div>
     <p class="err" id="setupErr"></p>
@@ -167,10 +167,11 @@
 
 <!-- Vänta på tur -->
 <section id="s-wait" class="screen">
-  <h2 data-i="waitTitle"></h2>
+  <h2 id="waitHead" data-i="waitTitle"></h2>
   <div class="progress" id="waitProg"></div>
   <p id="waitText"></p>
   <p class="fine" id="waitMine"></p>
+  <button class="btn secondary wide" id="waitHome" data-i="home" hidden></button>
 </section>
 
 <!-- Scen -->
@@ -190,12 +191,17 @@
       <div class="figname" id="figName"></div>
       <p class="place" id="figPlace"></p>
       <p class="place fine" id="figBy"></p>
-      <div class="rename">
-        <label class="sr" for="renameIn" data-i="rename"></label>
-        <input type="text" id="renameIn" autocomplete="off">
-        <button class="btn small" id="renameBtn" data-i="saveName"></button>
+      <!-- Den som håller i omgången bestämmer: spara gubben med namnet i rutan, eller radera den -->
+      <div class="decide" id="decideBox" hidden>
+        <label class="lbl" for="renameIn" data-i="figNameLbl"></label>
+        <input type="text" id="renameIn" maxlength="80" autocomplete="off">
+        <div class="actions">
+          <button class="btn primary" id="keepBtn" data-i="keepFig"></button>
+          <button class="btn" id="dropBtn" data-i="dropFig"></button>
+        </div>
       </div>
-      <div class="actions">
+      <p class="place" id="decideMsg"></p>
+      <div class="actions" id="stageActions">
         <button class="btn primary" id="againBtn" data-i="playAgain"></button>
         <button class="btn" id="stageGallery" data-i="toGallery"></button>
         <button class="btn" id="stageHome" data-i="home"></button>
@@ -238,6 +244,7 @@
 <script src="js/ordbok.js"></script>
 <script src="js/grund.js"></script>
 <script src="js/stader.js"></script>
+<script src="js/plats.js"></script>
 <script src="js/kroppsdelar.js"></script>
 <script src="js/plattform.js"></script>
 <script src="js/ljud.js"></script>

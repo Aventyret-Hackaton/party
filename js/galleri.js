@@ -190,6 +190,6 @@ async function byLabel(r) {
 }
 async function openGalleryItem(r) {
   const rec = { parts: r.parts.map(p => p.s), dir: r.dir, home: r.home, by: await byLabel(r), name: r.name, staff: r.staff, mid: r.mode === "online" };
-  openStage(rec, { canUnfold: true, replay: true, onRename: canRename(r) ? n => { r.name = n; return renameGallery(r.id, n); } : null });
+  openStage(rec, { canUnfold: true, replay: true });
 }
 $("goGallery").onclick = openGallery;

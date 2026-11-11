@@ -159,7 +159,9 @@ function serveStatic(req, res, pathname) {
   fs.readFile(file, (err, data) => {
     if (err) return send(req, res, 404, "Hittades inte", "text/plain; charset=utf-8");
     const type = TYPES[path.extname(file).toLowerCase()] || "application/octet-stream";
-    const cache = { "Cache-Control": rel === "index.html" ? "no-cache" : "public, max-age=300", "Accept-Ranges": "bytes" };
+    // Kod och sidan kontrolleras alltid på nytt, så att en ny deploy aldrig blandas med gamla filer.
+    // Bilder och ljud i assets/ får sparas en stund.
+    const cache = { "Cache-Control": top === "assets" ? "public, max-age=300" : "no-cache", "Accept-Ranges": "bytes" };
     // Safari på iPhone hämtar ljud i bitar (Range) och spelar inte upp det annars
     const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || "");
     if (range && /^audio\//.test(type)) {

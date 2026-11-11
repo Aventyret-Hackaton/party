@@ -67,7 +67,8 @@ function renderOpenList(list) {
     const what = document.createElement("span"); what.textContent = gameSummary(g);
     const who = document.createElement("span"); who.className = "who-in"; who.textContent = t("inGame", { names: (g.names || [g.hostName]).join(", ") });
     const seats = document.createElement("span"); seats.className = "seats";
-    seats.textContent = t("seatsLeft", { n: g.max - g.joined, m: g.max });
+    // En omgång där någon har lämnat och en ny spelare får ta över
+    seats.textContent = g.seeking ? t("seekingRow") : t("seatsLeft", { n: g.max - g.joined, m: g.max });
     info.append(title, who, where, what, seats);
     const b = document.createElement("button"); b.className = "btn primary small"; b.textContent = t("joinBtn");
     b.onclick = () => joinOnline(g.id, b);
@@ -122,12 +123,15 @@ function applyGame(g) { ON.game = g; ON.v = g.v; handleGame(); }
 function leaveOnline() {
   if (!ON) return;
   clearInterval(ON.timer);
-  if (ON.game?.status === "lobby") api("POST", `/api/games/${ON.game.id}/leave`).catch(() => {});
+  // Lämnar man mitt i får de andra veta det och välja hur de fortsätter
+  if (ON.game && !["saved", "deleted", "ended"].includes(ON.game.status)) api("POST", `/api/games/${ON.game.id}/leave`).catch(() => {});
   ON = null;
 }
 addEventListener("pagehide", () => leaveOnline());
 
 const meId = () => ON?.me.playerId;
+// De som faktiskt ritade, i turordning (inte de som lämnade innan de hann rita)
+const drawers = g => [...new Set(g.turns)].map(id => g.players.find(p => p.id === id)?.name).filter(Boolean);
 const isHost = () => ON?.game?.hostId === meId();
 function nameOf(id) {
   if (!ON?.game) return "";
@@ -150,6 +154,34 @@ function renderLobby() {
 }
 $("lobbyLeave").onclick = () => { leaveOnline(); show("s-home"); };
 $("waitHome").onclick = () => { leaveOnline(); show("s-home"); };
+$("waitLeave").onclick = () => { leaveOnline(); show("s-home"); };
+
+/* ---------- Någon har lämnat omgången ---------- */
+function renderPause() {
+  const g = ON?.game; if (!g) return;
+  const mine = g.players.find(p => p.id === meId());
+  const ended = g.status === "ended", out = !!mine?.left && !ended, seeking = g.status === "seeking";
+  const goneNames = (g.gone || []).map(id => g.players.find(p => p.id === id)?.name).filter(Boolean).join(", ");
+  $("pauseHead").textContent = t(ended ? "endedTitle" : out ? "youLeftTitle" : "pauseTitle");
+  $("pauseText").textContent = ended ? t("endedText", { name: nameOf(g.hostId) }) : out ? t("youLeftText") : t("playerLeft", { names: goneNames });
+  $("pauseNote").textContent = ended || out ? "" : seeking ? t("seekingNote") : isHost() ? t("pauseAsk") : t("pauseHostDecides", { name: nameOf(g.hostId) });
+  $("pauseChoices").hidden = ended || out || !isHost();
+  $("pauseWait").hidden = seeking;
+  $("pauseLeave").textContent = t(ended || out ? "home" : "leave");
+  $("pauseErr").textContent = "";
+}
+async function resolvePause(choice) {
+  if (!ON) return;
+  const btns = [$("pauseShare"), $("pauseWait"), $("pauseEnd")];
+  btns.forEach(b => b.disabled = true);
+  try { const s = await api("POST", `/api/games/${ON.game.id}/resolve`, { choice }); if (ON) applyGame(s); }
+  catch (e) { $("pauseErr").textContent = onlineError(e); }
+  btns.forEach(b => b.disabled = false);
+}
+$("pauseShare").onclick = () => resolvePause("share");
+$("pauseWait").onclick = () => resolvePause("wait");
+$("pauseEnd").onclick = () => resolvePause("end");
+$("pauseLeave").onclick = () => { leaveOnline(); show("s-home"); };
 
 function handleGame() {
   const g = ON.game;
@@ -165,13 +197,23 @@ function handleGame() {
     }
     return;
   }
+  // Någon har lämnat. Den som håller på att rita sin del får rita klart först.
+  const mine = g.players.find(p => p.id === meId());
+  if (["paused", "seeking", "ended"].includes(g.status) || mine?.left) {
+    const i = g.current;
+    if (g.status !== "ended" && !mine?.left && g.turns[i] === meId() && !ON.sent[i] && ON.view === "draw" + i) return;
+    if (g.status === "ended" || mine?.left) clearInterval(ON.timer);
+    if (ON.view !== "pause") { ON.view = "pause"; show("s-pause"); }
+    renderPause();
+    return;
+  }
   // Värden vecklar ut och bestämmer om gubben ska sparas. De andra väntar och får sedan se den, eller får veta att den raderades.
   if (!isHost()) {
     if (g.status === "saved") {
       if (ON.view !== "stage") {
         ON.view = "stage";
         notify(t("notifyDoneTitle"), t("notifyDoneBody"), "done-" + g.id);
-        openStage({ parts: g.parts || [], dir: g.dir, home: g.home, by: g.players.map(p => p.name).join(", "), staff: g.face?.name || "", name: g.name || "", mid: true }, { canUnfold: false, again: null });
+        openStage({ parts: g.parts || [], dir: g.dir, home: g.home, by: drawers(g).join(", "), staff: g.face?.name || "", name: g.name || "", mid: true }, { canUnfold: false, again: null });
         playShow();
       }
       return;
@@ -185,7 +227,7 @@ function handleGame() {
     if (ON.view !== "stage") {
       ON.view = "stage";
       const id = g.id;
-      ON.stageRec = { parts: g.parts || [], dir: g.dir, home: g.home, by: g.players.map(p => p.name).join(", "), staff: g.face?.name || "", name: g.name || "", mid: true };
+      ON.stageRec = { parts: g.parts || [], dir: g.dir, home: g.home, by: drawers(g).join(", "), staff: g.face?.name || "", name: g.name || "", mid: true };
       openStage(ON.stageRec, {
         canUnfold: isHost() && g.status === "done",
         onUnfoldClick: () => api("POST", `/api/games/${id}/reveal`).then(s => ON && applyGame(s)).catch(() => {}),
@@ -197,7 +239,7 @@ function handleGame() {
         decide: {
           keep: async name => {
             const rec = ST.rec;
-            const gid = await saveGallery({ name, what: rec.what || "", dir: rec.dir, parts: rec.parts.map(s => ({ s })), home: rec.home, names: ON.game.players.map(p => p.name), staff: rec.staff, mode: "online", createdAt: new Date().toISOString() });
+            const gid = await saveGallery({ name, what: rec.what || "", dir: rec.dir, parts: rec.parts.map(s => ({ s })), home: rec.home, names: drawers(ON.game), staff: rec.staff, mode: "online", createdAt: new Date().toISOString() });
             const s = await api("POST", `/api/games/${id}/save`, { name, what: rec.what || "", galleryId: gid || "" });
             if (ON) applyGame(s);
           },
@@ -214,6 +256,7 @@ function renderWait() {
   const end = g.status !== "drawing", gone = g.status === "deleted";
   $("waitHead").textContent = t(gone ? "droppedTitle" : end ? "decideTitle" : "waitTitle");
   $("waitHome").hidden = !gone;
+  $("waitLeave").hidden = gone;
   $("waitProg").innerHTML = Array.from({ length: g.n }, (_, i) => `<span class="${end || i < g.current ? "done" : ""}"></span>`).join("");
   if (end) {
     $("waitText").textContent = t(gone ? "hostDropped" : "hostDeciding", { name: nameOf(g.hostId) });

@@ -172,6 +172,21 @@
   <p id="waitText"></p>
   <p class="fine" id="waitMine"></p>
   <button class="btn secondary wide" id="waitHome" data-i="home" hidden></button>
+  <button class="btn secondary wide" id="waitLeave" data-i="leave"></button>
+</section>
+
+<!-- Någon har lämnat omgången: värden väljer hur ni fortsätter (js/online.js) -->
+<section id="s-pause" class="screen">
+  <h2 id="pauseHead"></h2>
+  <p id="pauseText"></p>
+  <p class="fine" id="pauseNote"></p>
+  <div class="stack" id="pauseChoices">
+    <button class="btn primary" id="pauseShare" data-i="pauseShare"></button>
+    <button class="btn" id="pauseWait" data-i="pauseWait"></button>
+    <button class="btn secondary" id="pauseEnd" data-i="pauseEnd"></button>
+  </div>
+  <p class="err" id="pauseErr"></p>
+  <button class="btn secondary wide" id="pauseLeave"></button>
 </section>
 
 <!-- Scen -->

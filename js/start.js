@@ -13,6 +13,7 @@ function applyI18n() {
   if (currentScreen === "s-draw") renderDrawTexts(), buildPalette(), syncTools();
   if (currentScreen === "s-lobby") renderLobby();
   if (currentScreen === "s-wait") renderWait();
+  if (currentScreen === "s-pause") renderPause();
   if (currentScreen === "s-gallery") renderGallery();
   if (currentScreen === "s-faces") renderFaces();
   if (currentScreen === "s-stage" && ST) {

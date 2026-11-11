@@ -20,7 +20,8 @@ It was built in a day and a bit for Äventyret's *Stupid hackathon* by group 7: 
 4. Draw your part. You see only the guide lines from the previous part. Fold, then pass the phone on or wait for the next player.
 5. The host unfolds the figure on stage. It is named, and it lives in the city where you played. Online, it lives in the city nearest the midpoint between all players. The game asks for your location. Say no and your share of the figure lives on Easter Island.
 6. The host chooses **Save**, with the name in the text field, or **Delete**. Online, the others wait and are then shown the figure, or told that it was deleted.
-7. Saved figures appear in the **Gallery**. You can filter them by continent, country and city, or see them on a map.
+7. If someone leaves an online game mid-round, everyone is told. The host chooses to finish it among yourselves, wait for a new player to take over, or end the round.
+8. Saved figures appear in the **Gallery**. You can filter them by continent, country and city, or see them on a map.
 
 The interface is available in Swedish, English, French, Spanish and German.
 
@@ -66,7 +67,7 @@ The scripts share global variables and are loaded in a fixed order at the bottom
 | File | What it does |
 |---|---|
 | `server.js` | Serves only `index.html`, `css/`, `js/` and `assets/`. Handles gzip, range requests (Safari needs them for audio) and `no-cache` for code, so a deploy never mixes old and new files. Provides the gallery API (`/api/gallery`) with Postgres, or memory as a fallback, input validation and a limit of 40 new figures per IP per hour. |
-| `online-server.js` | Online games in server memory: open lobbies, joining, turn order, who may see which strip, the reveal, and the host's save or delete. Clients poll every two seconds. Players are identified by a random id and key sent in headers. Lobby players who go silent for 25 seconds are removed, and games are cleared after three hours. |
+| `online-server.js` | Online games in server memory: open lobbies, joining, turn order, who may see which strip, the reveal, the host's save or delete, and what happens when someone leaves mid-game (the host picks: the rest share the parts, wait for a new player, or end the round). Clients poll every two seconds. Players are identified by a random id and key sent in headers. Lobby players who go silent for 25 seconds are removed, and games are cleared after three hours. |
 | `push-server.js` | Web Push through the `web-push` library. Notifications are sent when a game is full and when the figure is saved. This is needed for iPhones with the game in the background. |
 
 Online games are lost when the server restarts, which happens on every deploy. The gallery is kept in Postgres and survives.

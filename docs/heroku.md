@@ -41,6 +41,16 @@ Var spelarna är tar spelet reda på genom att be webbläsaren om platsen. Säge
 - En spelare som stänger sidan i väntrummet tas bort efter 25 sekunder. Stänger värden sidan försvinner omgången.
 - Gamla omgångar städas bort efter tre timmar.
 
+### Om någon lämnar mitt i
+
+En spelare räknas som borta om den lämnar omgången (stänger sidan eller trycker Lämna), eller om det är dess tur och den inte hörs av på 90 sekunder (5 minuter med push-notiser på). Har den spelaren delar kvar att rita pausas omgången, och alla får veta vem som har lämnat. Den som håller på att rita sin del får rita klart först. Värden väljer sedan:
+
+- **Rita klart själva** – delarna fördelas på de som är kvar, helst inte samma person två delar i rad.
+- **Vänta på en ny spelare** – omgången syns i listan under Gå med i omgång, och den som går med tar över delarna.
+- **Avsluta omgången** – omgången tar slut för alla.
+
+Alla andra kan lämna omgången själva. Går värden, eller hörs inte av på 90 sekunder när den ska bestämma något, tar den spelare som senast hördes av över som värd. Kommer en spelare som bara var borta en stund tillbaka innan någon har tagit över, fortsätter omgången som vanligt.
+
 ### Lösenord
 
 Onlinespelet kräver ett lösenord. **Skriv aldrig lösenordet i koden eller i repot**, eftersom repot är publikt.

@@ -58,8 +58,16 @@ button{font:inherit;cursor:pointer}
 .btn:disabled{opacity:.5;cursor:default}
 .btn.wide{width:100%;margin-top:1.25rem}
 .small{padding:.5rem 1rem;font-size:.9375rem}
-/* Lämna-knappen i onlinespelet: liten och undanskymd, så att man inte lämnar av misstag */
-.btn.leave{display:block;margin:2rem 0 0 auto}
+/* Lämna spelet i onlinespelet: en diskret länk längst ned på skärmen, så att man inte lämnar av misstag.
+   Svart i ljust läge, vit i mörkt läge. */
+.leave-link{position:fixed;left:50%;bottom:calc(1.25rem + env(safe-area-inset-bottom,0px));transform:translateX(-50%);
+  background:none;border:0;padding:.5rem;font:inherit;font-size:.9375rem;color:#000;
+  text-decoration:underline;text-underline-offset:.2em;cursor:pointer}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .leave-link{color:#fff}}
+:root[data-theme="dark"] .leave-link{color:#fff}
+/* Skärmarna med länken tonar bara in. Glider de in hamnar länken inte längst ned. */
+#s-lobby.active,#s-wait.active{animation-name:fadein}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
 .stack{display:grid;gap:.75rem;margin-top:1.75rem}
 
 /* Etikett med linje */

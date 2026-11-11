@@ -235,6 +235,10 @@ body.night input[type=text]{background:#1a1721;color:#fff;border-color:#3d3746}
 .intro{position:fixed;inset:0;z-index:30;display:grid;place-content:center;justify-items:center;gap:2.5rem;padding:1.5rem;
   background:var(--night);text-align:center;transition:opacity .45s ease}
 .intro.gone{opacity:0;pointer-events:none}
+/* Sidhuvudet med ljudknappen ligger ovanpå välkomstrutan, så att man kan stänga av ljudet innan Spela.
+   Den lilla loggan döljs så länge rutan syns, eftersom den stora redan står där. */
+.top{position:relative;z-index:35}
+body:has(.intro:not([hidden]):not(.gone)) .brand{visibility:hidden}
 .intro-logo{width:min(80vw,26rem);height:auto}
 .intro .btn{font-size:1.25rem;padding:1.1rem 2rem;animation:pulse 1.6s ease-in-out infinite}
 @keyframes pulse{50%{transform:scale(1.05)}}

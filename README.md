@@ -20,8 +20,9 @@ Under utveckling. Spelet byggs med [Claude Code](https://claude.com/claude-code)
 | `css/` | Utseendet |
 | `js/` | Koden, en fil per del av spelet |
 | `docs/` | Spelregler, designriktlinjer, beslut och utvecklingsplan |
-| `assets/` | Loggan i tre varianter |
+| `assets/` | Loggan i tre varianter, favikonen och mappen `ansikten/` för Äventyrare-ansikten |
 | `tools/` | Skriptet som ritar loggan |
+| `server.js` | Servern på Heroku: visar spelet och sparar det gemensamma galleriet, se docs/heroku.md |
 | `CLAUDE.md` | Instruktioner till Claude Code |
 
 ## Licens

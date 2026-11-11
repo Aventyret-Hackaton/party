@@ -6,8 +6,10 @@ function openStage(rec, opts) {
   ST = { rec, opts, shown: false };
   const fig = $("figure"); fig.className = "figure " + rec.dir; fig.innerHTML = ""; fig.style.setProperty("--n", rec.parts.length);
   const scale = Math.min(2, (devicePixelRatio || 1) * 1.2);
+  // Mörkt bläck får en ljus strålkastare bakom sig, ljust bläck står på den mörka scenen.
+  $("stage").dataset.ink = inkLightness(rec.parts) < 0.12 ? "dark" : "light";
   rec.parts.forEach((s, i) => {
-    const c = partCanvas(s, rec.dir, scale); c.className = "fold closed";
+    const c = partCanvas(s, rec.dir, scale, true); c.className = "fold closed";
     c.setAttribute("aria-label", t(partKey(rec.dir, rec.parts.length, i)));
     fig.appendChild(c);
   });
@@ -18,6 +20,8 @@ function openStage(rec, opts) {
   $("unfoldBtn").hidden = !opts.canUnfold;
   $("stageWait").textContent = opts.canUnfold ? "" : t("stageWait");
   $("againBtn").hidden = !opts.again;
+  // onRename: null betyder att gubben är någon annans i det delade galleriet
+  document.querySelector("#postShow .rename").hidden = opts.onRename === null;
   show("s-stage");
 }
 $("unfoldBtn").onclick = () => { if (ST.opts.onUnfoldClick) ST.opts.onUnfoldClick(); else playShow(); };

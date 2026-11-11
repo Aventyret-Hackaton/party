@@ -1,12 +1,12 @@
 {
   "name": "party",
   "private": true,
-  "description": "Party – Fold & draw. Startfil för Heroku.",
+  "description": "Party – Fold & draw. Servern för Heroku: visar spelet och sparar galleriet.",
   "scripts": {
-    "start": "serve . -l $PORT"
+    "start": "node server.js"
   },
   "dependencies": {
-    "serve": "^14.2.1"
+    "pg": "^8.13.1"
   },
   "engines": {
     "node": "20.x"

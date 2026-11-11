@@ -6,7 +6,7 @@ function renderFaces() {
   if (!faces.length) { box.innerHTML = `<p class="fine">${t("noFaces")}</p>`; return; }
   faces.forEach(f => {
     const fig = document.createElement("figure");
-    const img = document.createElement("img"); img.src = "/_blob/" + f.asset; img.alt = f.name;
+    const img = document.createElement("img"); img.src = faceSrc(f); img.alt = f.name;
     const cap = document.createElement("figcaption");
     const n = document.createElement("span"); n.textContent = f.name;
     const rm = document.createElement("button"); rm.className = "linkbtn"; rm.textContent = t("remove");

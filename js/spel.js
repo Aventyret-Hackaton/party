@@ -4,6 +4,7 @@
 let currentScreen = "s-home";
 function show(id) {
   currentScreen = id;
+  if (id !== "s-home") stopIntro();
   document.querySelectorAll(".screen").forEach(s => s.classList.toggle("active", s.id === id));
   document.body.classList.toggle("night", id === "s-stage");
   if (id !== "s-stage") particles = [];
@@ -89,7 +90,7 @@ function roomTurn() {
 }
 async function showFace(face, then) {
   $("faceText").textContent = t("faceText", { name: face.name });
-  $("faceImg").src = "/_blob/" + face.asset; $("faceImg").alt = face.name;
+  $("faceImg").src = faceSrc(face); $("faceImg").alt = face.name;
   show("s-face");
   for (let n = 5; n > 0; n--) { $("faceCount").textContent = n; await sleep(1000); }
   $("faceImg").removeAttribute("src");

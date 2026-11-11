@@ -58,6 +58,8 @@ button{font:inherit;cursor:pointer}
 .btn:disabled{opacity:.5;cursor:default}
 .btn.wide{width:100%;margin-top:1.25rem}
 .small{padding:.5rem 1rem;font-size:.9375rem}
+/* Lämna-knappen i onlinespelet: liten och undanskymd, så att man inte lämnar av misstag */
+.btn.leave{display:block;margin:2rem 0 0 auto}
 .stack{display:grid;gap:.75rem;margin-top:1.75rem}
 
 /* Etikett med linje */

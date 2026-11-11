@@ -16,7 +16,7 @@ It was built in a day and a bit for Äventyret's *Stupid hackathon* by group 7: 
    - **Online** – everyone on their own device. Start a **new online game** and wait for everyone, or **join a round** from the list of open games, where you can see who has already joined.
 3. Choose the number of players (3–6, one part each), the direction (top to bottom or left to right), the turn order and a category:
    - **Free** – draw whatever you like.
-   - **Adventurers** – the person drawing the head sees a colleague's face for five seconds, then draws it from memory.
+   - **Adventurers** – the person drawing the head sees a colleague's face for five seconds, then draws it from memory. After the unfold, everyone else guesses who it is from up to six names before the figure's name is shown.
 4. Draw your part. You see only the guide lines from the previous part. Fold, then pass the phone on or wait for the next player.
 5. The host unfolds the figure on stage. It is named, and it lives in the city where you played. Online, it lives in the city nearest the midpoint between all players. The game asks for your location. Say no and your share of the figure lives on Easter Island.
 6. The host chooses **Save**, with the name in the text field, or **Delete**. Online, the others wait and are then shown the figure, or told that it was deleted.

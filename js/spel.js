@@ -111,6 +111,7 @@ async function showFace(face, then) {
 function roomStage() {
   openStage({ parts: G.parts, dir: G.dir, home: G.home, by: G.names.join(", "), staff: G.face?.name, name: "" }, {
     canUnfold: true,
+    guess: G.face ? { answer: G.face.name, hint: t("guessRoomHint", { name: G.names[G.assign[headIndex(G.dir, G.n)]] }) } : null,
     afterShow: async rec => {
       const r = await aiName(rec);
       rec.what = r.what;

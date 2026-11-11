@@ -131,6 +131,8 @@ addEventListener("pagehide", () => leaveOnline());
 
 const meId = () => ON?.me.playerId;
 // De som faktiskt ritade, i turordning (inte de som lämnade innan de hann rita)
+// Gissa vilken Äventyrare: alla utom den som ritade huvudet
+const guessFor = g => g.face && g.turns[headIndex(g.dir, g.n)] !== meId() ? { answer: g.face.name } : null;
 const drawers = g => [...new Set(g.turns)].map(id => g.players.find(p => p.id === id)?.name).filter(Boolean);
 const isHost = () => ON?.game?.hostId === meId();
 function nameOf(id) {
@@ -213,7 +215,7 @@ function handleGame() {
       if (ON.view !== "stage") {
         ON.view = "stage";
         notify(t("notifyDoneTitle"), t("notifyDoneBody"), "done-" + g.id);
-        openStage({ parts: g.parts || [], dir: g.dir, home: g.home, by: drawers(g).join(", "), staff: g.face?.name || "", name: g.name || "", mid: true }, { canUnfold: false, again: null });
+        openStage({ parts: g.parts || [], dir: g.dir, home: g.home, by: drawers(g).join(", "), staff: g.face?.name || "", name: g.name || "", mid: true }, { canUnfold: false, again: null, guess: guessFor(g) });
         playShow();
       }
       return;
@@ -230,6 +232,7 @@ function handleGame() {
       ON.stageRec = { parts: g.parts || [], dir: g.dir, home: g.home, by: drawers(g).join(", "), staff: g.face?.name || "", name: g.name || "", mid: true };
       openStage(ON.stageRec, {
         canUnfold: isHost() && g.status === "done",
+        guess: guessFor(g),
         onUnfoldClick: () => api("POST", `/api/games/${id}/reveal`).then(s => ON && applyGame(s)).catch(() => {}),
         afterShow: async rec => {
           const r = await aiName(rec);

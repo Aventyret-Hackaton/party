@@ -188,6 +188,12 @@ button{font:inherit;cursor:pointer}
 body.night .btn{background:transparent;color:#fff;border-color:var(--gold)}
 body.night .btn.primary{background:var(--accent);border-color:var(--accent)}
 body.night input[type=text]{background:#1a1721;color:#fff;border-color:#3d3746}
+.guess{max-width:26rem;margin:.75rem auto 0}
+.guess p{color:var(--on-night);margin:0 0 .75rem}
+.guess-opts{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem}
+.guess-opts .btn{width:100%;padding-inline:.5rem}
+body.night .guess-opts .btn.right{background:#2f7d4f;border-color:#2f7d4f}
+body.night .guess-opts .btn.wrong{border-color:var(--accent);color:var(--accent)}
 .decide{display:grid;gap:.4rem;max-width:26rem;margin:1rem auto 0;text-align:left}
 .decide .actions{margin-top:.5rem}
 .where-now{margin:.25rem 0 0;font-weight:600}

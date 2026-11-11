@@ -147,11 +147,13 @@ function renderLobby() {
   });
   $("lobbySeats").innerHTML = Array.from({ length: g.max }, (_, i) => `<span class="${i < g.players.length ? "done" : ""}"></span>`).join("");
   $("lobbyNote").textContent = t("waitFull", { m: g.max });
+  renderNotify();
 }
 $("lobbyLeave").onclick = () => { leaveOnline(); show("s-home"); };
 
 function handleGame() {
   const g = ON.game;
+  if (ON.view === "lobby" && g.status !== "lobby") notify(t("notifyFullTitle"), t("notifyFullBody"), "full-" + g.id);
   if (g.status === "lobby") { if (ON.view !== "lobby") { ON.view = "lobby"; show("s-lobby"); } renderLobby(); return; }
   if (g.status === "drawing") {
     const i = g.current;
@@ -196,6 +198,7 @@ function renderWait() {
   $("waitProg").innerHTML = Array.from({ length: g.n }, (_, i) => `<span class="${i < g.current ? "done" : ""}"></span>`).join("");
   $("waitText").textContent = t("waitTurn", { name: nameOf(g.turns[g.current]), part: lc(t(partKey(g.dir, g.n, g.current))) });
   const mine = g.turns.map((u, i) => u === meId() && i > g.current ? lc(t(partKey(g.dir, g.n, i))) : null).filter(Boolean);
+  renderNotify();
   $("waitMine").textContent = mine.length ? t("yourNext", { parts: mine.join(", ") }) : (g.turns.includes(meId()) ? "" : t("noTurn"));
 }
 function startOnlineTurn(i) {

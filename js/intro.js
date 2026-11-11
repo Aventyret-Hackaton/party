@@ -1,38 +1,42 @@
-// Introljudet och välkomstrutan: ljudet loopas bakom rutan och tystnar direkt när man
-// trycker på knappen "Ja, det är här det är party".
-//
-// Webbläsare spelar inte upp ljud förrän man har tryckt någonstans på sidan. Därför
-// försöker vi spela direkt, och annars så fort man trycker någonstans i rutan utanför knappen.
+// Välkomstrutan i två steg:
+//   1. "Spela" startar introljudet (det loopar) och skjuter konfetti.
+//   2. "Ja, det är här det är party" stänger av ljudet och rutan, och man kan börja spela.
+// Webbläsare spelar bara upp ljud efter ett tryck, därför startar ljudet först på Spela.
 
 /* ---------- Introljud ---------- */
 const introAudio = new Audio("assets/ljud/are-hare-er-party.mp3");
 introAudio.loop = true;
 introAudio.volume = 0.8;
 introAudio.preload = "auto";
-let introDone = false;
+let introStarted = false, introDone = false;
 
 function playIntro() {
-  if (!soundOn || introDone) return;
-  introAudio.play().catch(() => {});      // nekas tyst om man inte har tryckt än
+  if (!soundOn || !introStarted || introDone) return;
+  introAudio.play().catch(() => {});
 }
 function stopIntro() {
   introAudio.pause();
   introAudio.currentTime = 0;
 }
 
+$("introPlay").onclick = () => {
+  introStarted = true;
+  playIntro();
+  if (soundOn) ac();                      // låser upp trumvirveln och fanfaren
+  confetti(); fxStart();                  // fxStart hoppar över konfettin om man har valt mindre rörelse
+  $("introPlay").hidden = true;
+  $("introBtn").hidden = false;
+  $("introBtn").focus();
+};
 $("introBtn").onclick = () => {
   introDone = true;
   stopIntro();
-  if (soundOn) ac();                      // låser upp trumvirveln och fanfaren
   const box = $("intro");
   box.classList.add("gone");
   setTimeout(() => { box.hidden = true; $("goSetup").focus(); }, reduceMotion ? 0 : 450);
 };
-// Ett tryck i rutan (men inte på knappen) räcker för att webbläsaren ska släppa fram ljudet
-$("intro").addEventListener("pointerdown", e => { if (e.target !== $("introBtn")) playIntro(); });
 // Ljudknappen uppe till höger stänger av och sätter på introljudet också
 // (setTimeout: vänta tills start.js har hunnit växla soundOn)
 $("soundBtn").addEventListener("click", () => setTimeout(() => { if (soundOn) playIntro(); else introAudio.pause(); }));
 
-$("introBtn").focus();
-playIntro();
+$("introPlay").focus();

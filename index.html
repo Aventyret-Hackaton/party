@@ -21,10 +21,11 @@
   </div>
 </header>
 <canvas id="fx" aria-hidden="true"></canvas>
-<!-- Välkomstrutan: trycket startar introljudet (js/intro.js) -->
+<!-- Välkomstrutan: Spela startar introljudet, party-knappen stänger rutan (js/intro.js) -->
 <div class="intro" id="intro">
   <img class="intro-logo" src="assets/party-logo-dark.svg" alt="Party">
-  <button class="btn primary" id="introBtn" data-i="introGo"></button>
+  <button class="btn primary" id="introPlay" data-i="introPlay"></button>
+  <button class="btn primary" id="introBtn" data-i="introGo" hidden></button>
 </div>
 <main>
 

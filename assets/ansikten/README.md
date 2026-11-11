@@ -4,7 +4,7 @@ Bilderna som visas i kategorin Äventyrare, där den som ritar huvudet ser ett a
 
 ## Så lägger du till ett ansikte
 
-1. Lägg bilden i den här mappen, till exempel `joel.jpg`. Kvadratiska bilder blir bäst, gärna runt 600 × 600 pixlar.
+1. Lägg bilden i den här mappen, till exempel `joel.jpg`. Kvadratiska bilder blir bäst. Skala ned till 600 × 600 pixlar, till exempel med `sips -s format jpeg -s formatOptions 72 -Z 600 bild.jpeg --out namn.jpg` i Terminalen. Då blir varje bild under 100 kB.
 2. Lägg till personen i `ansikten.json`:
 
 ```json

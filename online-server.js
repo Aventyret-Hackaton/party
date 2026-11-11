@@ -98,7 +98,7 @@ setInterval(sweep, 5000).unref();
 /* ---------- Vad spelarna får se ---------- */
 function publicGame(g) {
   const host = g.players.find(p => p.id === g.hostId);
-  return { id: g.id, hostName: host ? host.name : "", hostCity: host ? host.city : "", max: g.max, joined: g.players.length, n: g.n, dir: g.dir, orderMode: g.orderMode, cat: g.cat };
+  return { id: g.id, hostName: host ? host.name : "", hostCity: host ? host.city : "", names: g.players.map(p => p.name), max: g.max, joined: g.players.length, n: g.n, dir: g.dir, orderMode: g.orderMode, cat: g.cat };
 }
 function stateFor(g, me) {
   const out = {

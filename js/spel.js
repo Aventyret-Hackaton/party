@@ -12,8 +12,8 @@ function show(id) {
 }
 
 /* ---------- Inställningar ---------- */
-// creating: online och man har valt att starta en egen omgång i stället för att gå med i en
-const S = { players: 3, parts: 3, dir: "v", mode: "room", order: "strict", cat: "free", creating: false };
+// online: "new" = nytt onlinespel, "join" = gå med i en omgång, "" = inte valt än
+const S = { players: 3, parts: 3, dir: "v", mode: "room", order: "strict", cat: "free", online: "" };
 function chips(id, opts, key) {
   const box = $(id); box.innerHTML = "";
   opts.forEach(o => {
@@ -33,17 +33,19 @@ function renderSetupChips() {
   chips("c-order", [{ v: "strict", label: t("strict") }, { v: "random", label: t("random") }], "order");
   chips("c-cat", [{ v: "free", label: t("free") }, { v: "staff", label: t("staff"), disabled: !faces.length }], "cat");
   $("catHint").textContent = faces.length ? t("staffHint") : t("staffNone");
-  // Online visas först listan med öppna omgångar. Inställningarna visas när man startar en egen.
+  // Online väljer man först nytt onlinespel eller att gå med i en omgång som väntar på spelare
   const online = S.mode === "online";
+  chips("c-online", [{ v: "new", label: t("newOnline") }, { v: "join", label: t("joinRound") }], "online");
   $("onlinePanel").hidden = !online;
-  $("openWrap").hidden = !online || S.creating;
-  $("setupOpts").hidden = online && !S.creating;
-  $("backToList").hidden = !online;
+  $("onlineWho").hidden = !online || !S.online;
+  $("pwRow").hidden = !(caps.onlinePw && !lsGet(PW_KEY)) && $("pwRow").hidden;
+  $("openWrap").hidden = !online || S.online !== "join";
+  $("setupOpts").hidden = online && S.online !== "new";
   $("roomCity").hidden = online;
   $("setupNext").textContent = online ? t("createBtn") : t("next");
   syncOpenList();
 }
-$("goSetup").onclick = () => { S.creating = false; $("setupErr").textContent = ""; renderSetupChips(); show("s-setup"); };
+$("goSetup").onclick = () => { S.online = ""; $("setupErr").textContent = ""; $("onlineErr").textContent = ""; renderSetupChips(); show("s-setup"); };
 $("setupNext").onclick = () => {
   if (S.mode === "room") { renderNameInputs(); show("s-names"); }
   else createOnline();

@@ -249,3 +249,4 @@ body.night input[type=text]{background:#1a1721;color:#fff;border-color:#3d3746}
 .gamerow .seats{color:var(--ink);font-weight:600;margin-top:.15rem}
 .gamerow .btn{flex:none}
 #backToList{margin-top:1rem}
+.gamerow .who-in{color:var(--ink)}

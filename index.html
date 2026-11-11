@@ -37,7 +37,6 @@
   </div>
   <div class="stack">
     <button class="btn primary" id="goSetup" data-i="newGame"></button>
-    <button class="btn" id="goJoin" data-i="join"></button>
     <button class="btn" id="goGallery" data-i="gallery"></button>
     <button class="btn secondary" id="goFaces" data-i="manageFaces" hidden></button>
   </div>
@@ -48,28 +47,29 @@
   <h2 data-i="newGame"></h2>
   <div class="lbl" data-i="mode"></div><div class="chips" id="c-mode"></div>
 
-  <!-- Online: vem du är, och öppna omgångar att gå med i (js/online.js) -->
+  <!-- Online: nytt onlinespel eller gå med i en omgång, sedan vem du är (js/online.js) -->
   <div id="onlinePanel" hidden>
-    <div class="lbl"><label for="onName" data-i="yourName"></label></div>
-    <input type="text" id="onName" maxlength="30" autocomplete="nickname">
-    <div class="lbl"><label for="onCity" data-i="whereMe"></label></div>
-    <select id="onCity" style="width:100%"></select>
-    <p class="fine" data-i="whereOnline"></p>
-    <div id="pwRow" hidden>
-      <div class="lbl"><label for="onPw" data-i="onlinePw"></label></div>
-      <input type="password" id="onPw" autocomplete="off">
+    <div class="lbl" data-i="onlineWhat"></div><div class="chips" id="c-online"></div>
+    <div id="onlineWho" hidden>
+      <div class="lbl"><label for="onName" data-i="yourName"></label></div>
+      <input type="text" id="onName" maxlength="30" autocomplete="nickname">
+      <div class="lbl"><label for="onCity" data-i="whereMe"></label></div>
+      <select id="onCity" style="width:100%"></select>
+      <p class="fine" data-i="whereOnline"></p>
+      <div id="pwRow" hidden>
+        <div class="lbl"><label for="onPw" data-i="onlinePw"></label></div>
+        <input type="password" id="onPw" autocomplete="off">
+      </div>
     </div>
-    <div id="openWrap">
+    <div id="openWrap" hidden>
       <div class="lbl" data-i="openGames"></div>
       <div class="gamelist" id="openList" aria-live="polite"></div>
-      <button class="btn secondary wide" id="goCreate" data-i="createOwn"></button>
     </div>
     <p class="err" id="onlineErr"></p>
   </div>
 
   <!-- Inställningar för en ny omgång, i rummet eller online -->
   <div id="setupOpts">
-    <button class="linkbtn" id="backToList" data-i="backToList" hidden></button>
     <div class="lbl" data-i="playersParts"></div><div class="chips" id="c-players"></div>
     <div class="lbl" data-i="dir"></div><div class="chips" id="c-dir"></div>
     <p class="fine" data-i="dirHint"></p>

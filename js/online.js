@@ -35,19 +35,18 @@ const gameSummary = g => [g.dir === "v" ? "↓ " + t("vertical") : "→ " + t("h
 /* ---------- Listan med öppna omgångar ---------- */
 let openTimer = null;
 function syncOpenList() {
-  const want = S.mode === "online" && !S.creating;
+  const want = S.mode === "online" && S.online === "join";
   if (!want) { clearInterval(openTimer); openTimer = null; return; }
   if (openTimer) return;
   loadOpenList();
   openTimer = setInterval(() => {
-    if (currentScreen !== "s-setup" || S.mode !== "online" || S.creating) { clearInterval(openTimer); openTimer = null; return; }
+    if (currentScreen !== "s-setup" || S.mode !== "online" || S.online !== "join") { clearInterval(openTimer); openTimer = null; return; }
     if (!document.hidden) loadOpenList();
   }, 3000);
 }
 async function loadOpenList() {
   await apiReady;
   const box = $("openList");
-  $("goCreate").disabled = !caps.api;
   if (!caps.api) { box.innerHTML = `<p class="fine">${t("noServer")}</p>`; return; }
   try {
     renderOpenList(await api("GET", "/api/games"));
@@ -66,21 +65,16 @@ function renderOpenList(list) {
     const title = document.createElement("b"); title.textContent = t("gameBy", { name: g.hostName });
     const where = document.createElement("span"); where.textContent = placeLabel(g.hostCity);
     const what = document.createElement("span"); what.textContent = gameSummary(g);
+    const who = document.createElement("span"); who.className = "who-in"; who.textContent = t("inGame", { names: (g.names || [g.hostName]).join(", ") });
     const seats = document.createElement("span"); seats.className = "seats";
     seats.textContent = t("seatsLeft", { n: g.max - g.joined, m: g.max });
-    info.append(title, where, what, seats);
+    info.append(title, who, where, what, seats);
     const b = document.createElement("button"); b.className = "btn primary small"; b.textContent = t("joinBtn");
     b.onclick = () => joinOnline(g.id, b);
     row.append(info, b);
     box.appendChild(row);
   });
 }
-$("goCreate").onclick = () => {
-  if (needName($("onlineErr"))) return;
-  S.creating = true; $("setupErr").textContent = ""; renderSetupChips();
-};
-$("backToList").onclick = () => { S.creating = false; renderSetupChips(); };
-$("goJoin").onclick = () => { S.mode = "online"; S.creating = false; $("onlineErr").textContent = ""; renderSetupChips(); show("s-setup"); };
 
 /* ---------- Starta egen omgång eller gå med ---------- */
 async function createOnline() {
@@ -90,7 +84,7 @@ async function createOnline() {
     enterGame(await api("POST", "/api/games", { name: myName(), city: $("onCity").value, players: S.players, dir: S.dir, order: S.order, cat: S.cat }));
   } catch (e) {
     $("setupErr").textContent = onlineError(e);
-    if (e.code === "pw") { S.creating = false; renderSetupChips(); $("onlineErr").textContent = onlineError(e); $("onPw").focus(); }
+    if (e.code === "pw") $("onPw").focus();
   }
   $("setupNext").disabled = false;
 }
@@ -118,7 +112,7 @@ async function pollGame() {
   } catch (e) {
     if (ON !== on || !(e.status === 404 || e.status === 403)) return;
     ON = null; clearInterval(on.timer);
-    S.mode = "online"; S.creating = false; renderSetupChips(); show("s-setup");
+    S.mode = "online"; S.online = "join"; renderSetupChips(); show("s-setup");
     $("onlineErr").textContent = t("gameGone"); $("onlineErr").dataset.from = "game";
   }
 }

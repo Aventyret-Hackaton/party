@@ -44,15 +44,20 @@ function inkLightness(parts) {
   }
   return weight ? sum / weight : 0;
 }
-// Hela gubben i en bild
+// Hela gubben i en bild. Delarna överlappar med remsan nedanför vikningen (GAP), som på papper.
 function figureCanvas(parts, dir, scale) {
-  const { W, H } = DIMS[dir], n = parts.length, c = document.createElement("canvas");
-  c.width = Math.round((dir === "v" ? W : W * n) * scale); c.height = Math.round((dir === "v" ? H * n : H) * scale);
+  const { W, H } = DIMS[dir], n = parts.length, step = (dir === "v" ? H : W) - GAP, c = document.createElement("canvas");
+  c.width = Math.round((dir === "v" ? W : W + step * (n - 1)) * scale);
+  c.height = Math.round((dir === "v" ? H + step * (n - 1) : H) * scale);
   const x = c.getContext("2d");
+  x.scale(scale, scale);
+  x.fillStyle = "#ffffff"; x.fillRect(0, 0, c.width / scale, c.height / scale);
   parts.forEach((s, i) => {
-    x.save(); x.scale(scale, scale);
-    if (dir === "v") x.translate(0, i * H); else x.translate(i * W, 0);
-    x.beginPath(); x.rect(0, 0, W, H); x.clip(); paint(x, s, W, H); x.restore();
+    x.save();
+    if (dir === "v") x.translate(0, i * step); else x.translate(i * step, 0);
+    x.beginPath(); x.rect(0, 0, W, H); x.clip();
+    (s || []).forEach(st => drawStroke(x, st));
+    x.restore();
   });
   return c;
 }

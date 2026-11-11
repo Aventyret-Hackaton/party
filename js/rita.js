@@ -1,7 +1,7 @@
 // Ritskärmen: canvasen man ritar på, palett, tjocklek, sudd och ångra.
 
 /* ---------- Ritskärmen ---------- */
-const pad = $("pad"), pctx = pad.getContext("2d"), hint = $("hint");
+const pad = $("pad"), pctx = pad.getContext("2d");
 const PALETTE = ["#222222","#e2481e","#c19c61","#8a6a35","#1f6fd1","#5bc0de","#2e9e4f","#f2c12e","#e85d9c","#8e44ad","#7a4b2a","#9aa0a6"];
 const toolMem = {};
 const D = { dir: "v", strokes: [], prev: null, cur: null, color: "#222222", size: 5, erase: false, who: "", onDone: null, meta: null };
@@ -14,7 +14,6 @@ function openDraw(meta) {
   const { W, H } = DIMS[D.dir];
   pad.width = W; pad.height = H;
   $("sheet").className = "sheet paperclip " + D.dir;
-  hint.hidden = !D.prev;
   $("hintLabel").hidden = !D.prev;
   $("foldline").hidden = meta.i === meta.n - 1;
   buildPalette(); syncTools();
@@ -37,20 +36,21 @@ function fitPad() {
   const d = devicePixelRatio || 1;
   pad.width = Math.round(r.width * d); pad.height = Math.round(r.height * d);
   redraw();
-  if (D.prev) {
-    const hr = hint.getBoundingClientRect(), { W, H } = DIMS[D.dir];
-    hint.width = Math.round(hr.width * d); hint.height = Math.round(hr.height * d);
-    const hc = hint.getContext("2d"), k = hint.width / (D.dir === "v" ? W : GAP);
-    hc.setTransform(k, 0, 0, k, 0, 0);
-    // Visa bara kanten av förra delen: nedersta remsan (lodrätt) eller högra remsan (vågrätt)
-    if (D.dir === "v") hc.translate(0, -(H - GAP)); else hc.translate(-(W - GAP), 0);
-    paint(hc, D.prev, W, H);
-  }
 }
 function redraw() {
-  const k = pad.width / DIMS[D.dir].W;
+  const { W, H } = DIMS[D.dir], k = pad.width / W;
   pctx.setTransform(k, 0, 0, k, 0, 0);
-  paint(pctx, D.strokes, DIMS[D.dir].W, DIMS[D.dir].H);
+  pctx.fillStyle = "#ffffff"; pctx.fillRect(0, 0, W, H);
+  // Som på papper: det förra delen ritade nedanför vikningen ligger överst (eller längst till vänster)
+  // på den här delen, på exakt samma ställe som i den färdiga gubben.
+  if (D.prev) {
+    pctx.save(); pctx.beginPath();
+    if (D.dir === "v") { pctx.rect(0, 0, W, GAP); pctx.clip(); pctx.translate(0, -(H - GAP)); }
+    else { pctx.rect(0, 0, GAP, H); pctx.clip(); pctx.translate(-(W - GAP), 0); }
+    D.prev.forEach(s => drawStroke(pctx, s));
+    pctx.restore();
+  }
+  D.strokes.forEach(s => drawStroke(pctx, s));
 }
 function toLogical(e) {
   const r = pad.getBoundingClientRect(), { W, H } = DIMS[D.dir];

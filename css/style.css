@@ -104,9 +104,6 @@ button{font:inherit;cursor:pointer}
 .sheet.v{width:100%}
 .sheet.h{display:flex}
 .paperclip{clip-path:polygon(8px 0,calc(100% - 8px) 0,100% 8px,100% calc(100% - 8px),calc(100% - 8px) 100%,8px 100%,0 calc(100% - 8px),0 8px)}
-.hint{display:block;background:transparent;mix-blend-mode:multiply}
-.sheet.v .hint{width:100%;aspect-ratio:600/40;border-bottom:1px dashed #ccc}
-.sheet.h .hint{height:min(56vh,520px);aspect-ratio:40/600;border-right:1px dashed #ccc}
 .stage-box{position:relative}
 #pad{display:block;touch-action:none;cursor:crosshair;background:transparent;mix-blend-mode:multiply}
 .sheet.v #pad{width:100%;aspect-ratio:600/340}
@@ -156,8 +153,8 @@ button{font:inherit;cursor:pointer}
 @supports (height:100svh){.podium{--fit-h:calc(100svh - 10rem)}}
 .figure-scroll{max-width:100%;display:flex;justify-content:center}
 .figure{perspective:1600px;display:inline-flex;margin:0 auto;position:relative;isolation:isolate}
-.figure.v{flex-direction:column;width:min(100%,34rem,calc(var(--fit-h) * 600 / (340 * var(--n))))}
-.figure.h{flex-direction:row;width:min(100%,calc(var(--n) * 14rem),calc(var(--fit-h) * 340 * var(--n) / 600))}
+.figure.v{flex-direction:column;width:min(100%,34rem,calc(var(--fit-h) * 600 / (340 * var(--n) - 40 * (var(--n) - 1))))}
+.figure.h{flex-direction:row;width:min(100%,calc(var(--n) * 14rem),calc(var(--fit-h) * (340 * var(--n) - 40 * (var(--n) - 1)) / 600))}
 .figure canvas{display:block;background:transparent;filter:drop-shadow(0 0 1px var(--halo)) drop-shadow(0 0 2px var(--halo))}
 /* Strålkastarljuset bakom gubben. Mörkt bläck får ett ljust sken, ljust bläck ett svagt guldsken.
    Konturen (--halo) har motsatt ton, så att även avvikande färger syns. */
@@ -174,7 +171,10 @@ button{font:inherit;cursor:pointer}
     linear-gradient(#7a5130,#3b2313);
   clip-path:polygon(7% 0,93% 0,100% 100%,0 100%)}
 .figure.v canvas{width:100%}
-.figure.h canvas{width:calc(100% / var(--n));height:auto}
+/* Delarna överlappar med remsan nedanför vikningen (40 av 340 punkter), precis som på papper */
+.figure.v canvas + canvas{margin-top:calc(-100% * 40 / 600)}
+.figure.h canvas{flex:none;width:calc(100% * 340 / (340 * var(--n) - 40 * (var(--n) - 1)));height:auto}
+.figure.h canvas + canvas{margin-left:calc(-100% * 40 / (340 * var(--n) - 40 * (var(--n) - 1)))}
 .fold{transition:transform .45s cubic-bezier(.3,1.5,.5,1),opacity .2s;backface-visibility:hidden}
 .figure.v .fold{transform-origin:top center}
 .figure.h .fold{transform-origin:left center}

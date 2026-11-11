@@ -244,8 +244,18 @@ async function byLabel(r) {
   }
   return "";
 }
+// Öppna en gubbe från galleriet. Webbläsarens bakåtknapp (eller svep bakåt) och Tillbaka går till galleriet igen,
+// på samma ställe och med samma filter.
+let galScroll = 0;
 async function openGalleryItem(r) {
   const rec = { parts: r.parts.map(p => p.s), dir: r.dir, home: r.home, by: await byLabel(r), name: r.name, staff: r.staff, mid: r.mode === "online" };
-  openStage(rec, { canUnfold: true, replay: true });
+  galScroll = scrollY;
+  history.pushState({ party: "galleryItem" }, "");
+  openStage(rec, { canUnfold: true, replay: true, back: true });
 }
+async function backToGallery() {
+  await openGallery();
+  scrollTo(0, galScroll);
+}
+addEventListener("popstate", () => { if (currentScreen === "s-stage" && ST?.opts.back) backToGallery(); });
 $("goGallery").onclick = openGallery;

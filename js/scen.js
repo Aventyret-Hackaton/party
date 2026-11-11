@@ -22,6 +22,7 @@ function openStage(rec, opts) {
   $("unfoldBtn").hidden = !opts.canUnfold;
   $("stageWait").textContent = opts.canUnfold ? "" : t("stageWait");
   $("againBtn").hidden = !opts.again;
+  $("stageBack").hidden = !opts.back;   // öppnad från galleriet: tillbaka dit
   $("decideBox").hidden = true;
   $("decideMsg").textContent = "";
   $("guessBox").hidden = true;
@@ -52,6 +53,7 @@ async function playShow() {
   $("figBy").textContent = rec.by ? t("drawnBy", { names: rec.by }) : "";
   if (!ST.guessed) showGuess(); else revealName();
   ST.playing = false;
+  syncMoreBelow();
   if (!ST.shown) { ST.shown = true; if (ST.opts.afterShow) ST.opts.afterShow(rec); }
 }
 // Namnet, och för värden rutan där gubben sparas eller raderas
@@ -78,12 +80,14 @@ function guessOptions(answer) {
   const others = shuffle([...new Set(faces.map(f => f.name))].filter(n => n !== answer));
   return shuffle([answer, ...others.slice(0, 5)]);
 }
+// hint kan vara en funktion, så att texten går att översätta om man byter språk
+const guessHintText = () => { const h = ST?.opts.guess?.hint; return (typeof h === "function" ? h() : h) || t("guessHint"); };
 function showGuess() {
-  const { answer, hint } = ST.opts.guess;
+  const { answer } = ST.opts.guess;
   ST.guessing = true;
   $("stageActions").hidden = true;
   const el = $("figName"); el.textContent = t("guessTitle"); el.classList.remove("blur");
-  $("guessHint").textContent = hint || t("guessHint");
+  $("guessHint").textContent = guessHintText();
   const box = $("guessOpts"); box.innerHTML = "";
   guessOptions(answer).forEach(n => {
     const b = document.createElement("button"); b.className = "btn"; b.textContent = n;
@@ -105,6 +109,7 @@ async function pickGuess(n, btn) {
   ST.guessing = false; ST.guessed = true;
   $("guessBox").hidden = true;
   revealName();
+  syncMoreBelow();
 }
 // Namnet på scenen följer med när man skriver i rutan
 $("renameIn").oninput = () => { $("figName").textContent = $("renameIn").value.trim() || ST?.rec.name || t("nameless"); };
@@ -126,9 +131,27 @@ async function decideStage(keep) {
   $("decideBox").hidden = true;
   $("decideMsg").textContent = t(keep ? "keptFig" : "droppedFig");
   $("stageActions").hidden = false;
+  syncMoreBelow();
 }
 $("keepBtn").onclick = () => decideStage(true);
 $("dropBtn").onclick = () => decideStage(false);
 $("againBtn").onclick = () => ST?.opts.again?.();
-$("stageGallery").onclick = () => { leaveOnline(); openGallery(); };
+$("stageGallery").onclick = () => { if (ST?.opts.back) history.back(); else { leaveOnline(); openGallery(); } };
+$("stageBack").onclick = () => history.back();
+
+/* ---------- "Mer nedanför" ---------- */
+// Resultatet (namnet, gissningen, spara eller radera, knapparna) hamnar ibland under skärmkanten.
+// Då syns en knapp längst ned som rullar dit.
+function syncMoreBelow() {
+  const btn = $("moreBelow");
+  if (currentScreen !== "s-stage" || $("postShow").hidden) { btn.hidden = true; return; }
+  const last = [...$("postShow").children].filter(el => !el.hidden && el.offsetHeight).pop();
+  btn.hidden = !last || last.getBoundingClientRect().bottom <= innerHeight - 8;
+}
+addEventListener("scroll", syncMoreBelow, { passive: true });
+addEventListener("resize", syncMoreBelow);
+$("moreBelow").onclick = () => {
+  const p = $("postShow");
+  scrollTo({ top: p.getBoundingClientRect().bottom + scrollY - innerHeight + 24, behavior: reduceMotion ? "auto" : "smooth" });
+};
 $("stageHome").onclick = () => { leaveOnline(); show("s-home"); };

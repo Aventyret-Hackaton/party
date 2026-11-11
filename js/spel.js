@@ -6,6 +6,7 @@ function show(id) {
   currentScreen = id;
   if (id !== "s-home") stopIntro();
   if (typeof syncMusic === "function") syncMusic(id);
+  if (typeof syncMoreBelow === "function") setTimeout(syncMoreBelow);
   $("mapSheet").hidden = id !== "s-gallery";   // kartpanelen hör bara till galleriet
   document.body.classList.toggle("has-sheet", id === "s-gallery");
   document.querySelectorAll(".screen").forEach(s => s.classList.toggle("active", s.id === id));
@@ -16,7 +17,7 @@ function show(id) {
 
 /* ---------- Inställningar ---------- */
 // online: "new" = nytt onlinespel, "join" = gå med i en omgång, "" = inte valt än
-const S = { players: 3, parts: 3, dir: "v", mode: "room", order: "strict", cat: "free", online: "" };
+const S = { players: 3, parts: 3, dir: "v", mode: "online", order: "strict", cat: "free", online: "" };
 function chips(id, opts, key) {
   const box = $(id); box.innerHTML = "";
   opts.forEach(o => {
@@ -30,7 +31,8 @@ function chips(id, opts, key) {
 function renderSetupChips() {
   if (S.cat === "staff" && !faces.length) S.cat = "free";
   S.parts = S.players; // antalet spelare styr antalet delar
-  chips("c-mode", [{ v: "room", label: t("room") }, { v: "online", label: t("online") }], "mode");
+  // Online är förvalt, att spela i rummet är tillvalet
+  chips("c-mode", [{ v: "online", label: t("online") }, { v: "room", label: t("room") }], "mode");
   chips("c-players", [3, 4, 5, 6].map(v => ({ v, label: v })), "players");
   chips("c-dir", [{ v: "v", label: "↓ " + t("vertical") }, { v: "h", label: "→ " + t("horizontal") }], "dir");
   chips("c-order", [{ v: "strict", label: t("strict") }, { v: "random", label: t("random") }], "order");
@@ -92,12 +94,17 @@ function startRoom(names) {
   });
   roomTurn();
 }
-function roomTurn() {
+// Texterna på överlämningen. Körs igen om man byter språk.
+function renderHand() {
   const i = G.idx, who = G.names[G.assign[i]], part = t(partKey(G.dir, G.n, i));
   $("handTitle").textContent = t("handTo", { name: who });
   $("handText").textContent = t("handPart", { name: who, part: lc(part) });
   $("foldShout").hidden = i === 0;
   $("handParts").textContent = partsInfo(G.dir, G.n);
+}
+function roomTurn() {
+  const i = G.idx, who = G.names[G.assign[i]];
+  renderHand();
   $("handReady").onclick = () => {
     const go = () => openDraw({ dir: G.dir, i, n: G.n, who, whoKey: "r" + G.assign[i], prev: i ? G.parts[i - 1] : null, online: false,
       onDone: s => { G.parts[i] = s; G.idx++; if (G.idx < G.n) roomTurn(); else roomStage(); } });
@@ -107,6 +114,7 @@ function roomTurn() {
 }
 async function showFace(face, then) {
   $("faceText").textContent = t("faceText", { name: face.name });
+  $("faceText").dataset.face = face.name;   // så att texten kan översättas om man byter språk
   $("faceImg").src = faceSrc(face); $("faceImg").alt = face.name;
   show("s-face");
   for (let n = 5; n > 0; n--) { $("faceCount").textContent = n; await sleep(1000); }
@@ -116,7 +124,7 @@ async function showFace(face, then) {
 function roomStage() {
   openStage({ parts: G.parts, dir: G.dir, home: G.home, by: G.names.join(", "), staff: G.face?.name, name: "" }, {
     canUnfold: true,
-    guess: G.face ? { answer: G.face.name, hint: t("guessRoomHint", { name: G.names[G.assign[headIndex(G.dir, G.n)]] }) } : null,
+    guess: G.face ? { answer: G.face.name, hint: () => t("guessRoomHint", { name: G.names[G.assign[headIndex(G.dir, G.n)]] }) } : null,
     afterShow: async rec => {
       const r = await aiName(rec);
       rec.what = r.what;

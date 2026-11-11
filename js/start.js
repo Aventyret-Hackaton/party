@@ -10,6 +10,8 @@ function applyI18n() {
   renderWhere();
   renderSetupChips();
   if (currentScreen === "s-names") renderNameInputs();
+  if (currentScreen === "s-handoff" && G.names) renderHand();
+  if (currentScreen === "s-face") $("faceText").textContent = t("faceText", { name: $("faceText").dataset.face || "" });
   if (currentScreen === "s-draw") renderDrawTexts(), buildPalette(), syncTools();
   if (currentScreen === "s-lobby") renderLobby();
   if (currentScreen === "s-wait") renderWait();
@@ -18,6 +20,9 @@ function applyI18n() {
   if (currentScreen === "s-faces") renderFaces();
   if (currentScreen === "s-stage" && ST) {
     $("unfoldBtn").textContent = ST.opts.replay ? t("replay") : t("unfold");
+    $("stageWait").textContent = ST.opts.canUnfold ? "" : t("stageWait");
+    if (ST.guessing) { $("figName").textContent = t("guessTitle"); $("guessHint").textContent = guessHintText(); }
+    if (typeof renderNext === "function" && typeof ON !== "undefined" && ON) renderNext();
     if (!$("postShow").hidden) {
       $("figPlace").textContent = ST.rec.home ? t("livesIn", { place: placeLabel(ST.rec.home) }) + (ST.rec.mid ? ` (${t("midNote")})` : "") : "";
       $("figBy").textContent = ST.rec.by ? t("drawnBy", { names: ST.rec.by }) : "";

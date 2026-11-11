@@ -273,6 +273,13 @@ body.has-sheet[data-sheet="half"] main,body.has-sheet[data-sheet="full"] main{pa
    Den lilla loggan döljs så länge rutan syns, eftersom den stora redan står där. */
 .top{position:relative;z-index:35}
 body:has(.intro:not([hidden]):not(.gone)) .brand{visibility:hidden}
+.intro-credit{margin:-1.25rem 0 0;color:#ffffffa6;font-size:.8125rem;letter-spacing:.08em;text-transform:uppercase}
+.stage-back{position:absolute;left:0;top:.25rem;z-index:2;background:none;border:0;color:var(--gold);font:inherit;font-size:.9375rem;padding:.5rem .25rem;cursor:pointer}
+.stage-back:hover{text-decoration:underline}
+.more-below{position:fixed;left:50%;bottom:calc(1rem + env(safe-area-inset-bottom,0px));z-index:35;transform:translateX(-50%);display:flex;gap:.4rem;align-items:center;padding:.6rem 1.1rem;border-radius:999px;border:0;background:var(--gold);color:#100e16;font:600 .9375rem/1 var(--replica);box-shadow:0 4px 18px rgba(0,0,0,.4);cursor:pointer;animation:nudge 1.4s ease-in-out infinite}
+.more-below[hidden]{display:none}
+@keyframes nudge{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,5px)}}
+@media (prefers-reduced-motion:reduce){.more-below{animation:none}}
 .intro-logo{width:min(80vw,26rem);height:auto}
 .intro .btn{font-size:1.25rem;padding:1.1rem 2rem;animation:pulse 1.6s ease-in-out infinite}
 @keyframes pulse{50%{transform:scale(1.05)}}

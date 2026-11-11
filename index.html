@@ -32,6 +32,7 @@
   <img class="intro-logo" src="assets/party-logo-dark.svg" alt="Party">
   <button class="btn primary" id="introPlay" data-i="introPlay"></button>
   <button class="btn primary" id="introBtn" data-i="introGo" hidden></button>
+  <p class="intro-credit" data-i="builtWith"></p>
 </div>
 <main>
 
@@ -203,6 +204,7 @@
 <!-- Scen -->
 <section id="s-stage" class="screen">
   <div class="stage" id="stage">
+    <button class="stage-back" id="stageBack" hidden>← <span data-i="backGallery"></span></button>
     <div class="beam l"></div><div class="beam r"></div>
     <div id="preShow">
       <div class="andnow" data-i="andNow"></div>
@@ -271,6 +273,8 @@
 </section>
 
 </main>
+<!-- Syns på scenen när resultatet fortsätter nedanför skärmen (js/scen.js) -->
+<button class="more-below" id="moreBelow" hidden><span aria-hidden="true">↓</span> <span data-i="moreBelow"></span></button>
 <!-- Galleriets karta: en panel längst ned som man drar upp och ned i greppet (js/galleri.js).
      Den ligger utanför main, så att den sitter fast mot skärmens nederkant. -->
 <div class="mapsheet" id="mapSheet" data-pos="peek" hidden>

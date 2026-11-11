@@ -41,6 +41,7 @@ function renderSetupChips() {
   $("pwRow").hidden = !(caps.onlinePw && !lsGet(PW_KEY)) && $("pwRow").hidden;
   $("openWrap").hidden = !online || S.online !== "join";
   $("setupOpts").hidden = online && S.online !== "new";
+  if (typeof renderNotify === "function") renderNotify();
   $("roomCity").hidden = online;
   $("setupNext").textContent = online ? t("createBtn") : t("next");
   syncOpenList();

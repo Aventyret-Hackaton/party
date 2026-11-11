@@ -41,7 +41,7 @@ function syncOpenList() {
   loadOpenList();
   openTimer = setInterval(() => {
     if (currentScreen !== "s-setup" || S.mode !== "online" || S.online !== "join") { clearInterval(openTimer); openTimer = null; return; }
-    if (!document.hidden) loadOpenList();
+    if (!document.hidden || notifyOn()) loadOpenList();
   }, 3000);
 }
 async function loadOpenList() {
@@ -49,7 +49,8 @@ async function loadOpenList() {
   const box = $("openList");
   if (!caps.api) { box.innerHTML = `<p class="fine">${t("noServer")}</p>`; return; }
   try {
-    renderOpenList(await api("GET", "/api/games"));
+    const list = await api("GET", "/api/games");
+    renderOpenList(list); watchSeats(list);
     if ($("onlineErr").dataset.from === "list") $("onlineErr").textContent = "";
   } catch (e) {
     box.innerHTML = "";
@@ -103,8 +104,9 @@ function enterGame(r) {
   ON.timer = setInterval(pollGame, 2000);
 }
 async function pollGame() {
-  // I väntrummet frågar vi även när sidan ligger i bakgrunden, annars tror servern att man har gått
-  if (!ON || (document.hidden && ON.game?.status !== "lobby")) return;
+  // I väntrummet frågar vi även när sidan ligger i bakgrunden, annars tror servern att man har gått.
+  // Med notiser på frågar vi alltid, så att notisen om gubben kommer fram.
+  if (!ON || (document.hidden && ON.game?.status !== "lobby" && !notifyOn())) return;
   const on = ON;
   try {
     const s = await api("GET", `/api/games/${on.game.id}?v=${on.v}`);
@@ -164,6 +166,7 @@ function handleGame() {
   if (g.status === "done" || g.status === "revealed") {
     if (ON.view !== "stage") {
       ON.view = "stage";
+      notify(t("notifyDoneTitle"), t("notifyDoneBody"), "done-" + g.id);
       const id = g.id;
       ON.stageRec = { parts: g.parts || [], dir: g.dir, home: g.home, by: g.players.map(p => p.name).join(", "), staff: g.face?.name || "", name: g.name || "", mid: true };
       openStage(ON.stageRec, {

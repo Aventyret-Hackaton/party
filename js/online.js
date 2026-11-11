@@ -1,124 +1,190 @@
-// Onlinespel: lobby, turordning och gemensam avtäckning.
+// Onlinespel via vår egen server (online-server.js): öppna omgångar, väntrum,
+// turordning och gemensam avtäckning. Spelet frågar servern om läget varannan sekund.
 
-/* ---------- Onlinespel ---------- */
+/* ---------- Anrop till servern ---------- */
 let ON = null;
-function genCode() { const a = "ABCDEFGHJKLMNPQRSTUVWXYZ"; let s = ""; for (let i = 0; i < 4; i++) s += a[Math.floor(Math.random() * a.length)]; return s; }
-function onlineReady() { return caps.db && caps.uid && caps.canWrite; }
+const PW_KEY = "party-pw", NAME_KEY = "party-name";
+const lsGet = k => { try { return localStorage.getItem(k) || ""; } catch (e) { return ""; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+
+async function api(method, url, body) {
+  const headers = { "Content-Type": "application/json" };
+  const pw = $("onPw").value || lsGet(PW_KEY);
+  if (pw) headers["X-Party-Password"] = pw;
+  if (ON && ON.me) { headers["X-Player"] = ON.me.playerId; headers["X-Key"] = ON.me.key; }
+  const r = await fetch(url, { method, headers, body: body ? JSON.stringify(body) : undefined, cache: "no-store", keepalive: /\/leave$/.test(url) });
+  let data = null; try { data = await r.json(); } catch (e) {}
+  if (r.status === 401) { $("pwRow").hidden = false; if (pw === lsGet(PW_KEY)) lsSet(PW_KEY, ""); throw Object.assign(new Error("pw"), { code: "pw", status: 401 }); }
+  if (!r.ok) throw Object.assign(new Error(data?.error || "fel"), { code: data?.error, status: r.status });
+  if (pw && pw !== lsGet(PW_KEY)) lsSet(PW_KEY, pw);    // lösenordet fungerade, kom ihåg det
+  return data;
+}
+function onlineError(e) {
+  const k = e.code === "pw" ? ($("onPw").value || lsGet(PW_KEY) ? "wrongPw" : "pwNeeded") : e.code === "full" ? "full" : e.code === "started" ? "started"
+    : e.status === 404 ? "gameGone" : e instanceof TypeError ? "noServer" : "onlineFail";
+  return t(k);
+}
+const myName = () => $("onName").value.trim();
+function needName(errEl) {
+  if (myName()) { lsSet(NAME_KEY, myName()); return false; }
+  errEl.textContent = t("nameNeeded"); $("onName").focus();
+  return true;
+}
+const gameSummary = g => [g.dir === "v" ? "↓ " + t("vertical") : "→ " + t("horizontal"), g.orderMode === "random" ? t("random") : t("strict"), g.cat === "staff" ? t("staff") : t("free")].join(" · ");
+
+/* ---------- Listan med öppna omgångar ---------- */
+let openTimer = null;
+function syncOpenList() {
+  const want = S.mode === "online" && !S.creating;
+  if (!want) { clearInterval(openTimer); openTimer = null; return; }
+  if (openTimer) return;
+  loadOpenList();
+  openTimer = setInterval(() => {
+    if (currentScreen !== "s-setup" || S.mode !== "online" || S.creating) { clearInterval(openTimer); openTimer = null; return; }
+    if (!document.hidden) loadOpenList();
+  }, 3000);
+}
+async function loadOpenList() {
+  await apiReady;
+  const box = $("openList");
+  $("goCreate").disabled = !caps.api;
+  if (!caps.api) { box.innerHTML = `<p class="fine">${t("noServer")}</p>`; return; }
+  try {
+    renderOpenList(await api("GET", "/api/games"));
+    if ($("onlineErr").dataset.from === "list") $("onlineErr").textContent = "";
+  } catch (e) {
+    box.innerHTML = "";
+    $("onlineErr").textContent = onlineError(e); $("onlineErr").dataset.from = "list";
+  }
+}
+function renderOpenList(list) {
+  const box = $("openList"); box.innerHTML = "";
+  if (!list.length) { box.innerHTML = `<p class="fine">${t("noOpen")}</p>`; return; }
+  list.forEach(g => {
+    const row = document.createElement("div"); row.className = "gamerow";
+    const info = document.createElement("div");
+    const title = document.createElement("b"); title.textContent = t("gameBy", { name: g.hostName });
+    const where = document.createElement("span"); where.textContent = placeLabel(g.hostCity);
+    const what = document.createElement("span"); what.textContent = gameSummary(g);
+    const seats = document.createElement("span"); seats.className = "seats";
+    seats.textContent = t("seatsLeft", { n: g.max - g.joined, m: g.max });
+    info.append(title, where, what, seats);
+    const b = document.createElement("button"); b.className = "btn primary small"; b.textContent = t("joinBtn");
+    b.onclick = () => joinOnline(g.id, b);
+    row.append(info, b);
+    box.appendChild(row);
+  });
+}
+$("goCreate").onclick = () => {
+  if (needName($("onlineErr"))) return;
+  S.creating = true; $("setupErr").textContent = ""; renderSetupChips();
+};
+$("backToList").onclick = () => { S.creating = false; renderSetupChips(); };
+$("goJoin").onclick = () => { S.mode = "online"; S.creating = false; $("onlineErr").textContent = ""; renderSetupChips(); show("s-setup"); };
+
+/* ---------- Starta egen omgång eller gå med ---------- */
 async function createOnline() {
-  if (!onlineReady()) { $("setupErr").textContent = t("needDb"); return; }
+  if (needName($("setupErr"))) return;
   $("setupNext").disabled = true;
   try {
-    let code = genCode();
-    for (let i = 0; i < 5; i++) { const g = await caps.db.doc("games/" + code).get(); if (!g.exists) break; code = genCode(); }
-    await caps.db.doc("games/" + code).set({
-      host: caps.uid, players: S.players, n: S.parts, dir: S.dir, order: S.order, cat: S.cat,
-      status: "lobby", current: 0, createdAt: new Date().toISOString()
-    });
-    await caps.db.doc(`games/${code}/players/${caps.uid}`).set({ city: $("citySel").value, at: Date.now() });
-    enterGame(code);
-  } catch (e) { console.warn(e); $("setupErr").textContent = t("needDb"); }
+    enterGame(await api("POST", "/api/games", { name: myName(), city: $("onCity").value, players: S.players, dir: S.dir, order: S.order, cat: S.cat }));
+  } catch (e) {
+    $("setupErr").textContent = onlineError(e);
+    if (e.code === "pw") { S.creating = false; renderSetupChips(); $("onlineErr").textContent = onlineError(e); $("onPw").focus(); }
+  }
   $("setupNext").disabled = false;
 }
-$("goJoin").onclick = () => { $("joinErr").textContent = onlineReady() ? "" : t("needDb"); show("s-join"); };
-$("joinBtn").onclick = async () => {
-  if (!onlineReady()) { $("joinErr").textContent = t("needDb"); return; }
-  const code = $("joinCode").value.trim().toUpperCase();
-  if (code.length !== 4) { $("joinErr").textContent = t("notFound"); return; }
-  try {
-    const g = await caps.db.doc("games/" + code).get();
-    if (!g.exists) { $("joinErr").textContent = t("notFound"); return; }
-    const gd = g.data(), ps = await caps.db.collection(`games/${code}/players`).get();
-    const already = ps.docs.some(d => d.id === caps.uid);
-    if (!already && gd.status !== "lobby") { $("joinErr").textContent = t("started"); return; }
-    if (!already && ps.size >= gd.players) { $("joinErr").textContent = t("full"); return; }
-    if (!already) await caps.db.doc(`games/${code}/players/${caps.uid}`).set({ city: $("joinCity").value, at: Date.now() });
-    enterGame(code);
-  } catch (e) { console.warn(e); $("joinErr").textContent = t("needDb"); }
-};
-function enterGame(code) {
+async function joinOnline(id, btn) {
+  if (needName($("onlineErr"))) return;
+  btn.disabled = true;
+  try { enterGame(await api("POST", `/api/games/${id}/join`, { name: myName(), city: $("onCity").value })); }
+  catch (e) { $("onlineErr").textContent = onlineError(e); $("onlineErr").dataset.from = "join"; btn.disabled = false; loadOpenList(); }
+}
+
+/* ---------- I omgången ---------- */
+function enterGame(r) {
   leaveOnline();
-  ON = { code, game: null, players: [], names: {}, view: "", unsub: [], sent: {} };
-  $("lobbyCode").textContent = code;
-  ON.unsub.push(caps.db.collection(`games/${code}/players`).onSnapshot(async s => {
-    ON.players = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => a.at - b.at);
-    await resolveNames(ON.players.map(p => p.id));
-    if (ON?.game?.status === "lobby") renderLobby();
-    if (currentScreen === "s-wait") renderWait();
-  }, () => {}));
-  ON.unsub.push(caps.db.doc("games/" + code).onSnapshot(s => { if (s.exists && ON) { ON.game = s.data(); handleGame(); } }, () => {}));
+  ON = { me: { playerId: r.playerId, key: r.key }, game: null, v: 0, view: "", sent: {}, timer: null };
+  applyGame(r.game);
+  ON.timer = setInterval(pollGame, 2000);
 }
-function leaveOnline() { if (ON) { ON.unsub.forEach(u => { try { u(); } catch (e) {} }); ON = null; } }
-async function resolveNames(ids) {
-  if (!caps.user || !ids.length) return;
-  try { const ps = await caps.user.profiles(ids); ids.forEach(id => { if (ps[id]?.name) ON.names[id] = ps[id].name; }); } catch (e) {}
+async function pollGame() {
+  // I väntrummet frågar vi även när sidan ligger i bakgrunden, annars tror servern att man har gått
+  if (!ON || (document.hidden && ON.game?.status !== "lobby")) return;
+  const on = ON;
+  try {
+    const s = await api("GET", `/api/games/${on.game.id}?v=${on.v}`);
+    if (ON === on && !s.same) applyGame(s);
+  } catch (e) {
+    if (ON !== on || !(e.status === 404 || e.status === 403)) return;
+    ON = null; clearInterval(on.timer);
+    S.mode = "online"; S.creating = false; renderSetupChips(); show("s-setup");
+    $("onlineErr").textContent = t("gameGone"); $("onlineErr").dataset.from = "game";
+  }
 }
+function applyGame(g) { ON.game = g; ON.v = g.v; handleGame(); }
+function leaveOnline() {
+  if (!ON) return;
+  clearInterval(ON.timer);
+  if (ON.game?.status === "lobby") api("POST", `/api/games/${ON.game.id}/leave`).catch(() => {});
+  ON = null;
+}
+addEventListener("pagehide", () => leaveOnline());
+
+const meId = () => ON?.me.playerId;
+const isHost = () => ON?.game?.hostId === meId();
 function nameOf(id) {
-  if (!ON) return "";
-  const i = ON.players.findIndex(p => p.id === id);
-  const n = ON.names[id] || t("player", { n: i + 1 });
-  return id === caps.uid ? `${n} (${t("you")})` : n;
+  if (!ON?.game) return "";
+  const i = ON.game.players.findIndex(p => p.id === id);
+  const n = ON.game.players[i]?.name || t("player", { n: i + 1 });
+  return id === meId() ? `${n} (${t("you")})` : n;
 }
-const isHost = () => ON?.game?.host === caps.uid;
 function renderLobby() {
-  if (!ON?.game) return;
-  const g = ON.game;
-  $("joinedLbl").textContent = t("joined", { n: ON.players.length, m: g.players });
+  const g = ON?.game; if (!g) return;
+  $("lobbyInfo").textContent = gameSummary(g);
+  $("joinedLbl").textContent = t("joined", { n: g.players.length, m: g.max });
   $("lobbyList").innerHTML = "";
-  ON.players.forEach(p => {
+  g.players.forEach(p => {
     const li = document.createElement("li");
-    li.textContent = `${nameOf(p.id)}${p.id === g.host ? " · " + t("host") : ""} – ${placeLabel(p.city)}`;
+    li.textContent = `${nameOf(p.id)}${p.id === g.hostId ? " · " + t("host") : ""} – ${placeLabel(p.city)}`;
     $("lobbyList").appendChild(li);
   });
-  $("lobbyStart").hidden = !isHost();
-  $("lobbyStart").disabled = ON.players.length < 2;
-  $("lobbyNote").textContent = isHost() ? t("hostStartHint") : t("hostWait");
+  $("lobbySeats").innerHTML = Array.from({ length: g.max }, (_, i) => `<span class="${i < g.players.length ? "done" : ""}"></span>`).join("");
+  $("lobbyNote").textContent = t("waitFull", { m: g.max });
 }
-$("lobbyStart").onclick = async () => {
-  const g = ON.game, ids = ON.players.map(p => p.id);
-  const face = g.cat === "staff" && faces.length ? faces[Math.floor(Math.random() * faces.length)] : null;
-  await caps.db.doc("games/" + ON.code).update({
-    status: "drawing", current: 0, order: makeAssign(g.n, ids, g.order === "random"), playerIds: ids,
-    home: midpointCity(ON.players.map(p => p.city)), faceId: face ? face.id : null, faceName: face ? face.name : null
-  });
-};
 $("lobbyLeave").onclick = () => { leaveOnline(); show("s-home"); };
 
-async function handleGame() {
+function handleGame() {
   const g = ON.game;
   if (g.status === "lobby") { if (ON.view !== "lobby") { ON.view = "lobby"; show("s-lobby"); } renderLobby(); return; }
   if (g.status === "drawing") {
     const i = g.current;
-    if (g.order[i] === caps.uid && !ON.sent[i]) {
+    if (g.turns[i] === meId() && !ON.sent[i]) {
       if (ON.view !== "draw" + i) { ON.view = "draw" + i; startOnlineTurn(i); }
-    } else { if (ON.view !== "wait") { ON.view = "wait"; show("s-wait"); } renderWait(); }
+    } else {
+      if (ON.view !== "wait") { ON.view = "wait"; show("s-wait"); }
+      renderWait();
+    }
     return;
   }
   if (g.status === "done" || g.status === "revealed") {
-    if (!ON.stageRec) {
-      if (ON.loading) return;
-      ON.loading = true;
-      const snaps = await Promise.all(Array.from({ length: g.n }, (_, i) => caps.db.doc(`games/${ON.code}/parts/${i}`).get()));
-      const by = (g.playerIds || []).map(nameOf).join(", ");
-      if (!ON) return;
-      ON.stageRec = { parts: snaps.map(s => (s.data() || {}).s || []), dir: g.dir, home: g.home, by, staff: g.faceName || "", name: g.name || "", mid: true };
-      ON.loading = false;
-      return handleGame();
-    }
     if (ON.view !== "stage") {
       ON.view = "stage";
-      const code = ON.code;
+      const id = g.id;
+      ON.stageRec = { parts: g.parts || [], dir: g.dir, home: g.home, by: g.players.map(p => p.name).join(", "), staff: g.face?.name || "", name: g.name || "", mid: true };
       openStage(ON.stageRec, {
         canUnfold: isHost() && g.status === "done",
-        onUnfoldClick: () => caps.db.doc("games/" + code).update({ status: "revealed", revealAt: Date.now() }),
+        onUnfoldClick: () => api("POST", `/api/games/${id}/reveal`).then(s => ON && applyGame(s)).catch(() => {}),
         afterShow: async rec => {
           if (!isHost() || ON?.game?.name) return;
           const r = await aiName(rec);
-          await caps.db.doc("games/" + code).update({ name: r.name, what: r.what });
-          const gid = await saveGallery({ name: r.name, what: r.what, dir: rec.dir, parts: rec.parts.map(s => ({ s })), home: rec.home, uids: ON.game.playerIds, staff: rec.staff, mode: "online", createdAt: new Date().toISOString() });
-          if (gid) await caps.db.doc("games/" + code).update({ galleryId: gid });
+          setStageName(r.name);
+          const gid = await saveGallery({ name: r.name, what: r.what, dir: rec.dir, parts: rec.parts.map(s => ({ s })), home: rec.home, names: ON.game.players.map(p => p.name), staff: rec.staff, mode: "online", createdAt: new Date().toISOString() });
+          if (ON) api("POST", `/api/games/${id}/name`, { name: r.name, what: r.what, galleryId: gid || "" }).then(s => ON && applyGame(s)).catch(() => {});
         },
         onRename: async name => {
-          await caps.db.doc("games/" + code).update({ name });
+          if (!ON) return;
+          await api("POST", `/api/games/${id}/name`, { name }).catch(() => {});
           if (ON?.game?.galleryId) await renameGallery(ON.game.galleryId, name);
         },
         again: null
@@ -131,21 +197,24 @@ async function handleGame() {
 function renderWait() {
   const g = ON?.game; if (!g || g.status !== "drawing") return;
   $("waitProg").innerHTML = Array.from({ length: g.n }, (_, i) => `<span class="${i < g.current ? "done" : ""}"></span>`).join("");
-  $("waitText").textContent = t("waitTurn", { name: nameOf(g.order[g.current]), part: lc(t(partKey(g.dir, g.n, g.current))) });
-  const mine = g.order.map((u, i) => u === caps.uid && i > g.current ? lc(t(partKey(g.dir, g.n, i))) : null).filter(Boolean);
-  $("waitMine").textContent = mine.length ? t("yourNext", { parts: mine.join(", ") }) : (g.order.includes(caps.uid) ? "" : t("noTurn"));
+  $("waitText").textContent = t("waitTurn", { name: nameOf(g.turns[g.current]), part: lc(t(partKey(g.dir, g.n, g.current))) });
+  const mine = g.turns.map((u, i) => u === meId() && i > g.current ? lc(t(partKey(g.dir, g.n, i))) : null).filter(Boolean);
+  $("waitMine").textContent = mine.length ? t("yourNext", { parts: mine.join(", ") }) : (g.turns.includes(meId()) ? "" : t("noTurn"));
 }
-async function startOnlineTurn(i) {
-  const g = ON.game, code = ON.code;
-  let prev = null;
-  if (i > 0) { try { prev = ((await caps.db.doc(`games/${code}/parts/${i - 1}`).get()).data() || {}).s || []; } catch (e) { prev = []; } }
-  const go = () => openDraw({ dir: g.dir, i, n: g.n, who: nameOf(caps.uid), whoKey: "me", prev, online: true,
+function startOnlineTurn(i) {
+  const g = ON.game, id = g.id;
+  const go = () => openDraw({ dir: g.dir, i, n: g.n, who: nameOf(meId()), whoKey: "me", prev: i > 0 ? (g.prev || []) : null, online: true,
     onDone: async s => {
+      if (!ON) return;
       ON.sent[i] = true; ON.view = "wait"; show("s-wait"); renderWait();
       const doc = fitSize({ s: [{ s }] }, "s"); // komprimera vid behov
-      await caps.db.doc(`games/${code}/parts/${i}`).set({ s: doc.s[0].s });
-      await caps.db.doc("games/" + code).update(i + 1 < g.n ? { current: i + 1 } : { status: "done" });
+      try { const st = await api("POST", `/api/games/${id}/part`, { i, s: doc.s[0].s }); if (ON) applyGame(st); }
+      catch (e) { console.warn(e); if (ON) { ON.sent[i] = false; ON.view = ""; ON.v = 0; $("waitText").textContent = onlineError(e); } }
     } });
-  const face = g.faceId && faces.find(f => f.id === g.faceId);
-  if (face && i === headIndex(g.dir, g.n)) showFace(face, go); else go();
+  if (g.face && i === headIndex(g.dir, g.n)) showFace(g.face, go); else go();
 }
+
+$("onName").value = lsGet(NAME_KEY);
+// Ladda om listan så fort lösenordet är ifyllt
+$("onPw").addEventListener("change", () => loadOpenList());
+$("onPw").addEventListener("keydown", e => { if (e.key === "Enter") loadOpenList(); });

@@ -45,18 +45,44 @@
 <!-- Inställningar -->
 <section id="s-setup" class="screen">
   <h2 data-i="newGame"></h2>
-  <div class="lbl" data-i="playersParts"></div><div class="chips" id="c-players"></div>
-  <div class="lbl" data-i="dir"></div><div class="chips" id="c-dir"></div>
-  <p class="fine" data-i="dirHint"></p>
   <div class="lbl" data-i="mode"></div><div class="chips" id="c-mode"></div>
-  <div class="lbl" data-i="order"></div><div class="chips" id="c-order"></div>
-  <div class="lbl" data-i="category"></div><div class="chips" id="c-cat"></div>
-  <p class="fine" id="catHint"></p>
-  <div class="lbl"><label for="citySel" id="cityLbl"></label></div>
-  <select id="citySel" style="width:100%"></select>
-  <p class="fine" id="cityHint"></p>
-  <p class="err" id="setupErr"></p>
-  <button class="btn primary wide" id="setupNext" data-i="next"></button>
+
+  <!-- Online: vem du är, och öppna omgångar att gå med i (js/online.js) -->
+  <div id="onlinePanel" hidden>
+    <div class="lbl"><label for="onName" data-i="yourName"></label></div>
+    <input type="text" id="onName" maxlength="30" autocomplete="nickname">
+    <div class="lbl"><label for="onCity" data-i="whereMe"></label></div>
+    <select id="onCity" style="width:100%"></select>
+    <p class="fine" data-i="whereOnline"></p>
+    <div id="pwRow" hidden>
+      <div class="lbl"><label for="onPw" data-i="onlinePw"></label></div>
+      <input type="password" id="onPw" autocomplete="off">
+    </div>
+    <div id="openWrap">
+      <div class="lbl" data-i="openGames"></div>
+      <div class="gamelist" id="openList" aria-live="polite"></div>
+      <button class="btn secondary wide" id="goCreate" data-i="createOwn"></button>
+    </div>
+    <p class="err" id="onlineErr"></p>
+  </div>
+
+  <!-- Inställningar för en ny omgång, i rummet eller online -->
+  <div id="setupOpts">
+    <button class="linkbtn" id="backToList" data-i="backToList" hidden></button>
+    <div class="lbl" data-i="playersParts"></div><div class="chips" id="c-players"></div>
+    <div class="lbl" data-i="dir"></div><div class="chips" id="c-dir"></div>
+    <p class="fine" data-i="dirHint"></p>
+    <div class="lbl" data-i="order"></div><div class="chips" id="c-order"></div>
+    <div class="lbl" data-i="category"></div><div class="chips" id="c-cat"></div>
+    <p class="fine" id="catHint"></p>
+    <div id="roomCity">
+      <div class="lbl"><label for="citySel" data-i="whereRoom"></label></div>
+      <select id="citySel" style="width:100%"></select>
+      <p class="fine" data-i="whereRoomHint"></p>
+    </div>
+    <p class="err" id="setupErr"></p>
+    <button class="btn primary wide" id="setupNext"></button>
+  </div>
 </section>
 
 <!-- Namn -->
@@ -126,26 +152,12 @@
 <!-- Lobby -->
 <section id="s-lobby" class="screen">
   <h2 data-i="lobbyTitle"></h2>
-  <div class="lbl" data-i="codeLabel"></div>
-  <div class="code" id="lobbyCode"></div>
-  <p class="fine" data-i="codeHint"></p>
+  <p class="fine" id="lobbyInfo"></p>
   <div class="lbl" id="joinedLbl"></div>
   <ul class="diamonds" id="lobbyList"></ul>
+  <div class="progress" id="lobbySeats"></div>
   <p class="fine" id="lobbyNote"></p>
-  <button class="btn primary wide" id="lobbyStart" data-i="startNow" hidden></button>
   <button class="btn secondary wide" id="lobbyLeave" data-i="leave"></button>
-</section>
-
-<!-- Gå med -->
-<section id="s-join" class="screen">
-  <h2 data-i="joinTitle"></h2>
-  <div class="lbl"><label for="joinCode" data-i="codeLabel"></label></div>
-  <input type="text" id="joinCode" maxlength="4" autocomplete="off" style="text-transform:uppercase;font-size:1.5rem;letter-spacing:.2em">
-  <div class="lbl"><label for="joinCity" data-i="whereMe"></label></div>
-  <select id="joinCity" style="width:100%"></select>
-  <p class="fine" data-i="whereOnline"></p>
-  <p class="err" id="joinErr"></p>
-  <button class="btn primary wide" id="joinBtn" data-i="joinBtn"></button>
 </section>
 
 <!-- Vänta på tur -->

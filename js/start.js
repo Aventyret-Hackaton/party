@@ -8,7 +8,7 @@ function applyI18n() {
   $("soundBtn").textContent = soundOn ? "♪ " + t("soundOn") : t("soundOff");
   $("soundBtn").setAttribute("aria-pressed", soundOn);
   fillCitySelect($("citySel"), $("citySel").value);
-  fillCitySelect($("joinCity"), $("joinCity").value);
+  fillCitySelect($("onCity"), $("onCity").value);
   renderSetupChips();
   if (currentScreen === "s-names") renderNameInputs();
   if (currentScreen === "s-draw") renderDrawTexts(), buildPalette(), syncTools();
@@ -32,5 +32,5 @@ $("soundBtn").onclick = () => { soundOn = !soundOn; try { localStorage.setItem("
 $("brand").onclick = () => { leaveOnline(); show("s-home"); };
 
 fillCitySelect($("citySel"), DEFAULT_CITY[lang]);
-fillCitySelect($("joinCity"), DEFAULT_CITY[lang]);
+fillCitySelect($("onCity"), DEFAULT_CITY[lang]);
 applyI18n();

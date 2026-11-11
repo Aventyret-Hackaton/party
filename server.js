@@ -9,6 +9,7 @@
 //   GET   /api/gallery         – de senaste gubbarna
 //   POST  /api/gallery         – spara en ny gubbe, svarar med id och en nyckel
 //   PATCH /api/gallery/:id     – byt namn, kräver nyckeln från POST
+//   /api/games/...             – onlinespel, se online-server.js
 
 const http = require("http");
 const fs = require("fs");
@@ -176,13 +177,16 @@ function serveStatic(req, res, pathname) {
   });
 }
 
+/* ---------- Onlinespel, se online-server.js ---------- */
+const handleGames = require("./online-server.js")({ send, readJson, str, cleanStroke });
+
 /* ---------- Routning ---------- */
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, "http://localhost");
   const p = url.pathname;
   try {
     if (p === "/api/health" && req.method === "GET") {
-      return send(req, res, 200, { ok: true, storage: pool ? "postgres" : "memory" });
+      return send(req, res, 200, { ok: true, storage: pool ? "postgres" : "memory", online: true, password: !!process.env.ONLINE_PASSWORD });
     }
     if (p === "/api/gallery" && req.method === "GET") {
       return send(req, res, 200, await listGallery(), undefined, { "Cache-Control": "no-store" });
@@ -201,6 +205,7 @@ const server = http.createServer(async (req, res) => {
       const ok = await renameGallery(m[1], String(b.token), name);
       return send(req, res, ok ? 200 : 403, ok ? { ok: true } : { error: "Bara den som sparade gubben kan byta namn." });
     }
+    if (await handleGames(req, res, p, url)) return;
     if (p.startsWith("/api/")) return send(req, res, 404, { error: "Finns inte." });
     if (req.method === "GET" || req.method === "HEAD") return serveStatic(req, res, p);
     send(req, res, 405, "Inte tillåtet", "text/plain; charset=utf-8");

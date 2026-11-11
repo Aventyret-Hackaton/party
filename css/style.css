@@ -39,9 +39,9 @@ p{margin:.5rem 0}
 .top{display:flex;justify-content:space-between;align-items:center;gap:1rem;max-width:46rem;margin:0 auto;padding:.75rem 1.125rem}
 .brand{font-family:var(--script);font-size:1.75rem;color:var(--accent);background:none;border:0;padding:0;cursor:pointer}
 .top-r{display:flex;gap:.5rem;align-items:center}
-select,input[type=text],input[type=file]{font:inherit;font-size:1rem;color:var(--ink);background:var(--btn-bg);border:1px solid var(--line);padding:.55rem .75rem;
+select,input[type=text],input[type=password],input[type=file]{font:inherit;font-size:1rem;color:var(--ink);background:var(--btn-bg);border:1px solid var(--line);padding:.55rem .75rem;
   clip-path:polygon(4px 0,calc(100% - 4px) 0,100% 4px,100% calc(100% - 4px),calc(100% - 4px) 100%,4px 100%,0 calc(100% - 4px),0 4px)}
-input[type=text]{width:100%}
+input[type=text],input[type=password]{width:100%}
 main{max-width:46rem;margin:0 auto;padding:.5rem 1.125rem 3.75rem}
 .screen{display:none}
 .screen.active{display:block;animation:rise .5s ease .05s both}
@@ -238,3 +238,13 @@ body.night input[type=text]{background:#1a1721;color:#fff;border-color:#3d3746}
 .intro .btn{font-size:1.25rem;padding:1.1rem 2rem;animation:pulse 1.6s ease-in-out infinite}
 @keyframes pulse{50%{transform:scale(1.05)}}
 @media (prefers-reduced-motion:reduce){.intro .btn{animation:none}.intro{transition:none}}
+
+/* Öppna onlineomgångar */
+.gamelist{display:grid;gap:.6rem}
+.gamerow{display:flex;justify-content:space-between;align-items:center;gap:.75rem;padding:.8rem 1rem;border:1px solid var(--line);background:var(--card);
+  clip-path:polygon(6px 0,calc(100% - 6px) 0,100% 6px,100% calc(100% - 6px),calc(100% - 6px) 100%,6px 100%,0 calc(100% - 6px),0 6px)}
+.gamerow b{display:block;font:400 1.5rem/1.1 var(--script);color:var(--accent-text)}
+.gamerow span{display:block;font-size:.875rem;color:var(--fine)}
+.gamerow .seats{color:var(--ink);font-weight:600;margin-top:.15rem}
+.gamerow .btn{flex:none}
+#backToList{margin-top:1rem}

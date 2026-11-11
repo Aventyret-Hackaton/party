@@ -68,7 +68,7 @@ $("namesGo").onclick = () => {
 };
 function startRoom(names) {
   Object.assign(G, {
-    mode: "room", dir: S.dir, n: S.parts, cat: S.cat, theme: $("theme").value.trim(), home: $("citySel").value,
+    mode: "room", dir: S.dir, n: S.parts, cat: S.cat, home: $("citySel").value,
     names, assign: makeAssign(S.parts, names.map((_, i) => i), S.order === "random"), idx: 0, parts: [],
     face: S.cat === "staff" && faces.length ? faces[Math.floor(Math.random() * faces.length)] : null,
     name: "", galleryId: null
@@ -81,7 +81,7 @@ function roomTurn() {
   $("handText").textContent = t("handPart", { name: who, part: lc(part) });
   $("foldShout").hidden = i === 0;
   $("handReady").onclick = () => {
-    const go = () => openDraw({ dir: G.dir, i, n: G.n, who, whoKey: "r" + G.assign[i], prev: i ? G.parts[i - 1] : null, theme: G.theme, online: false,
+    const go = () => openDraw({ dir: G.dir, i, n: G.n, who, whoKey: "r" + G.assign[i], prev: i ? G.parts[i - 1] : null, online: false,
       onDone: s => { G.parts[i] = s; G.idx++; if (G.idx < G.n) roomTurn(); else roomStage(); } });
     if (G.face && i === headIndex(G.dir, G.n)) showFace(G.face, go); else go();
   };
@@ -96,13 +96,13 @@ async function showFace(face, then) {
   then();
 }
 function roomStage() {
-  openStage({ parts: G.parts, dir: G.dir, home: G.home, by: G.names.join(", "), staff: G.face?.name, theme: G.theme, name: "" }, {
+  openStage({ parts: G.parts, dir: G.dir, home: G.home, by: G.names.join(", "), staff: G.face?.name, name: "" }, {
     canUnfold: true,
     afterShow: async rec => {
       const r = await aiName(rec);
       setStageName(r.name);
       G.name = r.name;
-      G.galleryId = await saveGallery({ name: r.name, what: r.what, dir: G.dir, parts: G.parts.map(s => ({ s })), home: G.home, names: G.names, staff: G.face?.name || "", theme: G.theme, mode: "room", createdAt: new Date().toISOString() });
+      G.galleryId = await saveGallery({ name: r.name, what: r.what, dir: G.dir, parts: G.parts.map(s => ({ s })), home: G.home, names: G.names, staff: G.face?.name || "", mode: "room", createdAt: new Date().toISOString() });
     },
     onRename: async name => { G.name = name; if (G.galleryId) await renameGallery(G.galleryId, name); },
     again: () => startRoom(G.names)

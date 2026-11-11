@@ -7,7 +7,7 @@ const toolMem = {};
 const D = { dir: "v", strokes: [], prev: null, cur: null, color: "#222222", size: 5, erase: false, who: "", onDone: null, meta: null };
 
 function openDraw(meta) {
-  // meta: {dir, i, n, who, whoKey, prev, theme, online, onDone}
+  // meta: {dir, i, n, who, whoKey, prev, online, onDone}
   Object.assign(D, { dir: meta.dir, strokes: [], prev: meta.prev, cur: null, erase: false, meta, onDone: meta.onDone });
   const mem = toolMem[meta.whoKey] || { color: "#222222", size: 5 };
   D.color = mem.color; D.size = mem.size;
@@ -28,7 +28,6 @@ function renderDrawTexts() {
   $("partCount").textContent = t("partOf", { i: m.i + 1, n: m.n });
   $("whoDraws").textContent = m.who;
   $("guide").textContent = m.i === m.n - 1 ? t("guideLast") : t(m.dir === "v" ? "guideV" : "guideH");
-  $("themeLine").hidden = !m.theme; $("themeLine").textContent = t("themeIs", { t: m.theme || "" });
   $("hintLabel").textContent = t("hintLabel");
   $("foldBtn").textContent = m.i === m.n - 1 ? t("finish") : t(m.online ? "foldOnline" : "fold");
   pad.setAttribute("aria-label", t("canvasLabel"));

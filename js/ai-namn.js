@@ -19,7 +19,6 @@ async function aiName(rec) {
     const L = LANG_EN[lang];
     let prompt = `This is a drawing from the folding drawing game "exquisite corpse": several people each drew one part without seeing the others (${rec.dir === "v" ? "top to bottom" : "left to right"}). Quickly interpret what the whole figure looks like. Then invent a playful, family-friendly name for it, at most five words, in ${L}. Reply ONLY with JSON: {"what": "<1-4 words in ${L} for what it most looks like>", "name": "<the name>"}.`;
     if (rec.staff) prompt += ` The head was drawn from memory as a person called ${rec.staff}. The name must follow the pattern "${rec.staff} ${t("as_")} <what it looks like>" written naturally in ${L}, for example in Swedish "${rec.staff} som häst".`;
-    if (rec.theme) prompt += ` The theme was: ${rec.theme}.`;
     const r = await caps.sample.json(prompt, { images: [blob], modelTier: "quick" });
     if (r && typeof r.name === "string" && r.name.trim()) return { name: r.name.trim().slice(0, 80), what: String(r.what || "").slice(0, 60) };
   } catch (e) { console.warn("Namngivning misslyckades", e); }

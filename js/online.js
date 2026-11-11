@@ -11,7 +11,7 @@ async function createOnline() {
     let code = genCode();
     for (let i = 0; i < 5; i++) { const g = await caps.db.doc("games/" + code).get(); if (!g.exists) break; code = genCode(); }
     await caps.db.doc("games/" + code).set({
-      host: caps.uid, players: S.players, n: S.parts, dir: S.dir, order: S.order, cat: S.cat, theme: $("theme").value.trim(),
+      host: caps.uid, players: S.players, n: S.parts, dir: S.dir, order: S.order, cat: S.cat,
       status: "lobby", current: 0, createdAt: new Date().toISOString()
     });
     await caps.db.doc(`games/${code}/players/${caps.uid}`).set({ city: $("citySel").value, at: Date.now() });
@@ -100,7 +100,7 @@ async function handleGame() {
       const snaps = await Promise.all(Array.from({ length: g.n }, (_, i) => caps.db.doc(`games/${ON.code}/parts/${i}`).get()));
       const by = (g.playerIds || []).map(nameOf).join(", ");
       if (!ON) return;
-      ON.stageRec = { parts: snaps.map(s => (s.data() || {}).s || []), dir: g.dir, home: g.home, by, staff: g.faceName || "", theme: g.theme, name: g.name || "", mid: true };
+      ON.stageRec = { parts: snaps.map(s => (s.data() || {}).s || []), dir: g.dir, home: g.home, by, staff: g.faceName || "", name: g.name || "", mid: true };
       ON.loading = false;
       return handleGame();
     }
@@ -114,7 +114,7 @@ async function handleGame() {
           if (!isHost() || ON?.game?.name) return;
           const r = await aiName(rec);
           await caps.db.doc("games/" + code).update({ name: r.name, what: r.what });
-          const gid = await saveGallery({ name: r.name, what: r.what, dir: rec.dir, parts: rec.parts.map(s => ({ s })), home: rec.home, uids: ON.game.playerIds, staff: rec.staff, theme: rec.theme || "", mode: "online", createdAt: new Date().toISOString() });
+          const gid = await saveGallery({ name: r.name, what: r.what, dir: rec.dir, parts: rec.parts.map(s => ({ s })), home: rec.home, uids: ON.game.playerIds, staff: rec.staff, mode: "online", createdAt: new Date().toISOString() });
           if (gid) await caps.db.doc("games/" + code).update({ galleryId: gid });
         },
         onRename: async name => {
@@ -139,7 +139,7 @@ async function startOnlineTurn(i) {
   const g = ON.game, code = ON.code;
   let prev = null;
   if (i > 0) { try { prev = ((await caps.db.doc(`games/${code}/parts/${i - 1}`).get()).data() || {}).s || []; } catch (e) { prev = []; } }
-  const go = () => openDraw({ dir: g.dir, i, n: g.n, who: nameOf(caps.uid), whoKey: "me", prev, theme: g.theme, online: true,
+  const go = () => openDraw({ dir: g.dir, i, n: g.n, who: nameOf(caps.uid), whoKey: "me", prev, online: true,
     onDone: async s => {
       ON.sent[i] = true; ON.view = "wait"; show("s-wait"); renderWait();
       const doc = fitSize({ s: [{ s }] }, "s"); // komprimera vid behov

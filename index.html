@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Party</title>
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Inter+Tight:wght@300;400;600&display=swap" rel="stylesheet">
@@ -19,6 +21,11 @@
   </div>
 </header>
 <canvas id="fx" aria-hidden="true"></canvas>
+<!-- Välkomstrutan: trycket startar introljudet (js/intro.js) -->
+<div class="intro" id="intro">
+  <img class="intro-logo" src="assets/party-logo-dark.svg" alt="Party">
+  <button class="btn primary" id="introBtn" data-i="introGo"></button>
+</div>
 <main>
 
 <!-- Start -->
@@ -158,7 +165,10 @@
       <p id="stageWait"></p>
       <button class="btn primary" id="unfoldBtn" data-i="unfold"></button>
     </div>
-    <div class="figure-scroll"><div class="figure v" id="figure"></div></div>
+    <div class="podium">
+      <div class="figure-scroll"><div class="figure v" id="figure"></div></div>
+      <div class="boards" aria-hidden="true"></div>
+    </div>
     <div id="postShow" hidden>
       <div class="figname" id="figName"></div>
       <p class="place" id="figPlace"></p>
@@ -186,6 +196,8 @@
     <label><span data-i="country"></span><select id="fCountry"></select></label>
     <label><span data-i="city"></span><select id="fCity"></select></label>
   </div>
+  <div class="chips galview" id="galView" role="group"></div>
+  <div class="galmap" id="galMap" hidden></div>
   <div class="grid" id="galGrid"></div>
 </section>
 
@@ -221,6 +233,7 @@
 <script src="js/galleri.js"></script>
 <script src="js/online.js"></script>
 <script src="js/ansikten.js"></script>
+<script src="js/intro.js"></script>
 <script src="js/start.js"></script>
 </body>
 </html>

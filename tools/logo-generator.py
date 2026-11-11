@@ -1,7 +1,7 @@
 """Party-logga (Part + segerhand) - generator.
 
 Kör: python3 logo-generator.py
-Skapar party-logo.svg, party-logo-dark.svg och party-logo-transparent.svg.
+Skapar party-logo.svg, party-logo-dark.svg, party-logo-transparent.svg och favicon.svg.
 
 Parametrar som gav den godkända versionen (november 2026):
   HX=1420  handflatans vänsterkant i logo-koordinater
@@ -43,3 +43,16 @@ def svg(bg, ink, accent, mid):
 open('party-logo.svg','w').write(svg('#ffffff','#222222','#e2481e','m1'))
 open('party-logo-dark.svg','w').write(svg('#100e16','#c19c61','#e86d4b','m2'))
 open('party-logo-transparent.svg','w').write(svg(None,'#222222','#e2481e','m3'))
+
+# Favikon: bara handen, med tjockare linje så att den syns i liten storlek.
+# Rutan är kvadratisk och centrerad runt den vridna handen.
+FAV_VB="-15.5 -32.5 560 560"
+def favicon(bg, accent):
+    rect=f'<rect x="-15.5" y="-32.5" width="560" height="560" rx="96" fill="{bg}"/>\n' if bg else ''
+    return f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="{FAV_VB}">
+<title>Party</title>
+{rect}<path transform="rotate({HR:g} 240 330)" d="{HAND}" fill="none" stroke="{accent}" stroke-width="48" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+'''
+open('favicon.svg','w').write(favicon(None,'#e2481e'))
+# apple-touch-icon.png (180x180) är samma hand på vit platta, favicon("#ffffff", ...) exporterad som PNG.

@@ -149,11 +149,29 @@ button{font:inherit;cursor:pointer}
 .stage.lit .beam.r{animation:swayR 3s ease-in-out infinite alternate}
 @keyframes swayL{from{transform:rotate(-24deg)}to{transform:rotate(-8deg)}}
 @keyframes swayR{from{transform:rotate(24deg)}to{transform:rotate(8deg)}}
-.figure-scroll{overflow-x:auto;margin:1rem auto 0;max-width:100%}
-.figure{perspective:1600px;display:inline-flex;margin:0 auto}
-.figure.v{flex-direction:column;width:min(100%,34rem)}
-.figure.h{flex-direction:row;width:min(100%,calc(var(--n) * 14rem))}
-.figure canvas{display:block;background:#fff}
+/* Gubben står på en scen utan papper. Den ska få plats på skärmen utan att man scrollar:
+   --fit-h är skärmhöjden minus sidhuvud, marginaler och scengolv. */
+.podium{--fit-h:calc(100vh - 10rem);position:relative;margin:1rem auto 0}
+@supports (height:100svh){.podium{--fit-h:calc(100svh - 10rem)}}
+.figure-scroll{max-width:100%;display:flex;justify-content:center}
+.figure{perspective:1600px;display:inline-flex;margin:0 auto;position:relative;isolation:isolate}
+.figure.v{flex-direction:column;width:min(100%,34rem,calc(var(--fit-h) * 600 / (340 * var(--n))))}
+.figure.h{flex-direction:row;width:min(100%,calc(var(--n) * 14rem),calc(var(--fit-h) * 340 * var(--n) / 600))}
+.figure canvas{display:block;background:transparent;filter:drop-shadow(0 0 1px var(--halo)) drop-shadow(0 0 2px var(--halo))}
+/* Strålkastarljuset bakom gubben. Mörkt bläck får ett ljust sken, ljust bläck ett svagt guldsken.
+   Konturen (--halo) har motsatt ton, så att även avvikande färger syns. */
+.stage{--spot:rgba(193,156,97,.16);--halo:rgba(255,248,235,.55)}
+.stage[data-ink="dark"]{--spot:rgba(255,244,224,.96);--halo:rgba(16,14,22,.45)}
+.figure::before{content:"";position:absolute;inset:-5% -8%;z-index:-1;border-radius:28%;background:var(--spot);filter:blur(22px);opacity:0;transition:opacity .8s}
+.stage.lit .figure::before{opacity:1}
+/* Scengolvet som gubben står på */
+.boards{height:clamp(1.5rem,6vw,2.5rem);width:min(100%,40rem);margin:-.2rem auto 0;
+  background:
+    radial-gradient(ellipse 28% 45% at 50% 18%,rgba(0,0,0,.45),rgba(0,0,0,0)),
+    linear-gradient(transparent calc(100% - .4rem),#24140a calc(100% - .4rem)),
+    repeating-linear-gradient(90deg,rgba(0,0,0,.22) 0 2px,transparent 2px 9%),
+    linear-gradient(#7a5130,#3b2313);
+  clip-path:polygon(7% 0,93% 0,100% 100%,0 100%)}
 .figure.v canvas{width:100%}
 .figure.h canvas{width:calc(100% / var(--n));height:auto}
 .fold{transition:transform .45s cubic-bezier(.3,1.5,.5,1),opacity .2s;backface-visibility:hidden}
@@ -180,6 +198,19 @@ body.night input[type=text]{background:#1a1721;color:#fff;border-color:#3d3746}
 .thumb canvas{max-width:100%;max-height:100%}
 .card b{display:block;font-weight:400;font-family:var(--script);color:var(--accent);font-size:1.4rem;line-height:1.1;margin-top:.4rem}
 .card span{font-size:.875rem;color:var(--fine)}
+/* Kartvyn */
+.galview{margin-top:1.25rem}
+.galmap{height:min(65vh,32rem);margin-top:1rem;border:1px solid var(--line);background:var(--muted);z-index:0}
+.galmap>p{padding:1rem}
+.pin{background:none;border:0}
+.pin span{display:grid;place-items:center;width:36px;height:36px;background:var(--accent);color:#fff;font:600 .9375rem/1 var(--replica);
+  clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))}
+.mappop h3{font:400 1.5rem/1.1 var(--script);color:var(--accent-text);margin:0}
+.mappop .fine{margin:.15rem 0 .5rem;font-size:.8125rem}
+.mapgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;max-height:14rem;overflow:auto}
+.mapcard{background:none;border:0;padding:0;text-align:center;color:inherit;font-size:.75rem;line-height:1.2}
+.mapcard canvas{display:block;width:100%;height:4.5rem;object-fit:contain;background:#fff;border:1px solid #ddd;margin-bottom:.2rem}
+.mapcard span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* Ansikten */
 .facelist{display:grid;grid-template-columns:repeat(auto-fill,minmax(8rem,1fr));gap:1rem;margin-top:1rem}
@@ -198,3 +229,12 @@ body.night input[type=text]{background:#1a1721;color:#fff;border-color:#3d3746}
   .fold{transition:none}
   .stage.lit .beam{animation:none}
 }
+
+/* Välkomstrutan med introljudet */
+.intro{position:fixed;inset:0;z-index:30;display:grid;place-content:center;justify-items:center;gap:2.5rem;padding:1.5rem;
+  background:var(--night);text-align:center;transition:opacity .45s ease}
+.intro.gone{opacity:0;pointer-events:none}
+.intro-logo{width:min(80vw,26rem);height:auto}
+.intro .btn{font-size:1.25rem;padding:1.1rem 2rem;animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(1.05)}}
+@media (prefers-reduced-motion:reduce){.intro .btn{animation:none}.intro{transition:none}}

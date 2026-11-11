@@ -1,0 +1,14 @@
+{
+  "name": "party",
+  "private": true,
+  "description": "Party – Fold & draw. Startfil för Heroku.",
+  "scripts": {
+    "start": "serve . -l $PORT"
+  },
+  "dependencies": {
+    "serve": "^14.2.1"
+  },
+  "engines": {
+    "node": "20.x"
+  }
+}

@@ -1,12 +1,12 @@
-// Notiser i onlinespelet: säg till när omgången är full, när gubben är klar att kolla på
-// och när det finns en ledig plats i en omgång. Bara om spelaren har tillåtit notiser.
+// Notiser i onlinespelet: säg till när omgången är full och när gubben är klar att kolla på.
+// Spelaren tillåter notiser en gång (under Online i Nytt spel). Därefter kommer de av sig själva
+// till alla deltagare som har tillåtit dem.
 // Fungerar medan Party är öppet (även i en annan flik), inte när webbläsaren är stängd.
 // Safari på iPhone har inga notiser för vanliga webbsidor, där visas en förklaring i stället.
 
 /* ---------- Notiser ---------- */
-const NOTIFY_KEY = "party-notify";
 const canNotify = () => "Notification" in window;
-const notifyOn = () => canNotify() && Notification.permission === "granted" && lsGet(NOTIFY_KEY) === "1";
+const notifyOn = () => canNotify() && Notification.permission === "granted";
 
 // Android kräver en service worker för att visa notiser (js/sw.js)
 const swReg = "serviceWorker" in navigator && canNotify()
@@ -14,8 +14,7 @@ const swReg = "serviceWorker" in navigator && canNotify()
   : Promise.resolve(null);
 
 async function notify(title, body, tag) {
-  // Ingen notis om spelaren redan tittar på spelet
-  if (!notifyOn() || (document.visibilityState === "visible" && document.hasFocus())) return;
+  if (!notifyOn()) return;
   const opts = { body, tag, icon: "assets/apple-touch-icon.png" };
   try {
     const reg = await swReg;
@@ -27,36 +26,17 @@ async function notify(title, body, tag) {
   } catch (e) {}
 }
 
-// Knappen "Tillåt notiser": under Online i Nytt spel, i väntrummet och på vänteskärmen
+// "Tillåt notiser" under Online i Nytt spel. Syns bara tills spelaren har svarat.
 function renderNotify() {
-  document.querySelectorAll(".notify-row").forEach(row => {
-    const inSetup = !!row.closest("#s-setup");
-    row.hidden = inSetup && !(S.mode === "online" && S.online);
-    if (row.hidden) return;
-    const b = row.querySelector(".notify-btn"), h = row.querySelector(".notify-hint");
-    b.hidden = !canNotify();
-    if (!canNotify()) { h.textContent = t("notifyNoSupport"); return; }
-    const denied = Notification.permission === "denied", on = notifyOn();
-    b.textContent = t(on ? "notifyBtnOn" : "notifyBtn"); b.disabled = denied;
-    b.setAttribute("aria-pressed", on);
-    h.textContent = t(denied ? "notifyBlocked" : "notifyHint");
-  });
+  const row = $("notifyRow"), b = $("notifyBtn"), h = $("notifyHint");
+  const asked = canNotify() && Notification.permission !== "default";
+  row.hidden = !(S.mode === "online" && S.online) || notifyOn();
+  if (row.hidden) return;
+  b.hidden = !canNotify() || asked;
+  b.textContent = t("notifyBtn");
+  h.textContent = t(!canNotify() ? "notifyNoSupport" : asked ? "notifyBlocked" : "notifyHint");
 }
-document.querySelectorAll(".notify-btn").forEach(b => b.onclick = async () => {
-  if (notifyOn()) lsSet(NOTIFY_KEY, "");
-  else {
-    let p = Notification.permission;
-    if (p === "default") { try { p = await Notification.requestPermission(); } catch (e) {} }
-    if (p === "granted") lsSet(NOTIFY_KEY, "1");
-  }
+$("notifyBtn").onclick = async () => {
+  try { await Notification.requestPermission(); } catch (e) {}
   renderNotify();
-});
-
-// Ny ledig plats i listan med öppna omgångar
-let seatSeen = null;
-function watchSeats(list) {
-  const free = list.filter(g => g.max - g.joined > 0);
-  if (seatSeen) free.filter(g => !seatSeen.has(g.id))
-    .forEach(g => notify(t("notifySeatTitle"), t("notifySeatBody", { name: g.hostName }), "seat-" + g.id));
-  seatSeen = new Set(free.map(g => g.id));
-}
+};

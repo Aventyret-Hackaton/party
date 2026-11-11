@@ -41,7 +41,7 @@ function syncOpenList() {
   loadOpenList();
   openTimer = setInterval(() => {
     if (currentScreen !== "s-setup" || S.mode !== "online" || S.online !== "join") { clearInterval(openTimer); openTimer = null; return; }
-    if (!document.hidden || notifyOn()) loadOpenList();
+    if (!document.hidden) loadOpenList();
   }, 3000);
 }
 async function loadOpenList() {
@@ -49,8 +49,7 @@ async function loadOpenList() {
   const box = $("openList");
   if (!caps.api) { box.innerHTML = `<p class="fine">${t("noServer")}</p>`; return; }
   try {
-    const list = await api("GET", "/api/games");
-    renderOpenList(list); watchSeats(list);
+    renderOpenList(await api("GET", "/api/games"));
     if ($("onlineErr").dataset.from === "list") $("onlineErr").textContent = "";
   } catch (e) {
     box.innerHTML = "";
@@ -147,7 +146,6 @@ function renderLobby() {
   });
   $("lobbySeats").innerHTML = Array.from({ length: g.max }, (_, i) => `<span class="${i < g.players.length ? "done" : ""}"></span>`).join("");
   $("lobbyNote").textContent = t("waitFull", { m: g.max });
-  renderNotify();
 }
 $("lobbyLeave").onclick = () => { leaveOnline(); show("s-home"); };
 
@@ -198,7 +196,6 @@ function renderWait() {
   $("waitProg").innerHTML = Array.from({ length: g.n }, (_, i) => `<span class="${i < g.current ? "done" : ""}"></span>`).join("");
   $("waitText").textContent = t("waitTurn", { name: nameOf(g.turns[g.current]), part: lc(t(partKey(g.dir, g.n, g.current))) });
   const mine = g.turns.map((u, i) => u === meId() && i > g.current ? lc(t(partKey(g.dir, g.n, i))) : null).filter(Boolean);
-  renderNotify();
   $("waitMine").textContent = mine.length ? t("yourNext", { parts: mine.join(", ") }) : (g.turns.includes(meId()) ? "" : t("noTurn"));
 }
 function startOnlineTurn(i) {

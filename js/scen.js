@@ -99,7 +99,8 @@ async function pickGuess(n, btn) {
   if (!right) btn.classList.add("wrong");
   $("guessMsg").textContent = t(right ? "guessRight" : "guessWrong", { name: answer });
   if (right) { if (!reduceMotion) { confetti(); fxStart(); } fanfare(); }
-  await sleep(reduceMotion ? 300 : 1400);
+  else { if (!reduceMotion) { sleet(); fxStart(); } sadFanfare(); }
+  await sleep(reduceMotion ? 300 : right ? 1400 : 3000);   // låt den ledsna fanfaren spela klart
   if (!ST || !ST.guessing) return;
   ST.guessing = false; ST.guessed = true;
   $("guessBox").hidden = true;

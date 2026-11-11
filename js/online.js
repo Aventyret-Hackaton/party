@@ -144,6 +144,7 @@ function nameOf(id) {
 function renderLobby() {
   const g = ON?.game; if (!g) return;
   $("lobbyInfo").textContent = gameSummary(g);
+  $("lobbyParts").textContent = partsInfo(g.dir, g.n);
   $("joinedLbl").textContent = t("joined", { n: g.players.length, m: g.max });
   $("lobbyList").innerHTML = "";
   g.players.forEach(p => {
@@ -259,6 +260,8 @@ function renderWait() {
   const end = g.status !== "drawing", gone = g.status === "deleted";
   $("waitHead").textContent = t(gone ? "droppedTitle" : end ? "decideTitle" : "waitTitle");
   $("waitHome").hidden = !gone;
+  $("waitParts").textContent = partsInfo(g.dir, g.n);
+  $("waitParts").hidden = end;
   $("waitLeave").hidden = gone;
   $("waitProg").innerHTML = Array.from({ length: g.n }, (_, i) => `<span class="${end || i < g.current ? "done" : ""}"></span>`).join("");
   if (end) {

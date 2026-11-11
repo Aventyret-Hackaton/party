@@ -5,6 +5,7 @@ let currentScreen = "s-home";
 function show(id) {
   currentScreen = id;
   if (id !== "s-home") stopIntro();
+  if (typeof syncMusic === "function") syncMusic(id);
   document.querySelectorAll(".screen").forEach(s => s.classList.toggle("active", s.id === id));
   document.body.classList.toggle("night", id === "s-stage");
   if (id !== "s-stage") particles = [];
@@ -33,6 +34,7 @@ function renderSetupChips() {
   chips("c-order", [{ v: "strict", label: t("strict") }, { v: "random", label: t("random") }], "order");
   chips("c-cat", [{ v: "free", label: t("free") }, { v: "staff", label: t("staff"), disabled: !faces.length }], "cat");
   $("catHint").textContent = faces.length ? t("staffHint") : t("staffNone");
+  $("setupParts").textContent = partsInfo(S.dir, S.players);
   // Online väljer man först nytt onlinespel eller att gå med i en omgång som väntar på spelare
   const online = S.mode === "online";
   chips("c-online", [{ v: "new", label: t("newOnline") }, { v: "join", label: t("joinRound") }], "online");
@@ -93,6 +95,7 @@ function roomTurn() {
   $("handTitle").textContent = t("handTo", { name: who });
   $("handText").textContent = t("handPart", { name: who, part: lc(part) });
   $("foldShout").hidden = i === 0;
+  $("handParts").textContent = partsInfo(G.dir, G.n);
   $("handReady").onclick = () => {
     const go = () => openDraw({ dir: G.dir, i, n: G.n, who, whoKey: "r" + G.assign[i], prev: i ? G.parts[i - 1] : null, online: false,
       onDone: s => { G.parts[i] = s; G.idx++; if (G.idx < G.n) roomTurn(); else roomStage(); } });

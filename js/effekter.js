@@ -18,6 +18,12 @@ function confetti() {
   for (let i = 0; i < 80; i++) particles.push({ k: "c", x: Math.random() * w, y: -20 - Math.random() * 200, vx: (Math.random() - .5) * 2, vy: 2 + Math.random() * 2,
     rot: Math.random() * 6, vr: (Math.random() - .5) * .3, w: 6 + Math.random() * 6, h: 9 + Math.random() * 9, col: cols[i % cols.length], life: 0, max: 360 });
 }
+// Snöblandat regn: regnstreck som faller snabbt och snöflingor som dalar långsamt
+function sleet() {
+  const w = innerWidth, h = innerHeight;
+  for (let i = 0; i < 140; i++) particles.push({ k: "r", x: Math.random() * (w + 120) - 60, y: -Math.random() * h * 1.5, vx: -1.6, vy: 11 + Math.random() * 6, len: 12 + Math.random() * 14, life: 0, max: 260 });
+  for (let i = 0; i < 70; i++) particles.push({ k: "f", x: Math.random() * w, y: -Math.random() * h, vy: 1.1 + Math.random() * 1.4, r: 2 + Math.random() * 3, ph: Math.random() * 6, life: 0, max: 520 });
+}
 function fxLoop() {
   fctx.clearRect(0, 0, innerWidth, innerHeight);
   particles = particles.filter(p => p.life < p.max);
@@ -29,6 +35,16 @@ function fxLoop() {
       const g = fctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
       g.addColorStop(0, `rgba(225,220,235,${a})`); g.addColorStop(1, "rgba(225,220,235,0)");
       fctx.fillStyle = g; fctx.beginPath(); fctx.arc(p.x, p.y, p.r, 0, 7); fctx.fill();
+    } else if (p.k === "r") {
+      p.x += p.vx; p.y += p.vy;
+      if (p.y > innerHeight) p.life = p.max;
+      fctx.strokeStyle = "rgba(175,195,220,.75)"; fctx.lineWidth = 2;
+      fctx.beginPath(); fctx.moveTo(p.x, p.y); fctx.lineTo(p.x + p.vx * p.len / p.vy, p.y - p.len); fctx.stroke();
+    } else if (p.k === "f") {
+      p.y += p.vy; p.x += Math.sin(p.ph + p.life * .04) * .7;
+      if (p.y > innerHeight + 10) p.life = p.max;
+      fctx.fillStyle = `rgba(240,244,250,${Math.min(.85, (p.max - p.life) / 60)})`;
+      fctx.beginPath(); fctx.arc(p.x, p.y, p.r, 0, 7); fctx.fill();
     } else {
       p.vy += .22; p.vx *= .99; p.vy = Math.min(p.vy, 4.5); p.x += p.vx; p.y += p.vy; p.rot += p.vr;
       fctx.save(); fctx.translate(p.x, p.y); fctx.rotate(p.rot); fctx.scale(1, Math.cos(p.life * .15));

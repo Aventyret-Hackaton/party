@@ -50,3 +50,27 @@ function fanfare() {
   const g = a.createGain(); g.gain.setValueAtTime(.35, t0 + 1.43); g.gain.exponentialRampToValueAtTime(.001, t0 + 3.2);
   s.connect(hp).connect(g).connect(a.destination); s.start(t0 + 1.43); s.stop(t0 + 3.3);
 }
+// Ledsam fanfar när man gissar fel: fyra sjunkande toner, den sista lång och darrig
+function sadFanfare() {
+  const a = ac(); if (!a) return;
+  const t0 = a.currentTime + 0.02;
+  const master = a.createGain(); master.gain.value = 0.2; master.connect(a.destination);
+  const lp = a.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 1100; lp.Q.value = 2; lp.connect(master);
+  const notes = [[0, 293.66, .38], [.45, 277.18, .38], [.9, 261.63, .38], [1.35, 246.94, 1.5]];
+  for (const [st, f, d] of notes) {
+    const last = d > 1;
+    for (const det of [-8, 8]) {
+      const o = a.createOscillator(); o.type = "sawtooth"; o.frequency.value = f; o.detune.value = det;
+      if (last) {   // vibrato och lite sjunkande ton på den sista
+        const lfo = a.createOscillator(), lg = a.createGain();
+        lfo.frequency.value = 5.5; lg.gain.value = 9; lfo.connect(lg).connect(o.detune);
+        lfo.start(t0 + st); lfo.stop(t0 + st + d + .3);
+        o.frequency.setValueAtTime(f, t0 + st + .3); o.frequency.linearRampToValueAtTime(f * .94, t0 + st + d);
+      }
+      const g = a.createGain();
+      g.gain.setValueAtTime(0, t0 + st); g.gain.linearRampToValueAtTime(.5, t0 + st + .06);
+      g.gain.setValueAtTime(.42, t0 + st + d * .7); g.gain.exponentialRampToValueAtTime(.001, t0 + st + d + .2);
+      o.connect(g).connect(lp); o.start(t0 + st); o.stop(t0 + st + d + .25);
+    }
+  }
+}

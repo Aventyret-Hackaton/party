@@ -2,7 +2,47 @@
 
 /* ---------- Skärmhantering ---------- */
 let currentScreen = "s-home";
-function show(id) {
+
+/* ---------- Bakåt: webbläsarens bakåtknapp och Androids svep från kanten ---------- */
+// Menyskärmarna läggs i webbläsarens historik, så att bakåt går tillbaka till startskärmen i stället
+// för att lämna spelet. Mitt i ett spel gör bakåt ingenting, så att ingen råkar svepa sig ut.
+// Historiken blir aldrig djupare än: start → meny (→ en gubbe från galleriet).
+const NAV_MENU = ["s-setup", "s-names", "s-gallery", "s-faces"];
+const NAV_GAME = ["s-lobby", "s-handoff", "s-draw", "s-face", "s-wait", "s-pause"];
+let navDepth = 0, navSkip = false;
+function navPush(state) { history.pushState(state, ""); navDepth++; }
+function navTrack(id) {
+  const st = history.state;
+  if (id === "s-home") {
+    if (navDepth) { navSkip = true; history.go(-navDepth); navDepth = 0; }
+  } else if (NAV_MENU.includes(id)) {
+    if (st?.party === "screen" && st.id === "s-setup" && id === "s-names") navPush({ party: "screen", id });   // namnen → tillbaka till Nytt spel
+    else if (st?.party === "screen" || st?.party === "game") history.replaceState({ party: "screen", id }, "");
+    else if (!navDepth) navPush({ party: "screen", id });
+  } else if (NAV_GAME.includes(id) && st?.party !== "game") {
+    if (navDepth) history.replaceState({ party: "game" }, ""); else navPush({ party: "game" });
+  }
+}
+// Gå till en menyskärm igen när man backar dit
+function navOpen(id) {
+  if (id === "s-gallery") return openGallery(true);
+  if (id === "s-setup") renderSetupChips();
+  if (id === "s-faces") renderFaces();
+  show(id, true);
+}
+addEventListener("popstate", e => {
+  if (navSkip) { navSkip = false; return; }
+  navDepth = Math.max(0, navDepth - 1);
+  if (currentScreen === "s-stage" && ST?.opts.back) { backToGallery(); return; }   // gubbe → galleriet
+  if (NAV_GAME.includes(currentScreen) || currentScreen === "s-stage") { navPush({ party: "game" }); return; }
+  navOpen(e.state?.party === "screen" ? e.state.id : "s-home");
+});
+// Tillbaka-länkarna högst upp gör samma sak som bakåtknappen
+function goBack() { if (navDepth) history.back(); else show("s-home"); }
+document.querySelectorAll(".back-link").forEach(b => b.onclick = goBack);
+
+function show(id, fromNav) {
+  if (!fromNav) navTrack(id);
   currentScreen = id;
   if (id !== "s-home") stopIntro();
   if (typeof syncMusic === "function") syncMusic(id);

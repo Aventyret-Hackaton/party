@@ -48,7 +48,7 @@ async function loadApiGallery() {
     if (currentScreen === "s-gallery") renderGallery();
   } catch (e) { console.warn(e); }
 }
-async function openGallery() {
+async function openGallery(fromNav) {
   await apiReady;
   $("galNote").textContent = caps.api ? t("galShared") : caps.db ? "" : t("galLocal");
   if (caps.api) {
@@ -65,7 +65,7 @@ async function openGallery() {
       if (currentScreen === "s-gallery") renderGallery();
     }, () => {});
   }
-  renderGallery(); show("s-gallery");
+  renderGallery(); show("s-gallery", fromNav);
 }
 function allGallery() { return [...localGallery, ...gallery]; }
 function renderGallery() {
@@ -250,12 +250,11 @@ let galScroll = 0;
 async function openGalleryItem(r) {
   const rec = { parts: r.parts.map(p => p.s), dir: r.dir, home: r.home, by: await byLabel(r), name: r.name, staff: r.staff, mid: r.mode === "online" };
   galScroll = scrollY;
-  history.pushState({ party: "galleryItem" }, "");
+  navPush({ party: "item" });
   openStage(rec, { canUnfold: true, replay: true, back: true });
 }
 async function backToGallery() {
-  await openGallery();
+  await openGallery(true);
   scrollTo(0, galScroll);
 }
-addEventListener("popstate", () => { if (currentScreen === "s-stage" && ST?.opts.back) backToGallery(); });
-$("goGallery").onclick = openGallery;
+$("goGallery").onclick = () => openGallery();

@@ -3,7 +3,7 @@
 Gruppens kravlista (november 2026) med status i prototypen och vad som behöver göras i Claude Code-versionen.
 
 Prototypen finns som publicerad artefakt på claude.ai: https://claude.ai/artifact/XDNiFCeeVQrZW5fE3ei79T
-Koden ligger i `prototyp/index.html` (en enda fil, HTML, CSS och JavaScript med `<canvas>`).
+Koden ligger i `index.html`, `css/` och `js/` (HTML, CSS och JavaScript med `<canvas>`, inget ramverk).
 
 | # | Krav | Status i prototypen | Att göra i Claude Code |
 |---|---|---|---|
@@ -46,7 +46,7 @@ Prototypen använder funktioner som bara finns i publicerade artefakter på clau
 | `claude.use("sample")` | Claude tittar på bilden och hittar på ett namn | Serverlös funktion `/api/describe` som anropar Claude med `ANTHROPIC_API_KEY` |
 | `claude.use("assets")` | Uppladdade ansiktsbilder | Lagring i samma tjänst som databasen |
 
-Allt annat (ritytan, verktygen, vikningen, avtäckningen, ljudet, språken, stadslistan) är vanlig JavaScript och kan följa med som det är. Läget "i rummet" fungerar redan utan backend om man öppnar `prototyp/index.html` direkt i webbläsaren.
+Allt annat (ritytan, verktygen, vikningen, avtäckningen, ljudet, språken, stadslistan) är vanlig JavaScript och kan följa med som det är. Läget "i rummet" fungerar redan utan backend om man öppnar `index.html` direkt i webbläsaren.
 
 ## Kvar att ändra i prototypen
 

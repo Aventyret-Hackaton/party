@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vikgubbar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Inter+Tight:wght@300;400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="top">
+  <button class="brand" id="brand">Vikgubbar</button>
+  <div class="top-r">
+    <label class="sr" for="langSel" data-i="language"></label>
+    <select id="langSel"></select>
+    <button class="chip" id="soundBtn" aria-pressed="true"></button>
+  </div>
+</header>
+<canvas id="fx" aria-hidden="true"></canvas>
+<main>
+
+<!-- Start -->
+<section id="s-home" class="screen active">
+  <div class="hero">
+    <h1>Vikgubbar</h1>
+    <p data-i="tagline"></p>
+  </div>
+  <div class="stack">
+    <button class="btn primary" id="goSetup" data-i="newGame"></button>
+    <button class="btn" id="goJoin" data-i="join"></button>
+    <button class="btn" id="goGallery" data-i="gallery"></button>
+    <button class="btn secondary" id="goFaces" data-i="manageFaces" hidden></button>
+  </div>
+</section>
+
+<!-- Inställningar -->
+<section id="s-setup" class="screen">
+  <h2 data-i="newGame"></h2>
+  <div class="lbl" data-i="players"></div><div class="chips" id="c-players"></div>
+  <div class="lbl" data-i="parts"></div><div class="chips" id="c-parts"></div>
+  <div class="lbl" data-i="dir"></div><div class="chips" id="c-dir"></div>
+  <p class="fine" data-i="dirHint"></p>
+  <div class="lbl" data-i="mode"></div><div class="chips" id="c-mode"></div>
+  <div class="lbl" data-i="order"></div><div class="chips" id="c-order"></div>
+  <div class="lbl" data-i="category"></div><div class="chips" id="c-cat"></div>
+  <p class="fine" id="catHint"></p>
+  <div class="lbl"><label for="theme" data-i="theme"></label></div>
+  <input type="text" id="theme" data-ph="themePh" autocomplete="off">
+  <div class="lbl"><label for="citySel" id="cityLbl"></label></div>
+  <select id="citySel" style="width:100%"></select>
+  <p class="fine" id="cityHint"></p>
+  <p class="err" id="setupErr"></p>
+  <button class="btn primary wide" id="setupNext" data-i="next"></button>
+</section>
+
+<!-- Namn -->
+<section id="s-names" class="screen">
+  <h2 data-i="namesTitle"></h2>
+  <p class="fine" data-i="namesHint"></p>
+  <div id="nameInputs" class="stack"></div>
+  <button class="btn primary wide" id="namesGo" data-i="startDrawing"></button>
+</section>
+
+<!-- Överlämning -->
+<section id="s-handoff" class="screen">
+  <div style="padding-top:2.5rem">
+    <p class="script" id="foldShout" style="font-size:3.375rem;line-height:1" data-i="fold!"></p>
+    <h2 id="handTitle"></h2>
+    <p id="handText"></p>
+    <button class="btn primary wide" id="handReady" data-i="ready"></button>
+  </div>
+</section>
+
+<!-- Ansikte att minnas -->
+<section id="s-face" class="screen">
+  <div class="face">
+    <h2 data-i="faceTitle"></h2>
+    <p id="faceText"></p>
+    <img id="faceImg" alt="">
+    <div class="count" id="faceCount" aria-live="polite">5</div>
+  </div>
+</section>
+
+<!-- Rita -->
+<section id="s-draw" class="screen">
+  <div class="turnhead">
+    <h2 id="partTitle"></h2>
+    <span class="fine" id="partCount"></span>
+  </div>
+  <div class="who" id="whoDraws"></div>
+  <p class="fine" id="guide"></p>
+  <p class="fine" id="themeLine" hidden></p>
+  <div class="sheet-wrap">
+    <div class="sheet paperclip" id="sheet">
+      <canvas class="hint" id="hint" aria-hidden="true"></canvas>
+      <div class="stage-box">
+        <canvas id="pad" width="600" height="340" data-arialabel="canvasLabel"></canvas>
+        <div class="foldline" id="foldline"></div>
+      </div>
+    </div>
+  </div>
+  <p class="fine" id="hintLabel" style="text-align:center"></p>
+  <div class="tools">
+    <div class="palette" id="palette" role="group"></div>
+    <div class="sizerow">
+      <span data-i="pen"></span>
+      <label class="sr" for="sizeRange" data-i="sizeLabel"></label>
+      <input type="range" id="sizeRange" min="1" max="48" value="5">
+      <span data-i="brush"></span>
+      <div class="dot"><i id="sizeDot"></i></div>
+    </div>
+    <div class="toolbtns">
+      <button class="chip" id="eraser" aria-pressed="false" data-i="eraser"></button>
+      <button class="chip" id="undo" data-i="undo"></button>
+      <button class="chip" id="clear" data-i="clear"></button>
+    </div>
+  </div>
+  <button class="btn primary wide" id="foldBtn"></button>
+</section>
+
+<!-- Lobby -->
+<section id="s-lobby" class="screen">
+  <h2 data-i="lobbyTitle"></h2>
+  <div class="lbl" data-i="codeLabel"></div>
+  <div class="code" id="lobbyCode"></div>
+  <p class="fine" data-i="codeHint"></p>
+  <div class="lbl" id="joinedLbl"></div>
+  <ul class="diamonds" id="lobbyList"></ul>
+  <p class="fine" id="lobbyNote"></p>
+  <button class="btn primary wide" id="lobbyStart" data-i="startNow" hidden></button>
+  <button class="btn secondary wide" id="lobbyLeave" data-i="leave"></button>
+</section>
+
+<!-- Gå med -->
+<section id="s-join" class="screen">
+  <h2 data-i="joinTitle"></h2>
+  <div class="lbl"><label for="joinCode" data-i="codeLabel"></label></div>
+  <input type="text" id="joinCode" maxlength="4" autocomplete="off" style="text-transform:uppercase;font-size:1.5rem;letter-spacing:.2em">
+  <div class="lbl"><label for="joinCity" data-i="whereMe"></label></div>
+  <select id="joinCity" style="width:100%"></select>
+  <p class="fine" data-i="whereOnline"></p>
+  <p class="err" id="joinErr"></p>
+  <button class="btn primary wide" id="joinBtn" data-i="joinBtn"></button>
+</section>
+
+<!-- Vänta på tur -->
+<section id="s-wait" class="screen">
+  <h2 data-i="waitTitle"></h2>
+  <div class="progress" id="waitProg"></div>
+  <p id="waitText"></p>
+  <p class="fine" id="waitMine"></p>
+</section>
+
+<!-- Scen -->
+<section id="s-stage" class="screen">
+  <div class="stage" id="stage">
+    <div class="beam l"></div><div class="beam r"></div>
+    <div id="preShow">
+      <div class="andnow" data-i="andNow"></div>
+      <p id="stageWait"></p>
+      <button class="btn primary" id="unfoldBtn" data-i="unfold"></button>
+    </div>
+    <div class="figure-scroll"><div class="figure v" id="figure"></div></div>
+    <div id="postShow" hidden>
+      <div class="figname" id="figName"></div>
+      <p class="place" id="figPlace"></p>
+      <p class="place fine" id="figBy"></p>
+      <div class="rename">
+        <label class="sr" for="renameIn" data-i="rename"></label>
+        <input type="text" id="renameIn" autocomplete="off">
+        <button class="btn small" id="renameBtn" data-i="saveName"></button>
+      </div>
+      <div class="actions">
+        <button class="btn primary" id="againBtn" data-i="playAgain"></button>
+        <button class="btn" id="stageGallery" data-i="toGallery"></button>
+        <button class="btn" id="stageHome" data-i="home"></button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Galleri -->
+<section id="s-gallery" class="screen">
+  <h2 data-i="gallery"></h2>
+  <p class="fine" id="galNote"></p>
+  <div class="filters">
+    <label><span data-i="continent"></span><select id="fCont"></select></label>
+    <label><span data-i="country"></span><select id="fCountry"></select></label>
+    <label><span data-i="city"></span><select id="fCity"></select></label>
+  </div>
+  <div class="grid" id="galGrid"></div>
+</section>
+
+<!-- Ansikten -->
+<section id="s-faces" class="screen">
+  <h2 data-i="manageFaces"></h2>
+  <p class="fine" data-i="facesHint"></p>
+  <div class="lbl" data-i="addFace"></div>
+  <div class="stack" style="margin-top:0">
+    <label class="sr" for="faceName" data-i="faceName"></label>
+    <input type="text" id="faceName" data-ph="faceName" autocomplete="off">
+    <input type="file" id="faceFile" accept="image/*">
+    <p class="err" id="faceErr"></p>
+    <button class="btn primary" id="faceAdd" data-i="addFace"></button>
+  </div>
+  <div class="facelist" id="faceList"></div>
+</section>
+
+</main>
+<!-- Skripten delar variabler med varandra och måste laddas i den här ordningen. -->
+<script src="js/ordbok.js"></script>
+<script src="js/grund.js"></script>
+<script src="js/stader.js"></script>
+<script src="js/kroppsdelar.js"></script>
+<script src="js/plattform.js"></script>
+<script src="js/ljud.js"></script>
+<script src="js/effekter.js"></script>
+<script src="js/penndrag.js"></script>
+<script src="js/rita.js"></script>
+<script src="js/spel.js"></script>
+<script src="js/scen.js"></script>
+<script src="js/ai-namn.js"></script>
+<script src="js/galleri.js"></script>
+<script src="js/online.js"></script>
+<script src="js/ansikten.js"></script>
+<script src="js/start.js"></script>
+</body>
+</html>

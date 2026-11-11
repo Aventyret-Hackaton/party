@@ -1,0 +1,108 @@
+// Ritskärmen: canvasen man ritar på, palett, tjocklek, sudd och ångra.
+
+/* ---------- Ritskärmen ---------- */
+const pad = $("pad"), pctx = pad.getContext("2d"), hint = $("hint");
+const PALETTE = ["#222222","#e2481e","#c19c61","#8a6a35","#1f6fd1","#5bc0de","#2e9e4f","#f2c12e","#e85d9c","#8e44ad","#7a4b2a","#9aa0a6"];
+const toolMem = {};
+const D = { dir: "v", strokes: [], prev: null, cur: null, color: "#222222", size: 5, erase: false, who: "", onDone: null, meta: null };
+
+function openDraw(meta) {
+  // meta: {dir, i, n, who, whoKey, prev, theme, online, onDone}
+  Object.assign(D, { dir: meta.dir, strokes: [], prev: meta.prev, cur: null, erase: false, meta, onDone: meta.onDone });
+  const mem = toolMem[meta.whoKey] || { color: "#222222", size: 5 };
+  D.color = mem.color; D.size = mem.size;
+  const { W, H } = DIMS[D.dir];
+  pad.width = W; pad.height = H;
+  $("sheet").className = "sheet paperclip " + D.dir;
+  hint.hidden = !D.prev;
+  $("hintLabel").hidden = !D.prev;
+  $("foldline").hidden = meta.i === meta.n - 1;
+  buildPalette(); syncTools();
+  renderDrawTexts();
+  show("s-draw");
+  requestAnimationFrame(() => requestAnimationFrame(fitPad));
+}
+function renderDrawTexts() {
+  const m = D.meta; if (!m) return;
+  $("partTitle").textContent = t(partKey(m.dir, m.n, m.i));
+  $("partCount").textContent = t("partOf", { i: m.i + 1, n: m.n });
+  $("whoDraws").textContent = m.who;
+  $("guide").textContent = m.i === m.n - 1 ? t("guideLast") : t(m.dir === "v" ? "guideV" : "guideH");
+  $("themeLine").hidden = !m.theme; $("themeLine").textContent = t("themeIs", { t: m.theme || "" });
+  $("hintLabel").textContent = t("hintLabel");
+  $("foldBtn").textContent = m.i === m.n - 1 ? t("finish") : t(m.online ? "foldOnline" : "fold");
+  pad.setAttribute("aria-label", t("canvasLabel"));
+}
+function fitPad() {
+  const r = pad.getBoundingClientRect(); if (!r.width) return;
+  const d = devicePixelRatio || 1;
+  pad.width = Math.round(r.width * d); pad.height = Math.round(r.height * d);
+  redraw();
+  if (D.prev) {
+    const hr = hint.getBoundingClientRect(), { W, H } = DIMS[D.dir];
+    hint.width = Math.round(hr.width * d); hint.height = Math.round(hr.height * d);
+    const hc = hint.getContext("2d"), k = hint.width / (D.dir === "v" ? W : GAP);
+    hc.setTransform(k, 0, 0, k, 0, 0);
+    // Visa bara kanten av förra delen: nedersta remsan (lodrätt) eller högra remsan (vågrätt)
+    if (D.dir === "v") hc.translate(0, -(H - GAP)); else hc.translate(-(W - GAP), 0);
+    paint(hc, D.prev, W, H);
+  }
+}
+function redraw() {
+  const k = pad.width / DIMS[D.dir].W;
+  pctx.setTransform(k, 0, 0, k, 0, 0);
+  paint(pctx, D.strokes, DIMS[D.dir].W, DIMS[D.dir].H);
+}
+function toLogical(e) {
+  const r = pad.getBoundingClientRect(), { W, H } = DIMS[D.dir];
+  return [Math.round((e.clientX - r.left) / r.width * W * 10) / 10, Math.round((e.clientY - r.top) / r.height * H * 10) / 10];
+}
+pad.addEventListener("pointerdown", e => {
+  e.preventDefault(); pad.setPointerCapture(e.pointerId);
+  const [x, y] = toLogical(e);
+  D.cur = { c: D.color, w: D.erase ? D.size * 2 : D.size, e: D.erase ? 1 : 0, p: [x, y] };
+  D.strokes.push(D.cur); drawStroke(pctx, D.cur);
+});
+pad.addEventListener("pointermove", e => {
+  if (!D.cur) return;
+  const [x, y] = toLogical(e), p = D.cur.p, lx = p[p.length - 2], ly = p[p.length - 1];
+  if (Math.hypot(x - lx, y - ly) < 1.2) return;
+  p.push(x, y);
+  pctx.strokeStyle = D.cur.e ? "#ffffff" : D.cur.c; pctx.lineWidth = D.cur.w; pctx.lineCap = "round";
+  pctx.beginPath(); pctx.moveTo(lx, ly); pctx.lineTo(x, y); pctx.stroke();
+});
+["pointerup", "pointercancel"].forEach(ev => pad.addEventListener(ev, () => { if (D.cur) { D.cur = null; redraw(); } }));
+addEventListener("resize", () => { if ($("s-draw").classList.contains("active")) fitPad(); });
+
+function buildPalette() {
+  const box = $("palette"); box.innerHTML = ""; box.setAttribute("aria-label", t("custom"));
+  PALETTE.forEach(c => {
+    const b = document.createElement("button"); b.className = "sw"; b.style.background = c; b.dataset.c = c;
+    b.setAttribute("aria-label", c);
+    b.onclick = () => { D.color = c; D.erase = false; syncTools(); };
+    box.appendChild(b);
+  });
+  const w = document.createElement("label"); w.className = "customc"; w.title = t("custom");
+  w.innerHTML = `<span class="sr">${t("custom")}</span><input type="color" value="#e2481e">`;
+  w.querySelector("input").oninput = e => { D.color = e.target.value; D.erase = false; syncTools(); };
+  box.appendChild(w);
+}
+function syncTools() {
+  $("palette").querySelectorAll(".sw").forEach(b => b.setAttribute("aria-pressed", !D.erase && b.dataset.c === D.color));
+  $("eraser").setAttribute("aria-pressed", D.erase);
+  $("sizeRange").value = D.size;
+  const dot = $("sizeDot"), s = Math.max(2, Math.min(44, D.size));
+  dot.style.width = dot.style.height = s + "px"; dot.style.background = D.erase ? "#ccc" : D.color;
+  if (D.meta) toolMem[D.meta.whoKey] = { color: D.color, size: D.size };
+}
+$("sizeRange").oninput = e => { D.size = +e.target.value; syncTools(); };
+$("eraser").onclick = () => { D.erase = !D.erase; syncTools(); };
+$("undo").onclick = () => { D.strokes.pop(); redraw(); };
+$("clear").onclick = () => { if (D.strokes.length && confirm(t("clearConfirm"))) { D.strokes = []; redraw(); } };
+document.addEventListener("keydown", e => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && $("s-draw").classList.contains("active")) { e.preventDefault(); D.strokes.pop(); redraw(); }
+});
+$("foldBtn").onclick = () => {
+  if (!D.strokes.length && !confirm(t("emptyConfirm"))) return;
+  const s = D.strokes; D.meta = null; D.onDone(s);
+};

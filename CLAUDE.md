@@ -11,7 +11,7 @@ Regel: lösningen får inte bli för användbar.
 - docs/beslut.md – namn och logga
 - docs/plan-utveckling.md – vad som ska byggas och hur
 - docs/canvas-forklaring.md – hur canvas fungerar och hur prototypen använder den
-- prototyp/index.html – första fungerande versionen, byggd i Claude på claude.ai. Utgå från den.
+- index.html, css/ och js/ – själva spelet. Första versionen byggdes i Claude på claude.ai och delades sedan upp i filer.
 
 ## Riktlinjer
 - Repot är PUBLIKT. Committa aldrig API-nycklar, .env-filer eller andra hemligheter.
@@ -23,6 +23,12 @@ Regel: lösningen får inte bli för användbar.
 - API-nyckeln till Claude får aldrig hamna i klientkoden. AI-anropet ligger i en serverlös funktion (/api/describe) och nyckeln i miljövariabeln ANTHROPIC_API_KEY.
 - Loggor ligger i assets/. Ändra dem inte för hand, använd tools/logo-generator.py.
 - Användaren är inte utvecklare. Förklara på enkel svenska vad du gör och varför.
+
+## Mappstruktur
+- `index.html` – alla skärmar i spelet. `css/style.css` – utseendet.
+- `js/` – koden, en fil per del (rita.js, scen.js, galleri.js, online.js och så vidare). Filerna delar variabler och laddas i ordningen som står längst ned i index.html. Lägg nya filer i den listan, före start.js.
+- `api/` – serverlösa funktioner, till exempel `/api/describe` (finns inte än).
+- `assets/` – loggor. `docs/` – underlag. `tools/` – skript som inte ingår i spelet.
 
 ## Samarbete
 Tre personer (Signe, Anna och Joel) jobbar i repot samtidigt, var och en med sin egen Claude Code. Följ de här reglerna:

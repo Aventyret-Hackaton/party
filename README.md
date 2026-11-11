@@ -16,6 +16,9 @@ Under utveckling. Spelet byggs med [Claude Code](https://claude.com/claude-code)
 
 | Mapp | Vad |
 |---|---|
+| `index.html` | Spelet – öppna i webbläsaren |
+| `css/` | Utseendet |
+| `js/` | Koden, en fil per del av spelet |
 | `docs/` | Spelregler, designriktlinjer, beslut och utvecklingsplan |
 | `assets/` | Loggan i tre varianter |
 | `tools/` | Skriptet som ritar loggan |

@@ -8,7 +8,7 @@ const faceSrc = f => f.src || "/_blob/" + f.asset;
 // Egen server (Heroku): det gemensamma galleriet. Se server.js.
 const apiReady = fetch("/api/health", { cache: "no-store" })
   .then(r => r.ok ? r.json() : null)
-  .then(j => { caps.api = !!(j && j.ok); caps.onlinePw = !!(j && j.password); })
+  .then(j => { caps.api = !!(j && j.ok); caps.onlinePw = !!(j && j.password); caps.pushKey = (j && j.pushKey) || ""; })
   .catch(() => {});
 
 // Ansikten från mappen assets/ansikten, listade i ansikten.json. Se README.md i den mappen.

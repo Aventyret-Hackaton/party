@@ -101,6 +101,7 @@ function enterGame(r) {
   ON = { me: { playerId: r.playerId, key: r.key }, game: null, v: 0, view: "", sent: {}, timer: null };
   applyGame(r.game);
   ON.timer = setInterval(pollGame, 2000);
+  registerPush(r.game.id);   // push-notiser från servern, se js/notiser.js
 }
 async function pollGame() {
   // I väntrummet frågar vi även när sidan ligger i bakgrunden, annars tror servern att man har gått.

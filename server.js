@@ -147,6 +147,7 @@ const TYPES = {
   ".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8", ".js": "text/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8", ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg", ".webp": "image/webp", ".gif": "image/gif", ".ico": "image/x-icon",
+  ".webmanifest": "application/manifest+json; charset=utf-8",
   ".mp3": "audio/mpeg", ".m4a": "audio/mp4", ".ogg": "audio/ogg", ".wav": "audio/wav"
 };
 const PUBLIC = ["css", "js", "assets"];
@@ -163,6 +164,8 @@ function serveStatic(req, res, pathname) {
     // Kod och sidan kontrolleras alltid på nytt, så att en ny deploy aldrig blandas med gamla filer.
     // Bilder och ljud i assets/ får sparas en stund.
     const cache = { "Cache-Control": top === "assets" ? "public, max-age=300" : "no-cache", "Accept-Ranges": "bytes" };
+    // Notis-hjälpen (js/sw.js) får gälla hela sidan, inte bara mappen js/
+    if (rel.replace(/\\/g, "/") === "js/sw.js") cache["Service-Worker-Allowed"] = "/";
     // Safari på iPhone hämtar ljud i bitar (Range) och spelar inte upp det annars
     const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || "");
     if (range && /^audio\//.test(type)) {
@@ -179,6 +182,7 @@ function serveStatic(req, res, pathname) {
 
 /* ---------- Onlinespel, se online-server.js ---------- */
 const handleGames = require("./online-server.js")({ send, readJson, str, cleanStroke });
+const { pushKey } = require("./push-server.js");
 
 /* ---------- Routning ---------- */
 const server = http.createServer(async (req, res) => {
@@ -186,7 +190,7 @@ const server = http.createServer(async (req, res) => {
   const p = url.pathname;
   try {
     if (p === "/api/health" && req.method === "GET") {
-      return send(req, res, 200, { ok: true, storage: pool ? "postgres" : "memory", online: true, password: !!process.env.ONLINE_PASSWORD });
+      return send(req, res, 200, { ok: true, storage: pool ? "postgres" : "memory", online: true, password: !!process.env.ONLINE_PASSWORD, pushKey: pushKey() });
     }
     if (p === "/api/gallery" && req.method === "GET") {
       return send(req, res, 200, await listGallery(), undefined, { "Cache-Control": "no-store" });

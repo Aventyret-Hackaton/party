@@ -47,6 +47,17 @@ Onlinespelet kräver ett lösenord. **Skriv aldrig lösenordet i koden eller i r
 
 Spelarna skriver lösenordet en gång, sedan minns webbläsaren det. Utan `ONLINE_PASSWORD` behövs inget lösenord.
 
+### Notiser
+
+Under **Online** i Nytt spel finns knappen **Tillåt notiser**. Den som tillåter notiser får en notis när omgången är full och när gubben är klar att kolla på.
+
+- **Push från servern** (`push-server.js`): servern skickar notisen via Google, Apple, Mozilla eller Microsoft, så den kommer fram även när spelet ligger i bakgrunden eller telefonen är låst. Telefonen anmäler sig med `POST /api/games/:id/push` när spelaren går in i en omgång. Notis-hjälpen `js/sw.js` tar emot pushen och visar notisen.
+- **iPhone** kan bara få notiser om Party ligger på hemskärmen (Dela → Lägg till på hemskärmen) och öppnas därifrån. Det kräver iOS 16.4 eller nyare. `assets/manifest.webmanifest` gör att Party öppnas som en egen app.
+- Spelare med push får vara borta från väntrummet i 15 minuter i stället för 25 sekunder, eftersom en iPhone i bakgrunden inte hörs av.
+- Går push inte, till exempel i en webbläsare som saknar det, visas en vanlig notis medan Party är öppet.
+
+**Nycklar (VAPID):** servern skapar ett nytt nyckelpar vid varje start. Det räcker, eftersom omgångarna ändå försvinner vid en omstart. Vill man ha samma nycklar hela tiden kan man lägga in `VAPID_PUBLIC_KEY` och `VAPID_PRIVATE_KEY` under **Config Vars**. **Den privata nyckeln får aldrig hamna i koden eller i repot.**
+
 ## Kartvyn
 
 Galleriets karta använder Leaflet (från cdnjs) och kartbilder från OpenStreetMap. Gubbarna placeras i staden de bor i, med koordinaterna i `js/stader.js`. Ingen nyckel behövs.

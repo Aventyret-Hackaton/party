@@ -15,15 +15,18 @@
 //   POST /api/games/:id/part         – skicka in sin del {i, s}
 //   POST /api/games/:id/reveal       – värden vecklar ut
 //   POST /api/games/:id/name         – sätt gubbens namn {name, what, galleryId}
+//   POST /api/games/:id/push         – spara spelarens push-prenumeration, se push-server.js
 // Spelarens id och nyckel skickas i rubrikerna X-Player och X-Key.
 
 const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
 const crypto = require("crypto");
+const { savePush, pushAll } = require("./push-server.js");
 
 const PASSWORD = process.env.ONLINE_PASSWORD || "";
 const LOBBY_IDLE_MS = 25 * 1000;        // en spelare i väntrummet som inte hörs av på 25 s tas bort
+const LOBBY_IDLE_PUSH_MS = 15 * 60 * 1000; // med push-notiser: 15 min, en iPhone i bakgrunden hörs inte av
 const GAME_MAX_AGE_MS = 3 * 3600 * 1000; // omgångar städas bort efter tre timmar
 const MAX_GAMES = 200;
 
@@ -88,7 +91,7 @@ function sweep() {
     if (now - g.createdAt > GAME_MAX_AGE_MS) { games.delete(id); continue; }
     if (g.status !== "lobby") continue;
     const before = g.players.length;
-    g.players = g.players.filter(p => now - p.seen < LOBBY_IDLE_MS);
+    g.players = g.players.filter(p => now - p.seen < (p.push ? LOBBY_IDLE_PUSH_MS : LOBBY_IDLE_MS));
     if (!g.players.some(p => p.id === g.hostId)) { games.delete(id); continue; }  // värden har gått
     if (g.players.length !== before) touch(g);
   }
@@ -156,7 +159,7 @@ module.exports = function makeGamesApi({ send, readJson, str, cleanStroke }) {
       return true;
     }
 
-    const m = p.match(/^\/api\/games\/([A-Z]{4})(?:\/(join|leave|part|reveal|name))?$/);
+    const m = p.match(/^\/api\/games\/([A-Z]{4})(?:\/(join|leave|part|reveal|name|push))?$/);
     if (!m) { deny(req, res, 404, "Finns inte."); return true; }
     const g = games.get(m[1]), action = m[2];
     if (!g) { deny(req, res, 404, "Omgången finns inte längre."); return true; }
@@ -168,6 +171,7 @@ module.exports = function makeGamesApi({ send, readJson, str, cleanStroke }) {
       if (g.players.length >= g.max) { deny(req, res, 409, "full"); return true; }
       const me = addPlayer(g, cleanName(b.name), cleanCity(b.city));
       startIfFull(g);
+      if (g.status === "drawing") pushAll(g, "full");
       touch(g);
       send(req, res, 200, { ...me, game: stateFor(g, { id: me.playerId }) });
       return true;
@@ -197,7 +201,7 @@ module.exports = function makeGamesApi({ send, readJson, str, cleanStroke }) {
       if (!Array.isArray(b.s) || b.s.length > 3000) { deny(req, res, 400, "Delen gick inte att läsa."); return true; }
       g.parts[g.current] = b.s.map(cleanStroke).filter(Boolean);
       g.current++;
-      if (g.current >= g.n) g.status = "done";
+      if (g.current >= g.n) { g.status = "done"; pushAll(g, "done"); }
       touch(g);
       send(req, res, 200, stateFor(g, me));
       return true;
@@ -206,6 +210,11 @@ module.exports = function makeGamesApi({ send, readJson, str, cleanStroke }) {
       if (me.id !== g.hostId) { deny(req, res, 403, "Bara värden kan veckla ut."); return true; }
       if (g.status === "done") { g.status = "revealed"; g.revealAt = Date.now(); touch(g); }
       send(req, res, 200, stateFor(g, me));
+      return true;
+    }
+    if (action === "push") {
+      const ok = savePush(me, await readJson(req), str);
+      send(req, res, ok ? 200 : 400, ok ? { ok: true } : { error: "Prenumerationen gick inte att läsa." });
       return true;
     }
     if (action === "name") {

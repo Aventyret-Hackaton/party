@@ -23,6 +23,7 @@ Under utveckling. Spelet byggs med [Claude Code](https://claude.com/claude-code)
 | `assets/` | Loggan i tre varianter, favikonen och mappen `ansikten/` för Äventyrare-ansikten |
 | `tools/` | Skriptet som ritar loggan |
 | `server.js` | Servern på Heroku: visar spelet och sparar det gemensamma galleriet, se docs/heroku.md |
+| `online-server.js` | Onlinespelet: öppna omgångar, väntrum och turordning, se docs/heroku.md |
 | `CLAUDE.md` | Instruktioner till Claude Code |
 
 ## Licens

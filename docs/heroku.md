@@ -29,6 +29,24 @@ Utan databas fungerar galleriet ändå, men bara i minnet. Allt försvinner när
 
 Nyckeln sparas i webbläsaren (`localStorage`). Servern kontrollerar allt som skickas in och tillåter högst 40 nya gubbar i timmen per IP-adress.
 
+## Onlinespel
+
+Onlinespelet sköts av `online-server.js`, inte längre av claude.ai. Man väljer **Online** under *Var spelar ni?* och ser då en lista med öppna omgångar. Man kan gå med i en omgång eller starta en egen. En omgång startar automatiskt när alla platser är fyllda. Spelet frågar servern om läget varannan sekund.
+
+- Omgångarna ligger bara i serverns minne. Vid en deploy eller omstart avbryts de omgångar som pågår just då.
+- En spelare som stänger sidan i väntrummet tas bort efter 25 sekunder. Stänger värden sidan försvinner omgången.
+- Gamla omgångar städas bort efter tre timmar.
+
+### Lösenord
+
+Onlinespelet kräver ett lösenord. **Skriv aldrig lösenordet i koden eller i repot**, eftersom repot är publikt.
+
+1. Öppna appen på dashboard.heroku.com och gå till fliken **Settings**.
+2. Klicka på **Reveal Config Vars**.
+3. Lägg till nyckeln `ONLINE_PASSWORD` med lösenordet som värde och klicka på **Add**.
+
+Spelarna skriver lösenordet en gång, sedan minns webbläsaren det. Utan `ONLINE_PASSWORD` behövs inget lösenord.
+
 ## Kartvyn
 
 Galleriets karta använder Leaflet (från cdnjs) och kartbilder från OpenStreetMap. Gubbarna placeras i staden de bor i, med koordinaterna i `js/stader.js`. Ingen nyckel behövs.

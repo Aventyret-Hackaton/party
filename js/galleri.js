@@ -1,7 +1,7 @@
 // Galleriet med filter på världsdel, land och stad.
 
 /* ---------- Galleri ---------- */
-let gallery = [], localGallery = [], galSub = null, galPoll = null, galView = "grid";
+let gallery = [], localGallery = [], galSub = null, galPoll = null;
 
 // Nycklar för att få byta namn på gubbar man själv har sparat på servern
 const myKeys = (() => { try { return JSON.parse(localStorage.getItem("party-keys") || "{}"); } catch (e) { return {}; } })();
@@ -84,12 +84,11 @@ function renderGallery() {
   const cities = [...new Set(inCountry.map(x => cityKey(x.c)))].map(k => [k, k.split("|")[0]]).sort((a, b) => a[1].localeCompare(b[1]));
   fill(fci, cities, "", keep.ci);
   const shown = inCountry.filter(x => !fci.value || cityKey(x.c) === fci.value).map(x => x.r);
-  renderViewChips();
+  // Kartan visar alla gubbar. Trycker man på en stad visas bara den stadens gubbar i rutnätet.
+  if (sheetPos !== "peek") renderMap(items, fci.value);
+  renderSheetHint();
   const grid = $("galGrid"); grid.innerHTML = "";
-  $("galMap").hidden = galView !== "map";
-  grid.hidden = galView === "map" && shown.length > 0;
   if (!shown.length) grid.innerHTML = `<p class="fine">${t("galEmpty")}</p>`;
-  if (galView === "map") { renderMap(shown, [fc.value, fco.value, fci.value].join("/")); return; }
   shown.forEach(r => {
     const b = document.createElement("button"); b.className = "card";
     const th = document.createElement("div"); th.className = "thumb";
@@ -106,15 +105,78 @@ function renderGallery() {
 }
 ["fCont", "fCountry", "fCity"].forEach(id => $(id).onchange = renderGallery);
 
-/* ---------- Rutnät eller karta ---------- */
-function renderViewChips() {
-  const box = $("galView"); box.innerHTML = "";
-  [["grid", t("gridView")], ["map", t("mapView")]].forEach(([v, label]) => {
-    const b = document.createElement("button"); b.className = "chip"; b.textContent = label;
-    b.setAttribute("aria-pressed", galView === v);
-    b.onclick = () => { galView = v; renderGallery(); };
-    box.appendChild(b);
+/* ---------- Kartpanelen: dra i greppet eller tryck på det ---------- */
+// Tre lägen: "peek" (bara greppet syns), "half" (halva skärmen) och "full".
+// Man drar bara i greppet. Drar man i kartan flyttar man kartan.
+const SHEET_POS = ["peek", "half", "full"];
+let sheetPos = "peek";
+function setSheet(pos) {
+  if (sheetPos === "peek" && pos !== "peek") refit = true;   // zooma så att alla syns när kartan öppnas
+  sheetPos = pos;
+  const sh = $("mapSheet"); sh.dataset.pos = pos; document.body.dataset.sheet = pos; sh.style.removeProperty("--shown");
+  $("sheetGrip").setAttribute("aria-expanded", pos !== "peek");
+  renderSheetHint();
+  if (pos !== "peek") {
+    renderMap(allGallery(), $("fCity").value);
+    // Kartan måste få veta sin nya storlek när panelen har glidit klart
+    setTimeout(settleMap, reduceMotion ? 50 : 360);
+  }
+}
+function renderSheetHint() {
+  const city = $("fCity").value;
+  $("sheetHint").textContent = sheetPos === "peek" ? "– " + t("mapUp") : city ? "– " + placeLabel(city) : "";
+}
+(() => {
+  const sh = $("mapSheet"), grip = $("sheetGrip");
+  let drag = null;
+  grip.addEventListener("pointerdown", e => {
+    drag = { y: e.clientY, start: sh.getBoundingClientRect().height, moved: false, t: performance.now(), lastY: e.clientY, v: 0 };
+    grip.setPointerCapture(e.pointerId);
   });
+  grip.addEventListener("pointermove", e => {
+    if (!drag) return;
+    const dy = e.clientY - drag.y;
+    if (!drag.moved && Math.abs(dy) < 6) return;
+    if (!drag.moved) { drag.moved = true; sh.classList.add("dragging"); }
+    const now = performance.now();
+    drag.v = (e.clientY - drag.lastY) / Math.max(1, now - drag.t); drag.t = now; drag.lastY = e.clientY;
+    const max = innerHeight * .88;
+    sh.style.setProperty("--shown", Math.max(48, Math.min(max, drag.start - dy)) + "px");
+  });
+  const end = () => {
+    if (!drag) return;
+    const d = drag; drag = null;
+    sh.classList.remove("dragging");
+    if (!d.moved) { setSheet(SHEET_POS[(SHEET_POS.indexOf(sheetPos) + 1) % 3]); return; }   // tryck: nästa läge
+    // Närmaste läge, men en snabb svepning går ett steg vidare i den riktningen
+    const h = sh.getBoundingClientRect().height;
+    const stops = { peek: 64, half: innerHeight * .52, full: innerHeight * .88 };
+    let pos = SHEET_POS.reduce((a, b) => Math.abs(stops[a] - h) < Math.abs(stops[b] - h) ? a : b);
+    // En snabb svepning går till nästa läge i den riktningen, räknat från där panelen är nu
+    if (d.v < -.6) pos = SHEET_POS.find(p => stops[p] > h + 10) || "full";
+    if (d.v > .6) pos = [...SHEET_POS].reverse().find(p => stops[p] < h - 10) || "peek";
+    setSheet(pos);
+  };
+  grip.addEventListener("pointerup", end);
+  grip.addEventListener("pointercancel", end);
+  // Tangentbord: pil upp och ned byter läge, Enter och mellanslag går till nästa
+  grip.addEventListener("keydown", e => {
+    const i = SHEET_POS.indexOf(sheetPos);
+    if (e.key === "ArrowUp") { e.preventDefault(); setSheet(SHEET_POS[Math.min(2, i + 1)]); }
+    else if (e.key === "ArrowDown") { e.preventDefault(); setSheet(SHEET_POS[Math.max(0, i - 1)]); }
+    else if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSheet(SHEET_POS[(i + 1) % 3]); }
+  });
+})();
+// Tryck på en stad: visa bara den stadens gubbar, och dra ned panelen till halvvägs så att de syns.
+// Trycker man på samma stad igen visas alla igen.
+function pickCity(key) {
+  const c = findCity(key); if (!c) return;
+  const same = $("fCity").value === key;
+  $("fCont").value = same ? "" : c[2]; renderGallery();
+  $("fCountry").value = same ? "" : c[1]; renderGallery();
+  $("fCity").value = same ? "" : key; renderGallery();
+  if (sheetPos === "full") setSheet("half");
+  if (!same) requestAnimationFrame(() => scrollTo({ top: Math.max(0, $("galGrid").getBoundingClientRect().top + scrollY - 76), behavior: reduceMotion ? "auto" : "smooth" }));
 }
 
 /* ---------- Kartvyn: gubbarna i staden där de bor ---------- */
@@ -132,11 +194,12 @@ function loadLeaflet() {
   });
   return leafletP;
 }
-async function renderMap(items, filterKey) {
+// picked: staden man har tryckt på, den markeras
+async function renderMap(items, picked) {
   const box = $("galMap");
   try { await loadLeaflet(); }
   catch (e) { leafletP = null; box.innerHTML = `<p class="fine">${t("mapFail")}</p>`; return; }
-  if (galView !== "map" || currentScreen !== "s-gallery") return;
+  if (sheetPos === "peek" || currentScreen !== "s-gallery") return;
   if (!galMap) {
     galMap = L.map(box, { worldCopyJump: true, zoomSnap: 0.5 }).setView([30, 10], 2);
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -152,34 +215,27 @@ async function renderMap(items, filterKey) {
   for (const [key, list] of byCity) {
     const c = findCity(key); if (!c) continue;
     points.push([c[3], c[4]]);
-    const icon = L.divIcon({ className: "pin", html: `<span>${list.length}</span>`, iconSize: [36, 36], iconAnchor: [18, 18], popupAnchor: [0, -16] });
-    L.marker([c[3], c[4]], { icon, title: placeLabel(key), keyboard: true })
-      .bindPopup(() => cityPopup(key, list), { maxWidth: 300, minWidth: 200 })
+    const icon = L.divIcon({ className: "pin" + (key === picked ? " on" : ""), html: `<span>${list.length}</span>`, iconSize: [36, 36], iconAnchor: [18, 18] });
+    const count = t(list.length === 1 ? "figCount1" : "figCount", { n: list.length });
+    L.marker([c[3], c[4]], { icon, title: `${placeLabel(key)} – ${count}`, keyboard: true })
+      .on("click", () => pickCity(key))
       .addTo(galLayer);
   }
-  // Zooma bara om när filtret ändras, inte varje gång nya gubbar hämtas
-  const fit = filterKey + "|" + byCity.size;
-  if (fit !== lastFit && points.length) {
-    lastFit = fit;
-    if (points.length === 1) galMap.setView(points[0], 6);
-    else galMap.fitBounds(points, { padding: [40, 40], maxZoom: 6 });
-  }
+  // Zooma bara om när det kommer nya städer, inte varje gång nya gubbar hämtas eller man väljer en stad
+  const fit = String(byCity.size);
+  if (fit !== lastFit && points.length) { lastFit = fit; fitPoints = points; refit = true; fitMap(); }
 }
-function cityPopup(key, list) {
-  const box = document.createElement("div"); box.className = "mappop";
-  const h = document.createElement("h3"); h.textContent = placeLabel(key);
-  const n = document.createElement("p"); n.className = "fine"; n.textContent = t(list.length === 1 ? "figCount1" : "figCount", { n: list.length });
-  const grid = document.createElement("div"); grid.className = "mapgrid";
-  list.slice(0, 24).forEach(r => {
-    const b = document.createElement("button"); b.className = "mapcard"; b.title = r.name || t("nameless");
-    try { b.appendChild(figureCanvas(r.parts.map(p => p.s), r.dir, 0.12)); } catch (e) {}
-    const nm = document.createElement("span"); nm.textContent = r.name || t("nameless");
-    b.appendChild(nm);
-    b.onclick = () => { galMap.closePopup(); openGalleryItem(r); };
-    grid.appendChild(b);
-  });
-  box.append(h, n, grid);
-  return box;
+// Zooma så att alla städer syns. Görs igen när panelen har glidit klart och kartan har fått sin riktiga storlek.
+let fitPoints = null, refit = false;
+function settleMap() {
+  if (!galMap) return;
+  galMap.invalidateSize();
+  if (refit) { refit = false; fitMap(); }
+}
+function fitMap() {
+  if (!galMap || !fitPoints) return;
+  if (fitPoints.length === 1) galMap.setView(fitPoints[0], 6);
+  else galMap.fitBounds(fitPoints, { padding: [40, 40], maxZoom: 6 });
 }
 async function byLabel(r) {
   if (r.names) return r.names.join(", ");

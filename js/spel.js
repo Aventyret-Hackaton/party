@@ -6,6 +6,8 @@ function show(id) {
   currentScreen = id;
   if (id !== "s-home") stopIntro();
   if (typeof syncMusic === "function") syncMusic(id);
+  $("mapSheet").hidden = id !== "s-gallery";   // kartpanelen hör bara till galleriet
+  document.body.classList.toggle("has-sheet", id === "s-gallery");
   document.querySelectorAll(".screen").forEach(s => s.classList.toggle("active", s.id === id));
   document.body.classList.toggle("night", id === "s-stage");
   if (id !== "s-stage") particles = [];

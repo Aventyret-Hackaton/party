@@ -252,8 +252,6 @@
     <label><span data-i="country"></span><select id="fCountry"></select></label>
     <label><span data-i="city"></span><select id="fCity"></select></label>
   </div>
-  <div class="chips galview" id="galView" role="group"></div>
-  <div class="galmap" id="galMap" hidden></div>
   <div class="grid" id="galGrid"></div>
 </section>
 
@@ -273,6 +271,15 @@
 </section>
 
 </main>
+<!-- Galleriets karta: en panel längst ned som man drar upp och ned i greppet (js/galleri.js).
+     Den ligger utanför main, så att den sitter fast mot skärmens nederkant. -->
+<div class="mapsheet" id="mapSheet" data-pos="peek" hidden>
+  <button class="sheet-grip" id="sheetGrip" aria-controls="galMap" aria-expanded="false">
+    <span class="grip-bar" aria-hidden="true"></span>
+    <span class="grip-text"><b data-i="mapView"></b> <span id="sheetHint"></span></span>
+  </button>
+  <div class="galmap" id="galMap"></div>
+</div>
 <!-- Skripten delar variabler med varandra och måste laddas i den här ordningen. -->
 <script src="js/ordbok.js"></script>
 <script src="js/grund.js"></script>

@@ -222,18 +222,30 @@ body.night .guess-opts .btn.wrong{border-color:var(--accent);color:var(--accent)
 .card b{display:block;font-weight:400;font-family:var(--script);color:var(--accent);font-size:1.4rem;line-height:1.1;margin-top:.4rem}
 .card span{font-size:.875rem;color:var(--fine)}
 /* Kartvyn */
-.galview{margin-top:1.25rem}
-.galmap{height:min(65vh,32rem);margin-top:1rem;border:1px solid var(--line);background:var(--muted);z-index:0}
+/* Kartpanelen: tre lägen. --shown är hur mycket av panelen som syns. */
+.mapsheet{--peek:4rem;--sheet-h:88svh;--shown:var(--peek);position:fixed;left:0;right:0;bottom:0;z-index:30;height:var(--shown);
+  max-width:46rem;margin:0 auto;display:flex;flex-direction:column;background:var(--bg);border:1px solid var(--line);border-bottom:0;
+  border-radius:14px 14px 0 0;box-shadow:0 -6px 24px rgba(0,0,0,.18);
+  transition:height .32s cubic-bezier(.2,.8,.2,1)}
+.mapsheet[hidden]{display:none}
+.mapsheet[data-pos="half"]{--shown:52svh}
+.mapsheet[data-pos="full"]{--shown:var(--sheet-h)}
+.mapsheet.dragging{transition:none}
+.sheet-grip{flex:none;display:grid;justify-items:center;gap:.35rem;width:100%;height:var(--peek);padding:.5rem 1rem;background:none;border:0;color:var(--ink);cursor:grab;touch-action:none;font:inherit}
+.sheet-grip:active{cursor:grabbing}
+.grip-bar{width:2.75rem;height:5px;border-radius:3px;background:var(--line)}
+.grip-text{font-size:.9375rem}
+.grip-text span{color:var(--fine)}
+.galmap{flex:1;min-height:0;background:var(--muted);z-index:0;padding-bottom:env(safe-area-inset-bottom,0px)}
+body.has-sheet main{padding-bottom:6rem}
+/* Med kartan uppe går det att rulla upp gubbarna ovanför den */
+body.has-sheet[data-sheet="half"] main,body.has-sheet[data-sheet="full"] main{padding-bottom:56svh}
+.pin.on span{background:var(--head);outline:3px solid var(--accent)}
+@media (prefers-reduced-motion:reduce){.mapsheet{transition:none}}
 .galmap>p{padding:1rem}
 .pin{background:none;border:0}
 .pin span{display:grid;place-items:center;width:36px;height:36px;background:var(--accent);color:#fff;font:600 .9375rem/1 var(--replica);
   clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))}
-.mappop h3{font:400 1.5rem/1.1 var(--script);color:var(--accent-text);margin:0}
-.mappop .fine{margin:.15rem 0 .5rem;font-size:.8125rem}
-.mapgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;max-height:14rem;overflow:auto}
-.mapcard{background:none;border:0;padding:0;text-align:center;color:inherit;font-size:.75rem;line-height:1.2}
-.mapcard canvas{display:block;width:100%;height:4.5rem;object-fit:contain;background:#fff;border:1px solid #ddd;margin-bottom:.2rem}
-.mapcard span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* Ansikten */
 .facelist{display:grid;grid-template-columns:repeat(auto-fill,minmax(8rem,1fr));gap:1rem;margin-top:1rem}

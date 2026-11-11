@@ -21,7 +21,7 @@ It was built in a day and a bit for Äventyret's *Stupid hackathon* by group 7: 
 5. The host unfolds the figure on stage. It is named, and it lives in the city where you played. Online, it lives in the city nearest the midpoint between all players. The game asks for your location. Say no and your share of the figure lives on Easter Island.
 6. The host chooses **Save**, with the name in the text field, or **Delete**. Online, the others wait and are then shown the figure, or told that it was deleted.
 7. If someone leaves an online game mid-round, everyone is told. The host chooses to finish it among yourselves, wait for a new player to take over, or end the round.
-8. Saved figures appear in the **Gallery**. You can filter them by continent, country and city, or see them on a map.
+8. Saved figures appear in the **Gallery**. You can filter them by continent, country and city. A map panel at the bottom can be pulled up by its handle. Tap a city on the map to see only the figures that live there.
 
 The interface is available in Swedish, English, French, Spanish and German.
 
@@ -57,7 +57,7 @@ The game is plain HTML, CSS and JavaScript, with no framework and no build step.
 - **The fold.** The last strip of each part is shown to the next player as guide lines (`js/kroppsdelar.js`, `js/rita.js`).
 - **The stage.** `js/scen.js` handles the unfold: spotlights, folds that open one by one, and a background that adapts to whether the ink is dark or light. Smoke and confetti are drawn on a separate full-screen canvas (`js/effekter.js`). The drumroll, the fanfare and the sad fanfare for a wrong guess are synthesised with Web Audio (`js/ljud.js`). So is the background music, an airy flute over a drone that makes up its melody as it plays (`js/musik.js`). It plays while you wait in online games, and all the time while you pass the phone around in the room. The intro song is an mp3 in `assets/ljud/`.
 - **Cities.** `js/stader.js` is a hand-picked list of cities, all on land, so a figure never lives in the sea. It also works out the midpoint on the globe. `js/plats.js` asks the browser for the player's position and picks the nearest city.
-- **Gallery.** `js/galleri.js` shows a grid with filters, plus a map view built with [Leaflet](https://leafletjs.com/) and OpenStreetMap tiles, loaded lazily from cdnjs.
+- **Gallery.** `js/galleri.js` shows a grid with filters, plus a map in a bottom sheet with three positions (peek, half, full) that you drag by its handle. The map is built with [Leaflet](https://leafletjs.com/) and OpenStreetMap tiles, loaded lazily from cdnjs.
 - **Texts.** Every UI string lives in the dictionary `T` in `js/ordbok.js`, in all five languages.
 
 The scripts share global variables and are loaded in a fixed order at the bottom of `index.html`. `start.js` is always last.

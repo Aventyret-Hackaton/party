@@ -14,11 +14,18 @@ async function api(method, url, body) {
   if (ON && ON.me) { headers["X-Player"] = ON.me.playerId; headers["X-Key"] = ON.me.key; }
   const r = await fetch(url, { method, headers, body: body ? JSON.stringify(body) : undefined, cache: "no-store", keepalive: /\/leave$/.test(url) });
   let data = null; try { data = await r.json(); } catch (e) {}
+  const v = r.headers.get("X-App-Version");
+  if (v && caps.version && v !== caps.version) showUpdate();
   if (r.status === 401) { $("pwRow").hidden = false; if (pw === lsGet(PW_KEY)) lsSet(PW_KEY, ""); throw Object.assign(new Error("pw"), { code: "pw", status: 401 }); }
   if (!r.ok) throw Object.assign(new Error(data?.error || "fel"), { code: data?.error, status: r.status });
   if (pw && pw !== lsGet(PW_KEY)) lsSet(PW_KEY, pw);    // lösenordet fungerade, kom ihåg det
   return data;
 }
+// En ny version av spelet har kommit ut medan sidan var öppen. Alla bör ha samma version.
+function showUpdate() { $("updateBar").hidden = false; }
+$("updateBtn").onclick = () => { leaveOnline(); location.reload(); };
+// Delens namn i en onlineomgång. Servern bestämmer delarna, så alla ser samma.
+const gPart = (g, i) => (g.keys && g.keys[i]) || partKey(g.dir, g.n, i);
 function onlineError(e) {
   const k = e.code === "pw" ? ($("onPw").value || lsGet(PW_KEY) ? "wrongPw" : "pwNeeded") : e.code === "full" ? "full" : e.code === "started" ? "started"
     : e.status === 404 ? "gameGone" : e instanceof TypeError ? "noServer" : "onlineFail";
@@ -132,7 +139,8 @@ addEventListener("pagehide", () => leaveOnline());
 const meId = () => ON?.me.playerId;
 // De som faktiskt ritade, i turordning (inte de som lämnade innan de hann rita)
 // Gissa vilken Äventyrare: alla utom den som ritade huvudet
-const guessFor = g => g.face && g.turns[headIndex(g.dir, g.n)] !== meId() ? { answer: g.face.name } : null;
+const gHead = g => g.keys?.length ? g.keys.findIndex(k => k === "head" || k === "headfront") : headIndex(g.dir, g.n);
+const guessFor = g => g.face && g.turns[gHead(g)] !== meId() ? { answer: g.face.name } : null;
 const drawers = g => [...new Set(g.turns)].map(id => g.players.find(p => p.id === id)?.name).filter(Boolean);
 const isHost = () => ON?.game?.hostId === meId();
 function nameOf(id) {
@@ -144,7 +152,7 @@ function nameOf(id) {
 function renderLobby() {
   const g = ON?.game; if (!g) return;
   $("lobbyInfo").textContent = gameSummary(g);
-  $("lobbyParts").textContent = partsInfo(g.dir, g.n);
+  $("lobbyParts").textContent = partsInfo(g.dir, g.n, g.keys);
   $("joinedLbl").textContent = t("joined", { n: g.players.length, m: g.max });
   $("lobbyList").innerHTML = "";
   g.players.forEach(p => {
@@ -157,6 +165,27 @@ function renderLobby() {
 }
 $("lobbyLeave").onclick = () => { leaveOnline(); show("s-home"); };
 $("waitHome").onclick = () => { leaveOnline(); show("s-home"); };
+$("waitAgain").onclick = () => playAgainOnline();
+
+/* ---------- Spela igen ---------- */
+// Den första som trycker startar en ny omgång med samma inställningar. De andra hamnar i samma omgång.
+async function playAgainOnline() {
+  if (!ON) return;
+  const btns = [$("againBtn"), $("waitAgain")];
+  btns.forEach(b => b.disabled = true);
+  try {
+    const r = await api("POST", `/api/games/${ON.game.id}/again`, { name: lsGet(NAME_KEY) || myName() || t("player", { n: 1 }), city: await locate() });
+    enterGame(r);
+  } catch (e) {
+    $(currentScreen === "s-stage" ? "decideMsg" : "waitText").textContent = onlineError(e);
+  }
+  btns.forEach(b => b.disabled = false);
+}
+// Visa att någon annan redan har startat nästa omgång
+function renderNext() {
+  const note = ON?.game?.next ? t("playAgainOnline") : "";
+  $("againNote").textContent = note; $("waitAgainNote").textContent = note;
+}
 $("waitLeave").onclick = () => { leaveOnline(); show("s-home"); };
 
 /* ---------- Någon har lämnat omgången ---------- */
@@ -188,6 +217,7 @@ $("pauseLeave").onclick = () => { leaveOnline(); show("s-home"); };
 
 function handleGame() {
   const g = ON.game;
+  renderNext();
   if (ON.view === "lobby" && g.status !== "lobby") notify(t("notifyFullTitle"), t("notifyFullBody"), "full-" + g.id);
   if (g.status === "lobby") { if (ON.view !== "lobby") { ON.view = "lobby"; show("s-lobby"); } renderLobby(); return; }
   if (g.status === "drawing") {
@@ -216,12 +246,11 @@ function handleGame() {
       if (ON.view !== "stage") {
         ON.view = "stage";
         notify(t("notifyDoneTitle"), t("notifyDoneBody"), "done-" + g.id);
-        openStage({ parts: g.parts || [], dir: g.dir, home: g.home, by: drawers(g).join(", "), staff: g.face?.name || "", name: g.name || "", mid: true }, { canUnfold: false, again: null, guess: guessFor(g) });
+        openStage({ parts: g.parts || [], dir: g.dir, home: g.home, by: drawers(g).join(", "), staff: g.face?.name || "", name: g.name || "", mid: true }, { canUnfold: false, again: playAgainOnline, guess: guessFor(g) });
         playShow();
       }
       return;
     }
-    if (g.status === "deleted") clearInterval(ON.timer);
     if (ON.view !== "end") { ON.view = "end"; show("s-wait"); }
     renderWait();
     return;
@@ -249,7 +278,7 @@ function handleGame() {
           },
           drop: async () => { const s = await api("POST", `/api/games/${id}/discard`); if (ON) applyGame(s); }
         },
-        again: null
+        again: playAgainOnline
       });
     }
   }
@@ -260,7 +289,8 @@ function renderWait() {
   const end = g.status !== "drawing", gone = g.status === "deleted";
   $("waitHead").textContent = t(gone ? "droppedTitle" : end ? "decideTitle" : "waitTitle");
   $("waitHome").hidden = !gone;
-  $("waitParts").textContent = partsInfo(g.dir, g.n);
+  $("waitAgain").hidden = !gone;
+  $("waitParts").textContent = partsInfo(g.dir, g.n, g.keys);
   $("waitParts").hidden = end;
   $("waitLeave").hidden = gone;
   $("waitProg").innerHTML = Array.from({ length: g.n }, (_, i) => `<span class="${end || i < g.current ? "done" : ""}"></span>`).join("");
@@ -269,13 +299,17 @@ function renderWait() {
     $("waitMine").textContent = "";
     return;
   }
-  $("waitText").textContent = t("waitTurn", { name: nameOf(g.turns[g.current]), part: lc(t(partKey(g.dir, g.n, g.current))) });
-  const mine = g.turns.map((u, i) => u === meId() && i > g.current ? lc(t(partKey(g.dir, g.n, i))) : null).filter(Boolean);
-  $("waitMine").textContent = mine.length ? t("yourNext", { parts: mine.join(", ") }) : (g.turns.includes(meId()) ? "" : t("noTurn"));
+  $("waitText").textContent = t("waitTurn", { name: nameOf(g.turns[g.current]), part: lc(t(gPart(g, g.current))) });
+  // Vad jag ska rita, och hur många som ritar före mig
+  const mineIdx = g.turns.map((u, i) => u === meId() && i > g.current ? i : -1).filter(i => i >= 0);
+  const mine = mineIdx.map(i => lc(t(gPart(g, i)))).join(", ");
+  const before = mineIdx.length ? mineIdx[0] - g.current : 0;
+  $("waitMine").textContent = mineIdx.length ? t(before === 1 ? "yourNext1" : "yourNextN", { parts: mine, n: before })
+    : (g.turns.includes(meId()) ? "" : t("noTurn"));
 }
 function startOnlineTurn(i) {
   const g = ON.game, id = g.id;
-  const go = () => openDraw({ dir: g.dir, i, n: g.n, who: nameOf(meId()), whoKey: "me", prev: i > 0 ? (g.prev || []) : null, online: true,
+  const go = () => openDraw({ dir: g.dir, i, n: g.n, key: gPart(g, i), who: nameOf(meId()), whoKey: "me", prev: i > 0 ? (g.prev || []) : null, online: true,
     onDone: async s => {
       if (!ON) return;
       ON.sent[i] = true; ON.view = "wait"; show("s-wait"); renderWait();
@@ -283,7 +317,7 @@ function startOnlineTurn(i) {
       try { const st = await api("POST", `/api/games/${id}/part`, { i, s: doc.s[0].s }); if (ON) applyGame(st); }
       catch (e) { console.warn(e); if (ON) { ON.sent[i] = false; ON.view = ""; ON.v = 0; $("waitText").textContent = onlineError(e); } }
     } });
-  if (g.face && i === headIndex(g.dir, g.n)) showFace(g.face, go); else go();
+  if (g.face && i === gHead(g)) showFace(g.face, go); else go();
 }
 
 $("onName").value = lsGet(NAME_KEY);

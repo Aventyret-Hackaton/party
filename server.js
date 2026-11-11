@@ -119,9 +119,18 @@ function allowPost(ip) {
 }
 
 /* ---------- Svar ---------- */
+// Versionen av spelet: en kontrollsumma av koden, räknad när servern startar. Skickas med varje svar,
+// så att en telefon som har en gammal version öppen kan säga till (js/online.js).
+const APP_VERSION = (() => {
+  const h = crypto.createHash("sha256");
+  const walk = d => fs.readdirSync(path.join(__dirname, d), { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))
+    .forEach(e => e.isDirectory() ? walk(path.join(d, e.name)) : h.update(fs.readFileSync(path.join(__dirname, d, e.name))));
+  try { h.update(fs.readFileSync(path.join(__dirname, "index.html"))); walk("css"); walk("js"); } catch (e) {}
+  return h.digest("hex").slice(0, 12);
+})();
 function send(req, res, status, body, type = "application/json; charset=utf-8", extra = {}) {
   let buf = Buffer.isBuffer(body) ? body : Buffer.from(typeof body === "string" ? body : JSON.stringify(body));
-  const headers = { "Content-Type": type, "X-Content-Type-Options": "nosniff", ...extra };
+  const headers = { "Content-Type": type, "X-Content-Type-Options": "nosniff", "X-App-Version": APP_VERSION, ...extra };
   if (buf.length > 1024 && /\bgzip\b/.test(req.headers["accept-encoding"] || "") && /json|text|javascript|svg/.test(type)) {
     buf = zlib.gzipSync(buf); headers["Content-Encoding"] = "gzip"; headers["Vary"] = "Accept-Encoding";
   }

@@ -16,6 +16,7 @@
 //   POST /api/games/:id/reveal       – värden vecklar ut (bara värden ser gubben)
 //   POST /api/games/:id/save         – värden sparar gubben {name, what, galleryId}, alla får se den
 //   POST /api/games/:id/discard      – värden raderar gubben, de andra får veta det
+//   POST /api/games/:id/again        – spela igen: gå med i nästa omgång, eller starta den med samma inställningar {name, city}
 //   POST /api/games/:id/resolve      – värden väljer hur omgången fortsätter när någon har lämnat {choice}
 // Läget (status): lobby → drawing → done → revealed → saved eller deleted.
 // Lämnar någon som har delar kvar att rita: drawing → paused. Värden väljer då
@@ -43,6 +44,14 @@ const MAX_GAMES = 200;
 const cityTools = (() => {
   const code = fs.readFileSync(path.join(__dirname, "js", "stader.js"), "utf8");
   return vm.runInNewContext(code + "\n;({ midpointCity, findCity })", { lang: "sv", Intl, Math });
+})();
+
+/* ---------- Delarna: samma lista som i spelet (js/kroppsdelar.js) ---------- */
+// Servern bestämmer vilka delar en omgång har, så att alla spelare ser samma delnamn
+// även om någon har en äldre version av spelet öppen.
+const PARTSETS = (() => {
+  const code = fs.readFileSync(path.join(__dirname, "js", "kroppsdelar.js"), "utf8");
+  return vm.runInNewContext(code + "\n;PARTSETS", {});
 })();
 
 /* ---------- Ansikten för kategorin Äventyrare (assets/ansikten/ansikten.json) ---------- */
@@ -83,6 +92,18 @@ function addPlayer(g, name, city) {
   // left = har lämnat (eller ersatts), missing = har inte hörts av på länge men kan komma tillbaka
   g.players.push({ id, name, city, keyHash: hash(key), seen: Date.now(), left: false, missing: false });
   return { playerId: id, key };
+}
+// En ny omgång i väntrummet. b = {players, dir, order, cat}
+function newGame(b) {
+  const max = [3, 4, 5, 6].includes(+b.players) ? +b.players : 3;
+  const g = {
+    id: genCode(), v: 1, createdAt: Date.now(), touched: Date.now(), status: "lobby",
+    max, n: max, dir: b.dir === "h" ? "h" : "v", orderMode: b.order === "random" ? "random" : "strict",
+    cat: b.cat === "staff" ? "staff" : "free", players: [], keys: [], turns: [], current: 0, parts: [],
+    home: "", face: null, name: "", what: "", galleryId: "", revealAt: 0, hostId: ""
+  };
+  g.keys = PARTSETS[g.dir][g.n];
+  return g;
 }
 function startIfFull(g) {
   if (g.status !== "lobby" || g.players.length < g.max) return;
@@ -180,6 +201,7 @@ function stateFor(g, me) {
     id: g.id, v: g.v, status: g.status, max: g.max, n: g.n, dir: g.dir, orderMode: g.orderMode, cat: g.cat,
     hostId: g.hostId, players: g.players.map(p => ({ id: p.id, name: p.name, city: p.city, left: p.left, missing: p.missing })),
     gone: blocking(g).map(p => p.id),
+    keys: g.keys, next: g.next || "",
     turns: g.turns, current: g.current, home: g.home, face: g.face,
     name: g.name, what: g.what, galleryId: g.galleryId, revealAt: g.revealAt
   };
@@ -221,13 +243,7 @@ module.exports = function makeGamesApi({ send, readJson, str, cleanStroke }) {
       if (games.size >= MAX_GAMES) sweep();
       if (games.size >= MAX_GAMES) { deny(req, res, 503, "För många omgångar just nu. Försök snart igen."); return true; }
       const b = await readJson(req) || {};
-      const max = [3, 4, 5, 6].includes(+b.players) ? +b.players : 3;
-      const g = {
-        id: genCode(), v: 1, createdAt: Date.now(), touched: Date.now(), status: "lobby",
-        max, n: max, dir: b.dir === "h" ? "h" : "v", orderMode: b.order === "random" ? "random" : "strict",
-        cat: b.cat === "staff" ? "staff" : "free", players: [], turns: [], current: 0, parts: [],
-        home: "", face: null, name: "", what: "", galleryId: "", revealAt: 0, hostId: ""
-      };
+      const g = newGame(b);
       const me = addPlayer(g, cleanName(b.name), cleanCity(b.city));
       g.hostId = me.playerId;
       games.set(g.id, g);
@@ -235,7 +251,7 @@ module.exports = function makeGamesApi({ send, readJson, str, cleanStroke }) {
       return true;
     }
 
-    const m = p.match(/^\/api\/games\/([A-Z]{4})(?:\/(join|leave|part|reveal|save|discard|push|resolve))?$/);
+    const m = p.match(/^\/api\/games\/([A-Z]{4})(?:\/(join|leave|part|reveal|save|discard|push|resolve|again))?$/);
     if (!m) { deny(req, res, 404, "Finns inte."); return true; }
     const g = games.get(m[1]), action = m[2];
     if (!g) { deny(req, res, 404, "Omgången finns inte längre."); return true; }
@@ -306,6 +322,30 @@ module.exports = function makeGamesApi({ send, readJson, str, cleanStroke }) {
     if (action === "push") {
       const ok = savePush(me, await readJson(req), str);
       send(req, res, ok ? 200 : 400, ok ? { ok: true } : { error: "Prenumerationen gick inte att läsa." });
+      return true;
+    }
+    // Spela igen: den första som trycker startar en ny omgång med samma inställningar, de andra går med i den
+    if (action === "again") {
+      const b = await readJson(req) || {};
+      if (!["saved", "deleted", "ended"].includes(g.status)) { deny(req, res, 409, "Omgången är inte klar."); return true; }
+      let n = g.next && games.get(g.next);
+      if (n && n.status === "lobby" && n.players.length < n.max) {
+        const joined = addPlayer(n, cleanName(b.name), cleanCity(b.city));
+        startIfFull(n);
+        if (n.status === "drawing") pushAll(n, "full");
+        touch(n);
+        send(req, res, 200, { ...joined, game: stateFor(n, { id: joined.playerId }) });
+        return true;
+      }
+      if (games.size >= MAX_GAMES) sweep();
+      if (games.size >= MAX_GAMES) { deny(req, res, 503, "För många omgångar just nu. Försök snart igen."); return true; }
+      n = newGame({ players: g.max, dir: g.dir, order: g.orderMode, cat: g.cat });
+      const host = addPlayer(n, cleanName(b.name), cleanCity(b.city));
+      n.hostId = host.playerId;
+      games.set(n.id, n);
+      g.next = n.id;
+      touch(g);
+      send(req, res, 201, { ...host, game: stateFor(n, { id: host.playerId }) });
       return true;
     }
     if (action === "resolve") {

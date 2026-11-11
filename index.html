@@ -22,6 +22,11 @@
   </div>
 </header>
 <canvas id="fx" aria-hidden="true"></canvas>
+<!-- Visas om en ny version av spelet har kommit ut medan sidan var öppen (js/online.js) -->
+<div class="update-bar" id="updateBar" role="status" hidden>
+  <span data-i="updateText"></span>
+  <button class="btn small" id="updateBtn" data-i="updateBtn"></button>
+</div>
 <!-- Välkomstrutan: Spela startar introljudet, party-knappen stänger rutan (js/intro.js) -->
 <div class="intro" id="intro">
   <img class="intro-logo" src="assets/party-logo-dark.svg" alt="Party">
@@ -175,6 +180,8 @@
   <div class="progress" id="waitProg"></div>
   <p id="waitText"></p>
   <p class="fine" id="waitMine"></p>
+  <p class="fine" id="waitAgainNote"></p>
+  <button class="btn primary wide" id="waitAgain" data-i="playAgain" hidden></button>
   <button class="btn secondary wide" id="waitHome" data-i="home" hidden></button>
   <button class="leave-link" id="waitLeave" data-i="leave"></button>
 </section>
@@ -226,6 +233,7 @@
         </div>
       </div>
       <p class="place" id="decideMsg"></p>
+      <p class="place" id="againNote"></p>
       <div class="actions" id="stageActions">
         <button class="btn primary" id="againBtn" data-i="playAgain"></button>
         <button class="btn" id="stageGallery" data-i="toGallery"></button>

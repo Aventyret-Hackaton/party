@@ -23,7 +23,7 @@ function openDraw(meta) {
 }
 function renderDrawTexts() {
   const m = D.meta; if (!m) return;
-  $("partTitle").textContent = t(partKey(m.dir, m.n, m.i));
+  $("partTitle").textContent = t(m.key || partKey(m.dir, m.n, m.i));
   $("partCount").textContent = t("partOf", { i: m.i + 1, n: m.n });
   $("whoDraws").textContent = m.who;
   $("guide").textContent = m.i === m.n - 1 ? t("guideLast") : t(m.dir === "v" ? "guideV" : "guideH");

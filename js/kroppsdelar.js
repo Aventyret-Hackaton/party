@@ -7,8 +7,8 @@ const PARTSETS = {
 };
 const partKey = (dir, n, i) => PARTSETS[dir][n][i];
 // Riktning och alla delar i ordning, till exempel "Gubben ritas uppifrån och ned, i 3 delar: 1 huvud, 2 överkropp, 3 ben och fötter."
-function partsInfo(dir, n) {
-  const parts = PARTSETS[dir][n].map((k, i) => `${i + 1} ${lc(t(k))}`).join(", ");
+function partsInfo(dir, n, keys) {
+  const parts = (keys && keys.length ? keys : PARTSETS[dir][n]).map((k, i) => `${i + 1} ${lc(t(k))}`).join(", ");
   return t(dir === "v" ? "partsV" : "partsH", { n, parts });
 }
 const headIndex = (dir, n) => PARTSETS[dir][n].findIndex(k => k === "head" || k === "headfront");

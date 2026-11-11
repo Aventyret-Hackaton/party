@@ -41,6 +41,14 @@ Var spelarna är tar spelet reda på genom att be webbläsaren om platsen. Säge
 - En spelare som stänger sidan i väntrummet tas bort efter 25 sekunder. Stänger värden sidan försvinner omgången.
 - Gamla omgångar städas bort efter tre timmar.
 
+### Samma version för alla
+
+Servern bestämmer vilka delar en omgång har, så att alla spelare ser samma delnamn. Varje svar från servern har också en versionskod (`X-App-Version`, en kontrollsumma av koden). Har en telefon en äldre version öppen än servern, till exempel efter en deploy, visas en röd rad högst upp med knappen Ladda om.
+
+### Spela igen
+
+När gubben är sparad eller raderad finns knappen **Spela igen!**. Den som trycker först startar en ny omgång med samma inställningar och blir värd. De andra ser att en ny omgång har startat och hamnar i samma omgång när de trycker.
+
 ### Om någon lämnar mitt i
 
 En spelare räknas som borta om den lämnar omgången (stänger sidan eller trycker Lämna), eller om det är dess tur och den inte hörs av på 90 sekunder (5 minuter med push-notiser på). Har den spelaren delar kvar att rita pausas omgången, och alla får veta vem som har lämnat. Den som håller på att rita sin del får rita klart först. Värden väljer sedan:

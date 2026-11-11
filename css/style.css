@@ -202,6 +202,9 @@ body.night input[type=text]{background:#1a1721;color:#fff;border-color:#3d3746}
 .guess-opts .btn{width:100%;padding-inline:.5rem}
 body.night .guess-opts .btn.right{background:#2f7d4f;border-color:#2f7d4f}
 body.night .guess-opts .btn.wrong{border-color:var(--accent);color:var(--accent)}
+.update-bar{position:fixed;left:0;right:0;top:0;z-index:60;display:flex;gap:.75rem;align-items:center;justify-content:center;flex-wrap:wrap;padding:.6rem 1rem;background:var(--accent);color:#fff;font-weight:600;text-align:center}
+.update-bar[hidden]{display:none}
+.update-bar .btn{background:#fff;color:var(--accent);border-color:#fff}
 .parts-info{font-weight:600;margin:.75rem 0;padding:.6rem .8rem;border-left:3px solid var(--accent);background:color-mix(in srgb,var(--accent) 8%,transparent)}
 .decide{display:grid;gap:.4rem;max-width:26rem;margin:1rem auto 0;text-align:left}
 .decide .actions{margin-top:.5rem}

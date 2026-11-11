@@ -7,7 +7,7 @@ const faceSrc = f => f.src || "/_blob/" + f.asset;
 
 // Egen server (Heroku): det gemensamma galleriet. Se server.js.
 const apiReady = fetch("/api/health", { cache: "no-store" })
-  .then(r => r.ok ? r.json() : null)
+  .then(r => { caps.version = r.headers.get("X-App-Version") || ""; return r.ok ? r.json() : null; })
   .then(j => { caps.api = !!(j && j.ok); caps.onlinePw = !!(j && j.password); caps.pushKey = (j && j.pushKey) || ""; })
   .catch(() => {});
 

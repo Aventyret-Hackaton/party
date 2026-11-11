@@ -25,8 +25,8 @@ function chips(id, opts, key) {
 }
 function renderSetupChips() {
   if (S.cat === "staff" && !faces.length) S.cat = "free";
+  S.parts = S.players; // antalet spelare styr antalet delar
   chips("c-players", [3, 4, 5, 6].map(v => ({ v, label: v })), "players");
-  chips("c-parts", [3, 4, 5, 6].map(v => ({ v, label: v })), "parts");
   chips("c-dir", [{ v: "v", label: "↓ " + t("vertical") }, { v: "h", label: "→ " + t("horizontal") }], "dir");
   chips("c-mode", [{ v: "room", label: t("room") }, { v: "online", label: t("online") }], "mode");
   chips("c-order", [{ v: "strict", label: t("strict") }, { v: "random", label: t("random") }], "order");

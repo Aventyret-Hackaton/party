@@ -1,0 +1,16 @@
+# Hemligheter – får aldrig committas
+.env
+.env.*
+!.env.example
+
+# Hosting
+.vercel/
+.netlify/
+
+# Node
+node_modules/
+npm-debug.log*
+
+# System
+.DS_Store
+Thumbs.db

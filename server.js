@@ -145,7 +145,8 @@ function readJson(req) {
 const TYPES = {
   ".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8", ".js": "text/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8", ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg",
-  ".jpeg": "image/jpeg", ".webp": "image/webp", ".gif": "image/gif", ".ico": "image/x-icon"
+  ".jpeg": "image/jpeg", ".webp": "image/webp", ".gif": "image/gif", ".ico": "image/x-icon",
+  ".mp3": "audio/mpeg", ".m4a": "audio/mp4", ".ogg": "audio/ogg", ".wav": "audio/wav"
 };
 const PUBLIC = ["css", "js", "assets"];
 function serveStatic(req, res, pathname) {
@@ -158,7 +159,18 @@ function serveStatic(req, res, pathname) {
   fs.readFile(file, (err, data) => {
     if (err) return send(req, res, 404, "Hittades inte", "text/plain; charset=utf-8");
     const type = TYPES[path.extname(file).toLowerCase()] || "application/octet-stream";
-    send(req, res, 200, data, type, { "Cache-Control": rel === "index.html" ? "no-cache" : "public, max-age=300" });
+    const cache = { "Cache-Control": rel === "index.html" ? "no-cache" : "public, max-age=300", "Accept-Ranges": "bytes" };
+    // Safari på iPhone hämtar ljud i bitar (Range) och spelar inte upp det annars
+    const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || "");
+    if (range && /^audio\//.test(type)) {
+      let start = range[1] ? +range[1] : data.length - +range[2], end = range[1] && range[2] ? +range[2] : data.length - 1;
+      if (!range[1] && !range[2] || start < 0 || start >= data.length || end < start) {
+        res.writeHead(416, { "Content-Range": `bytes */${data.length}` }); return res.end();
+      }
+      end = Math.min(end, data.length - 1);
+      return send(req, res, 206, data.subarray(start, end + 1), type, { ...cache, "Content-Range": `bytes ${start}-${end}/${data.length}` });
+    }
+    send(req, res, 200, data, type, cache);
   });
 }
 

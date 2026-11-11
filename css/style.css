@@ -74,6 +74,17 @@ button{font:inherit;cursor:pointer}
 
 /* Startsidan */
 .hero{padding:2.5rem 0 .5rem}
+/* Loggan: transparent på ljus bakgrund, mörk variant i mörkt läge och på scenen */
+.logo{display:block;height:auto}
+.logo.dark{display:none}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .logo.light{display:none}
+  :root:not([data-theme="light"]) .logo.dark{display:block}
+}
+:root[data-theme="dark"] .logo.light,body.night .logo.light{display:none}
+:root[data-theme="dark"] .logo.dark,body.night .logo.dark{display:block}
+.brand .logo{height:2.75rem;width:auto}
+.hero h1 .logo{width:min(100%,28rem)}
 .hero h1{font-family:var(--script);color:var(--accent);font-size:clamp(4.5rem,20vw,8rem);line-height:.9;font-weight:400}
 .hero p{font-size:1.3125rem;line-height:1.45;max-width:30rem;color:var(--ink)}
 

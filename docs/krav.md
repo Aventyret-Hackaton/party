@@ -50,5 +50,4 @@ Allt annat (ritytan, verktygen, vikningen, avtäckningen, ljudet, språken, stad
 
 ## Kvar att ändra i prototypen
 
-- Byt "Vikgubbar" mot Party och lägg in loggan från `assets/`.
 - Byt typsnittet Inter Tight mot Hanken Grotesk, enligt designriktlinjerna.

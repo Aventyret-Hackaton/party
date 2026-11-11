@@ -5,15 +5,20 @@ Tilldelad teknik: Canvas – användaren ritar på skärmen. Den måste synas ty
 Regel: lösningen får inte bli för användbar.
 
 ## Läs först
+- docs/krav.md – gruppens 15 krav, status och beslut
 - docs/vikgubbar.md – spelreglerna
 - docs/designriktlinjer.md – färger, typsnitt, komponenter. Följ dem.
 - docs/beslut.md – namn och logga
 - docs/plan-utveckling.md – vad som ska byggas och hur
+- docs/canvas-forklaring.md – hur canvas fungerar och hur prototypen använder den
+- prototyp/index.html – första fungerande versionen, byggd i Claude på claude.ai. Utgå från den.
 
 ## Riktlinjer
 - Repot är PUBLIKT. Committa aldrig API-nycklar, .env-filer eller andra hemligheter.
 - Enkel webbapp: HTML, CSS och JavaScript med <canvas>. Inget ramverk.
-- Gränssnittstexter på svenska. Använd tankstreck (–), aldrig em-streck (—).
+- Gränssnittet finns på svenska, engelska, franska, spanska och tyska. Alla texter ligger i ordboken T i koden – lägg aldrig in text utan översättning. Använd tankstreck (–), aldrig em-streck (—).
+- Penndrag sparas som vektorer (färg, tjocklek, punkter). Behåll det, så att SVG-export (krav 15) går att bygga.
+- Prototypen anropar window.claude.use(...) för databas, inloggning, AI-namn och bilduppladdning. Det finns bara på claude.ai och ska ersättas, se tabellen i docs/krav.md.
 - Pointer events och touch-action: none på canvas. Testa i Safari på iPhone.
 - API-nyckeln till Claude får aldrig hamna i klientkoden. AI-anropet ligger i en serverlös funktion (/api/describe) och nyckeln i miljövariabeln ANTHROPIC_API_KEY.
 - Loggor ligger i assets/. Ändra dem inte för hand, använd tools/logo-generator.py.

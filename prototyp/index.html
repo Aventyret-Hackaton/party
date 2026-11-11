@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vikgubbar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Inter+Tight:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+/* Tokens från Äventyrets designriktlinjer */
+:root{
+  --accent:#e2481e; --accent-text:#c43c14; --accent-hover:#9e2f0f; --accent-muted:#e86d4b;
+  --ink:#222; --head:#000; --bg:#fff; --muted:#eeeeed; --sand:#e3e1db; --line:#ccc; --fine:#4d4d4d;
+  --night:#100e16; --gold:#c19c61; --on-night:#ffffffa6;
+  --btn-bg:#fff; --focus:#000; --focus-ring:#fff; --card:#fff;
+  --replica:"Inter Tight","Manrope","Helvetica Neue",Arial,sans-serif;
+  --script:"Caveat Brush","Kalam","Segoe Print","Comic Sans MS",cursive;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ink:#ffffffa6; --head:#c19c61; --bg:#100e16; --muted:#1f1b27; --sand:#2a2531; --line:#3d3746; --fine:#ffffff8c;
+    --accent-text:#e86d4b; --accent-hover:#f08f73; --btn-bg:#100e16; --focus:#fff; --focus-ring:#000; --card:#1a1721;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --ink:#ffffffa6; --head:#c19c61; --bg:#100e16; --muted:#1f1b27; --sand:#2a2531; --line:#3d3746; --fine:#ffffff8c;
+  --accent-text:#e86d4b; --accent-hover:#f08f73; --btn-bg:#100e16; --focus:#fff; --focus-ring:#000; --card:#1a1721;
+  color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none !important}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font:400 1.125rem/1.5 var(--replica);letter-spacing:.004em;transition:background .5s}
+body.night{background:var(--night);color:var(--on-night)}
+h1,h2,h3{font-weight:300;color:var(--head);margin:0;letter-spacing:0}
+h2{font-size:2.25rem;line-height:1.15}
+p{margin:.5rem 0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.fine{color:var(--fine);font-size:.9375rem}
+.script{font-family:var(--script);color:var(--accent);font-weight:400}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px;box-shadow:0 0 0 4px var(--focus-ring)}
+
+.top{display:flex;justify-content:space-between;align-items:center;gap:1rem;max-width:46rem;margin:0 auto;padding:.75rem 1.125rem}
+.brand{font-family:var(--script);font-size:1.75rem;color:var(--accent);background:none;border:0;padding:0;cursor:pointer}
+.top-r{display:flex;gap:.5rem;align-items:center}
+select,input[type=text],input[type=file]{font:inherit;font-size:1rem;color:var(--ink);background:var(--btn-bg);border:1px solid var(--line);padding:.55rem .75rem;
+  clip-path:polygon(4px 0,calc(100% - 4px) 0,100% 4px,100% calc(100% - 4px),calc(100% - 4px) 100%,4px 100%,0 calc(100% - 4px),0 4px)}
+input[type=text]{width:100%}
+main{max-width:46rem;margin:0 auto;padding:.5rem 1.125rem 3.75rem}
+.screen{display:none}
+.screen.active{display:block;animation:rise .5s ease .05s both}
+@keyframes rise{from{opacity:0;transform:translateY(1.5rem)}to{opacity:1;transform:none}}
+
+/* Knappar */
+button{font:inherit;cursor:pointer}
+.btn{display:inline-flex;justify-content:center;align-items:center;gap:.5rem;border-radius:2.25rem;padding:1rem 1.875rem;font-size:1.0625rem;
+  background:var(--btn-bg);color:var(--accent-text);border:1px solid var(--accent);transition:background .2s}
+.btn:hover{background:var(--muted)}
+.btn.primary{background:var(--accent);color:#fff;font-weight:600}
+.btn.primary:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
+.btn.secondary{color:var(--ink);border-color:var(--ink)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.wide{width:100%;margin-top:1.25rem}
+.small{padding:.5rem 1rem;font-size:.9375rem}
+.stack{display:grid;gap:.75rem;margin-top:1.75rem}
+
+/* Etikett med linje */
+.lbl{display:flex;align-items:center;gap:.75rem;font-size:.9375rem;margin:1.75rem 0 .6rem;color:var(--ink)}
+.lbl::after{content:"";flex:1;height:1px;background:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:.5rem}
+.chip{border-radius:2.25rem;padding:.5rem 1.1rem;border:1px solid var(--line);background:var(--btn-bg);color:var(--ink);font-size:1rem}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.chip:disabled{opacity:.5;cursor:default}
+.diamonds{list-style:none;padding:0;margin:.5rem 0}
+.diamonds li{position:relative;padding-left:1.25rem;margin:.35rem 0}
+.diamonds li::before{content:"";position:absolute;left:.15rem;top:.62em;width:.45rem;height:.45rem;background:var(--accent);transform:rotate(45deg)}
+.err{color:var(--accent-text);min-height:1.5em}
+
+/* Startsidan */
+.hero{padding:2.5rem 0 .5rem}
+.hero h1{font-family:var(--script);color:var(--accent);font-size:clamp(4.5rem,20vw,8rem);line-height:.9;font-weight:400}
+.hero p{font-size:1.3125rem;line-height:1.45;max-width:30rem;color:var(--ink)}
+
+/* Ritytan */
+.turnhead{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;flex-wrap:wrap}
+.who{font-family:var(--script);color:var(--accent);font-size:1.6rem}
+.sheet-wrap{display:flex;justify-content:center;margin-top:1rem}
+.sheet{position:relative;background:#fff;filter:drop-shadow(0 6px 14px rgba(24,19,12,.18))}
+.sheet.v{width:100%}
+.sheet.h{display:flex}
+.paperclip{clip-path:polygon(8px 0,calc(100% - 8px) 0,100% 8px,100% calc(100% - 8px),calc(100% - 8px) 100%,8px 100%,0 calc(100% - 8px),0 8px)}
+.hint{display:block;background:#f4f3f1}
+.sheet.v .hint{width:100%;aspect-ratio:600/40;border-bottom:1px dashed #ccc}
+.sheet.h .hint{height:min(56vh,520px);aspect-ratio:40/600;border-right:1px dashed #ccc}
+.stage-box{position:relative}
+#pad{display:block;touch-action:none;cursor:crosshair;background:#fff}
+.sheet.v #pad{width:100%;aspect-ratio:600/340}
+.sheet.h #pad{height:min(56vh,520px);aspect-ratio:340/600}
+.foldline{position:absolute;pointer-events:none}
+.sheet.v .foldline{left:0;right:0;bottom:calc(100% * 40 / 340);border-top:2px dashed #ccc}
+.sheet.h .foldline{top:0;bottom:0;right:calc(100% * 40 / 340);border-left:2px dashed #ccc}
+.tools{margin-top:1rem;display:grid;gap:.75rem}
+.palette{display:flex;flex-wrap:wrap;gap:.45rem;align-items:center}
+.sw{width:2.1rem;height:2.1rem;border-radius:50%;border:2px solid var(--line);padding:0}
+.sw[aria-pressed="true"]{outline:2px solid var(--ink);outline-offset:2px}
+.customc{position:relative;width:2.1rem;height:2.1rem;border-radius:50%;overflow:hidden;border:2px dashed var(--line)}
+.customc input{position:absolute;inset:-6px;width:150%;height:150%;border:0;padding:0;cursor:pointer}
+.sizerow{display:flex;align-items:center;gap:.75rem;font-size:.9375rem}
+.sizerow input{flex:1;accent-color:var(--accent)}
+.dot{width:3rem;height:3rem;display:grid;place-items:center}
+.dot i{display:block;border-radius:50%;background:#222}
+.toolbtns{display:flex;flex-wrap:wrap;gap:.5rem}
+
+/* Ansiktsvisning */
+.face{display:grid;place-items:center;text-align:center;padding-top:1rem}
+.face img{width:min(18rem,70vw);aspect-ratio:1;object-fit:cover;clip-path:polygon(8px 0,calc(100% - 8px) 0,100% 8px,100% calc(100% - 8px),calc(100% - 8px) 100%,8px 100%,0 calc(100% - 8px),0 8px);margin:1rem 0}
+.count{font-family:var(--script);color:var(--accent);font-size:clamp(6rem,24vw,9rem);line-height:1}
+
+/* Lobby */
+.code{font-family:var(--script);color:var(--accent);font-size:clamp(4rem,18vw,6.5rem);letter-spacing:.08em;line-height:1}
+.progress{display:flex;gap:.35rem;margin:1rem 0}
+.progress span{flex:1;height:.4rem;background:var(--line)}
+.progress span.done{background:var(--accent)}
+
+/* Scenen */
+.stage{position:relative;text-align:center;padding-top:1rem;min-height:70vh}
+.stage h2{color:var(--gold)}
+.stage .andnow{font-family:var(--script);color:var(--gold);font-size:clamp(3.4rem,14vw,5rem);line-height:1;margin:1rem 0}
+.beam{position:fixed;top:-10vh;width:40vw;height:130vh;pointer-events:none;opacity:0;transition:opacity .8s;
+  background:linear-gradient(to bottom,rgba(255,240,210,.28),rgba(255,240,210,0) 85%);clip-path:polygon(45% 0,55% 0,100% 100%,0 100%);mix-blend-mode:screen}
+.beam.l{left:-5vw;transform-origin:50% 0;transform:rotate(-18deg)}
+.beam.r{right:-5vw;transform-origin:50% 0;transform:rotate(18deg)}
+.stage.lit .beam{opacity:1}
+.stage.lit .beam.l{animation:swayL 3s ease-in-out infinite alternate}
+.stage.lit .beam.r{animation:swayR 3s ease-in-out infinite alternate}
+@keyframes swayL{from{transform:rotate(-24deg)}to{transform:rotate(-8deg)}}
+@keyframes swayR{from{transform:rotate(24deg)}to{transform:rotate(8deg)}}
+.figure-scroll{overflow-x:auto;margin:1rem auto 0;max-width:100%}
+.figure{perspective:1600px;display:inline-flex;margin:0 auto}
+.figure.v{flex-direction:column;width:min(100%,34rem)}
+.figure.h{flex-direction:row;width:min(100%,calc(var(--n) * 14rem))}
+.figure canvas{display:block;background:#fff}
+.figure.v canvas{width:100%}
+.figure.h canvas{width:calc(100% / var(--n));height:auto}
+.fold{transition:transform .45s cubic-bezier(.3,1.5,.5,1),opacity .2s;backface-visibility:hidden}
+.figure.v .fold{transform-origin:top center}
+.figure.h .fold{transform-origin:left center}
+.figure.v .fold.closed{transform:rotateX(-95deg);opacity:0}
+.figure.h .fold.closed{transform:rotateY(95deg);opacity:0}
+.figname{font-family:var(--script);color:var(--gold);font-size:clamp(2.6rem,10vw,4rem);line-height:1.05;margin-top:1.25rem;min-height:1.1em;filter:blur(0);transition:filter .6s,opacity .6s}
+.figname.blur{filter:blur(8px);opacity:.3}
+.place{color:var(--on-night);margin:.25rem 0}
+body.night .btn{background:transparent;color:#fff;border-color:var(--gold)}
+body.night .btn.primary{background:var(--accent);border-color:var(--accent)}
+body.night input[type=text]{background:#1a1721;color:#fff;border-color:#3d3746}
+.rename{display:flex;gap:.5rem;max-width:26rem;margin:1rem auto 0}
+.actions{display:flex;flex-wrap:wrap;gap:.6rem;justify-content:center;margin-top:1.5rem}
+#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:20}
+
+/* Galleri */
+.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr));gap:.6rem;margin-top:1rem}
+.filters label{font-size:.9375rem;display:grid;gap:.25rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(10rem,1fr));gap:1.125rem;margin-top:1.5rem}
+.card{background:none;border:0;padding:0;text-align:left;color:inherit}
+.thumb{background:#fff;aspect-ratio:3/4;display:grid;place-items:center;overflow:hidden;border:1px solid var(--line)}
+.thumb canvas{max-width:100%;max-height:100%}
+.card b{display:block;font-weight:400;font-family:var(--script);color:var(--accent);font-size:1.4rem;line-height:1.1;margin-top:.4rem}
+.card span{font-size:.875rem;color:var(--fine)}
+
+/* Ansikten */
+.facelist{display:grid;grid-template-columns:repeat(auto-fill,minmax(8rem,1fr));gap:1rem;margin-top:1rem}
+.facelist figure{margin:0}
+.facelist img{width:100%;aspect-ratio:1;object-fit:cover}
+.facelist figcaption{display:flex;justify-content:space-between;align-items:center;font-size:.9375rem;margin-top:.25rem}
+.linkbtn{background:none;border:0;color:var(--accent-text);padding:0;text-decoration:none}
+.linkbtn:hover{text-decoration:underline}
+
+@media (min-width:45rem){
+  body{font-size:1.3125rem;line-height:1.43}
+  h2{font-size:2.625rem}
+}
+@media (prefers-reduced-motion:reduce){
+  .screen.active{animation:none}
+  .fold{transition:none}
+  .stage.lit .beam{animation:none}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <button class="brand" id="brand">Vikgubbar</button>
+  <div class="top-r">
+    <label class="sr" for="langSel" data-i="language"></label>
+    <select id="langSel"></select>
+    <button class="chip" id="soundBtn" aria-pressed="true"></button>
+  </div>
+</header>
+<canvas id="fx" aria-hidden="true"></canvas>
+<main>
+
+<!-- Start -->
+<section id="s-home" class="screen active">
+  <div class="hero">
+    <h1>Vikgubbar</h1>
+    <p data-i="tagline"></p>
+  </div>
+  <div class="stack">
+    <button class="btn primary" id="goSetup" data-i="newGame"></button>
+    <button class="btn" id="goJoin" data-i="join"></button>
+    <button class="btn" id="goGallery" data-i="gallery"></button>
+    <button class="btn secondary" id="goFaces" data-i="manageFaces" hidden></button>
+  </div>
+</section>
+
+<!-- Inställningar -->
+<section id="s-setup" class="screen">
+  <h2 data-i="newGame"></h2>
+  <div class="lbl" data-i="players"></div><div class="chips" id="c-players"></div>
+  <div class="lbl" data-i="parts"></div><div class="chips" id="c-parts"></div>
+  <div class="lbl" data-i="dir"></div><div class="chips" id="c-dir"></div>
+  <p class="fine" data-i="dirHint"></p>
+  <div class="lbl" data-i="mode"></div><div class="chips" id="c-mode"></div>
+  <div class="lbl" data-i="order"></div><div class="chips" id="c-order"></div>
+  <div class="lbl" data-i="category"></div><div class="chips" id="c-cat"></div>
+  <p class="fine" id="catHint"></p>
+  <div class="lbl"><label for="theme" data-i="theme"></label></div>
+  <input type="text" id="theme" data-ph="themePh" autocomplete="off">
+  <div class="lbl"><label for="citySel" id="cityLbl"></label></div>
+  <select id="citySel" style="width:100%"></select>
+  <p class="fine" id="cityHint"></p>
+  <p class="err" id="setupErr"></p>
+  <button class="btn primary wide" id="setupNext" data-i="next"></button>
+</section>
+
+<!-- Namn -->
+<section id="s-names" class="screen">
+  <h2 data-i="namesTitle"></h2>
+  <p class="fine" data-i="namesHint"></p>
+  <div id="nameInputs" class="stack"></div>
+  <button class="btn primary wide" id="namesGo" data-i="startDrawing"></button>
+</section>
+
+<!-- Överlämning -->
+<section id="s-handoff" class="screen">
+  <div style="padding-top:2.5rem">
+    <p class="script" id="foldShout" style="font-size:3.375rem;line-height:1" data-i="fold!"></p>
+    <h2 id="handTitle"></h2>
+    <p id="handText"></p>
+    <button class="btn primary wide" id="handReady" data-i="ready"></button>
+  </div>
+</section>
+
+<!-- Ansikte att minnas -->
+<section id="s-face" class="screen">
+  <div class="face">
+    <h2 data-i="faceTitle"></h2>
+    <p id="faceText"></p>
+    <img id="faceImg" alt="">
+    <div class="count" id="faceCount" aria-live="polite">5</div>
+  </div>
+</section>
+
+<!-- Rita -->
+<section id="s-draw" class="screen">
+  <div class="turnhead">
+    <h2 id="partTitle"></h2>
+    <span class="fine" id="partCount"></span>
+  </div>
+  <div class="who" id="whoDraws"></div>
+  <p class="fine" id="guide"></p>
+  <p class="fine" id="themeLine" hidden></p>
+  <div class="sheet-wrap">
+    <div class="sheet paperclip" id="sheet">
+      <canvas class="hint" id="hint" aria-hidden="true"></canvas>
+      <div class="stage-box">
+        <canvas id="pad" width="600" height="340" data-arialabel="canvasLabel"></canvas>
+        <div class="foldline" id="foldline"></div>
+      </div>
+    </div>
+  </div>
+  <p class="fine" id="hintLabel" style="text-align:center"></p>
+  <div class="tools">
+    <div class="palette" id="palette" role="group"></div>
+    <div class="sizerow">
+      <span data-i="pen"></span>
+      <label class="sr" for="sizeRange" data-i="sizeLabel"></label>
+      <input type="range" id="sizeRange" min="1" max="48" value="5">
+      <span data-i="brush"></span>
+      <div class="dot"><i id="sizeDot"></i></div>
+    </div>
+    <div class="toolbtns">
+      <button class="chip" id="eraser" aria-pressed="false" data-i="eraser"></button>
+      <button class="chip" id="undo" data-i="undo"></button>
+      <button class="chip" id="clear" data-i="clear"></button>
+    </div>
+  </div>
+  <button class="btn primary wide" id="foldBtn"></button>
+</section>
+
+<!-- Lobby -->
+<section id="s-lobby" class="screen">
+  <h2 data-i="lobbyTitle"></h2>
+  <div class="lbl" data-i="codeLabel"></div>
+  <div class="code" id="lobbyCode"></div>
+  <p class="fine" data-i="codeHint"></p>
+  <div class="lbl" id="joinedLbl"></div>
+  <ul class="diamonds" id="lobbyList"></ul>
+  <p class="fine" id="lobbyNote"></p>
+  <button class="btn primary wide" id="lobbyStart" data-i="startNow" hidden></button>
+  <button class="btn secondary wide" id="lobbyLeave" data-i="leave"></button>
+</section>
+
+<!-- Gå med -->
+<section id="s-join" class="screen">
+  <h2 data-i="joinTitle"></h2>
+  <div class="lbl"><label for="joinCode" data-i="codeLabel"></label></div>
+  <input type="text" id="joinCode" maxlength="4" autocomplete="off" style="text-transform:uppercase;font-size:1.5rem;letter-spacing:.2em">
+  <div class="lbl"><label for="joinCity" data-i="whereMe"></label></div>
+  <select id="joinCity" style="width:100%"></select>
+  <p class="fine" data-i="whereOnline"></p>
+  <p class="err" id="joinErr"></p>
+  <button class="btn primary wide" id="joinBtn" data-i="joinBtn"></button>
+</section>
+
+<!-- Vänta på tur -->
+<section id="s-wait" class="screen">
+  <h2 data-i="waitTitle"></h2>
+  <div class="progress" id="waitProg"></div>
+  <p id="waitText"></p>
+  <p class="fine" id="waitMine"></p>
+</section>
+
+<!-- Scen -->
+<section id="s-stage" class="screen">
+  <div class="stage" id="stage">
+    <div class="beam l"></div><div class="beam r"></div>
+    <div id="preShow">
+      <div class="andnow" data-i="andNow"></div>
+      <p id="stageWait"></p>
+      <button class="btn primary" id="unfoldBtn" data-i="unfold"></button>
+    </div>
+    <div class="figure-scroll"><div class="figure v" id="figure"></div></div>
+    <div id="postShow" hidden>
+      <div class="figname" id="figName"></div>
+      <p class="place" id="figPlace"></p>
+      <p class="place fine" id="figBy"></p>
+      <div class="rename">
+        <label class="sr" for="renameIn" data-i="rename"></label>
+        <input type="text" id="renameIn" autocomplete="off">
+        <button class="btn small" id="renameBtn" data-i="saveName"></button>
+      </div>
+      <div class="actions">
+        <button class="btn primary" id="againBtn" data-i="playAgain"></button>
+        <button class="btn" id="stageGallery" data-i="toGallery"></button>
+        <button class="btn" id="stageHome" data-i="home"></button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Galleri -->
+<section id="s-gallery" class="screen">
+  <h2 data-i="gallery"></h2>
+  <p class="fine" id="galNote"></p>
+  <div class="filters">
+    <label><span data-i="continent"></span><select id="fCont"></select></label>
+    <label><span data-i="country"></span><select id="fCountry"></select></label>
+    <label><span data-i="city"></span><select id="fCity"></select></label>
+  </div>
+  <div class="grid" id="galGrid"></div>
+</section>
+
+<!-- Ansikten -->
+<section id="s-faces" class="screen">
+  <h2 data-i="manageFaces"></h2>
+  <p class="fine" data-i="facesHint"></p>
+  <div class="lbl" data-i="addFace"></div>
+  <div class="stack" style="margin-top:0">
+    <label class="sr" for="faceName" data-i="faceName"></label>
+    <input type="text" id="faceName" data-ph="faceName" autocomplete="off">
+    <input type="file" id="faceFile" accept="image/*">
+    <p class="err" id="faceErr"></p>
+    <button class="btn primary" id="faceAdd" data-i="addFace"></button>
+  </div>
+  <div class="facelist" id="faceList"></div>
+</section>
+
+</main>
+
+<script>
+/* =========================================================
+   Vikgubbar, version 2
+   Allt ritande sker på <canvas>. Penndrag sparas som vektorer
+   (färg, tjocklek och punkter), så att vi kan ångra, rita om,
+   spara i galleriet och senare exportera till SVG.
+   ========================================================= */
+
+/* ---------- Språk ---------- */
+const LANGS = { sv:"Svenska", en:"English", fr:"Français", es:"Español", de:"Deutsch" };
+const LANG_EN = { sv:"Swedish", en:"English", fr:"French", es:"Spanish", de:"German" };
+const T = {
+sv:{tagline:"Rita en del var utan att se vad de andra har ritat. Veckla ut tillsammans.",newGame:"Nytt spel",join:"Gå med i onlinespel",gallery:"Galleri",manageFaces:"Äventyrare-ansikten",language:"Språk",soundOn:"Ljud på",soundOff:"Ljud av",
+players:"Antal spelare",parts:"Antal delar",dir:"Riktning",vertical:"Uppifrån och ned",horizontal:"Vänster till höger",dirHint:"Sidled passar för hästar, bilar och drakar.",
+mode:"Var spelar ni?",room:"I rummet, en enhet",online:"Online, varsin enhet",order:"Vem ritar vad?",strict:"I tur och ordning",random:"Slumpa",category:"Kategori",free:"Fritt",staff:"Äventyrare",
+staffHint:"Den som ritar huvudet får se ett ansikte i fem sekunder och ritar sedan ur minnet.",staffNone:"Lägg till ansikten under Äventyrare-ansikten för att låsa upp kategorin.",
+theme:"Tema (valfritt)",themePh:"Till exempel rymdvarelser",whereRoom:"Var är ni?",whereMe:"Var är du?",whereRoomHint:"Gubben bor där ni ritar den.",whereOnline:"Gubben flyttar till en plats mitt emellan er alla.",
+next:"Nästa",namesTitle:"Vilka spelar?",namesHint:"Valfritt. Hoppar ni över heter ni Spelare 1, 2 och så vidare.",player:"Spelare {n}",startDrawing:"Börja rita",
+hat:"Hatt",head:"Huvud",neck:"Hals och axlar",body:"Överkropp och armar",legs:"Ben",feet:"Fötter",legsfeet:"Ben och fötter",snout:"Nos",front:"Framdel",middle:"Mitten",rear:"Bakdel",tail:"Svans",headfront:"Huvud och framdel",rearTail:"Bakdel och svans",
+guideV:"Dra ut stödstreck förbi den streckade linjen längst ned, så vet nästa var hen ska fortsätta.",guideH:"Dra ut stödstreck förbi den streckade linjen till höger, så vet nästa var hen ska fortsätta.",guideLast:"Sista delen! Fortsätt från strecken och gör klart gubben.",
+hintLabel:"Remsan bredvid är det som sticker fram från förra delen.",partOf:"Del {i} av {n}",themeIs:"Tema: {t}",pen:"Penna",brush:"Pensel",sizeLabel:"Tjocklek",eraser:"Sudd",undo:"Ångra",clear:"Rensa",custom:"Egen färg",canvasLabel:"Rityta",
+fold:"Vik och lämna över",foldOnline:"Vik och skicka",finish:"Klar! Dags att veckla ut",emptyConfirm:"Delen är tom. Gå vidare ändå?",clearConfirm:"Rensa hela delen?",
+"fold!":"Vik!",handTo:"Lämna över till {name}",handPart:"{name} ritar: {part}. Ingen tjuvkikning!",ready:"Jag är redo",
+faceTitle:"Kom ihåg ansiktet!",faceText:"Om en stund ritar du {name} – ur minnet.",
+waitTitle:"Vänta på din tur",waitTurn:"{name} ritar just nu: {part}.",yourNext:"Du ritar: {parts}.",noTurn:"Du ritar ingen del den här gången, men du får se avtäckningen.",
+lobbyTitle:"Väntar på spelare",codeLabel:"Spelkod",codeHint:"Be de andra öppna appen, välja Gå med i onlinespel och skriva in koden.",joined:"{n} av {m} är med",startNow:"Starta spelet",hostWait:"Värden startar när alla är med.",hostStartHint:"Du kan starta när minst två är med.",leave:"Lämna spelet",
+joinTitle:"Gå med i ett spel",joinBtn:"Gå med",notFound:"Hittar inget spel med den koden.",started:"Det spelet har redan börjat.",full:"Spelet är fullt.",
+needDb:"Onlinespel kräver att du är inloggad med rätt att använda appen. I rummet fungerar ändå.",you:"du",host:"värd",
+andNow:"Och nu …",stageWait:"Alla delar är ritade. Värden vecklar ut.",unfold:"Veckla ut!",replay:"Spela upp igen",naming:"Hittar på ett namn …",livesIn:"Bor i {place}",midNote:"mitt emellan er",drawnBy:"Ritad av {names}",
+rename:"Byt namn",saveName:"Spara namnet",saved:"Sparat",playAgain:"Spela igen",home:"Till start",toGallery:"Visa galleriet",
+continent:"Världsdel",country:"Land",city:"Stad",all:"Alla",galEmpty:"Inga gubbar här än. Rita den första!",galLocal:"Du är inte inloggad, så galleriet sparas bara så länge sidan är öppen.",
+eu:"Europa",as:"Asien",af:"Afrika",na:"Nordamerika",sa:"Sydamerika",oc:"Oceanien",
+facesHint:"Ladda upp ett foto per person med förnamn. Fråga gärna kollegorna först om det är okej.",faceName:"Förnamn",addFace:"Lägg till ansikte",remove:"Ta bort",noFaces:"Inga ansikten än.",facesNoAccess:"Bara den som kan redigera appen kan lägga till ansikten.",faceMissing:"Skriv ett namn och välj en bild.",
+nameless:"Namnlös",as_:"som"},
+en:{tagline:"Everyone draws one part without seeing the others. Unfold it together.",newGame:"New game",join:"Join an online game",gallery:"Gallery",manageFaces:"Äventyret faces",language:"Language",soundOn:"Sound on",soundOff:"Sound off",
+players:"Players",parts:"Parts",dir:"Direction",vertical:"Top to bottom",horizontal:"Left to right",dirHint:"Sideways suits horses, cars and dragons.",
+mode:"Where are you playing?",room:"In the room, one device",online:"Online, own devices",order:"Who draws what?",strict:"In order",random:"Shuffle",category:"Category",free:"Free",staff:"Äventyret staff",
+staffHint:"Whoever draws the head sees a face for five seconds, then draws it from memory.",staffNone:"Add faces under Äventyret faces to unlock this category.",
+theme:"Theme (optional)",themePh:"For example space aliens",whereRoom:"Where are you?",whereMe:"Where are you?",whereRoomHint:"The figure lives where you draw it.",whereOnline:"The figure moves to a place halfway between all of you.",
+next:"Next",namesTitle:"Who’s playing?",namesHint:"Optional. Skip it and you’ll be Player 1, 2 and so on.",player:"Player {n}",startDrawing:"Start drawing",
+hat:"Hat",head:"Head",neck:"Neck and shoulders",body:"Body and arms",legs:"Legs",feet:"Feet",legsfeet:"Legs and feet",snout:"Snout",front:"Front",middle:"Middle",rear:"Rear",tail:"Tail",headfront:"Head and front",rearTail:"Rear and tail",
+guideV:"Let your lines cross the dashed line at the bottom so the next person knows where to continue.",guideH:"Let your lines cross the dashed line on the right so the next person knows where to continue.",guideLast:"Last part! Carry on from the lines and finish the figure.",
+hintLabel:"The strip next to the paper is what peeks through from the last part.",partOf:"Part {i} of {n}",themeIs:"Theme: {t}",pen:"Pen",brush:"Brush",sizeLabel:"Thickness",eraser:"Eraser",undo:"Undo",clear:"Clear",custom:"Own colour",canvasLabel:"Drawing area",
+fold:"Fold and pass on",foldOnline:"Fold and send",finish:"Done! Time to unfold",emptyConfirm:"This part is empty. Continue anyway?",clearConfirm:"Clear the whole part?",
+"fold!":"Fold!",handTo:"Pass it to {name}",handPart:"{name} draws: {part}. No peeking!",ready:"I’m ready",
+faceTitle:"Remember this face!",faceText:"In a moment you’ll draw {name} – from memory.",
+waitTitle:"Wait for your turn",waitTurn:"{name} is drawing: {part}.",yourNext:"You’ll draw: {parts}.",noTurn:"You won’t draw a part this time, but you’ll see the reveal.",
+lobbyTitle:"Waiting for players",codeLabel:"Game code",codeHint:"Ask the others to open the app, choose Join an online game and enter the code.",joined:"{n} of {m} joined",startNow:"Start the game",hostWait:"The host starts when everyone has joined.",hostStartHint:"You can start once at least two have joined.",leave:"Leave game",
+joinTitle:"Join a game",joinBtn:"Join",notFound:"No game with that code.",started:"That game has already started.",full:"The game is full.",
+needDb:"Online games need you to be signed in with access to the app. Playing in the room still works.",you:"you",host:"host",
+andNow:"And now …",stageWait:"All parts are drawn. The host will unfold.",unfold:"Unfold!",replay:"Play it again",naming:"Coming up with a name …",livesIn:"Lives in {place}",midNote:"halfway between you",drawnBy:"Drawn by {names}",
+rename:"Rename",saveName:"Save name",saved:"Saved",playAgain:"Play again",home:"Home",toGallery:"See the gallery",
+continent:"Continent",country:"Country",city:"City",all:"All",galEmpty:"No figures here yet. Draw the first one!",galLocal:"You’re not signed in, so the gallery only lasts while this page is open.",
+eu:"Europe",as:"Asia",af:"Africa",na:"North America",sa:"South America",oc:"Oceania",
+facesHint:"Upload one photo per person with their first name. It’s kind to check with colleagues first.",faceName:"First name",addFace:"Add face",remove:"Remove",noFaces:"No faces yet.",facesNoAccess:"Only people who can edit the app can add faces.",faceMissing:"Enter a name and choose a picture.",
+nameless:"Nameless",as_:"as"},
+fr:{tagline:"Chacun dessine une partie sans voir celles des autres. Dépliez ensemble.",newGame:"Nouvelle partie",join:"Rejoindre une partie en ligne",gallery:"Galerie",manageFaces:"Visages d’Äventyret",language:"Langue",soundOn:"Son activé",soundOff:"Son coupé",
+players:"Joueurs",parts:"Parties",dir:"Sens",vertical:"De haut en bas",horizontal:"De gauche à droite",dirHint:"Le sens horizontal convient aux chevaux, aux voitures et aux dragons.",
+mode:"Où jouez-vous ?",room:"Dans la pièce, un appareil",online:"En ligne, chacun son appareil",order:"Qui dessine quoi ?",strict:"Dans l’ordre",random:"Au hasard",category:"Catégorie",free:"Libre",staff:"Équipe Äventyret",
+staffHint:"La personne qui dessine la tête voit un visage pendant cinq secondes, puis le dessine de mémoire.",staffNone:"Ajoutez des visages dans Visages d’Äventyret pour débloquer cette catégorie.",
+theme:"Thème (facultatif)",themePh:"Par exemple des extraterrestres",whereRoom:"Où êtes-vous ?",whereMe:"Où es-tu ?",whereRoomHint:"La créature habite là où vous la dessinez.",whereOnline:"La créature s’installe à mi-chemin entre vous tous.",
+next:"Suivant",namesTitle:"Qui joue ?",namesHint:"Facultatif. Sinon vous serez Joueur 1, 2, etc.",player:"Joueur {n}",startDrawing:"Commencer à dessiner",
+hat:"Chapeau",head:"Tête",neck:"Cou et épaules",body:"Torse et bras",legs:"Jambes",feet:"Pieds",legsfeet:"Jambes et pieds",snout:"Museau",front:"Avant",middle:"Milieu",rear:"Arrière",tail:"Queue",headfront:"Tête et avant",rearTail:"Arrière et queue",
+guideV:"Prolonge tes traits sous la ligne pointillée en bas pour que la personne suivante sache où continuer.",guideH:"Prolonge tes traits au-delà de la ligne pointillée à droite pour que la personne suivante sache où continuer.",guideLast:"Dernière partie ! Pars des traits et termine la créature.",
+hintLabel:"La bande à côté du papier dépasse de la partie précédente.",partOf:"Partie {i} sur {n}",themeIs:"Thème : {t}",pen:"Crayon",brush:"Pinceau",sizeLabel:"Épaisseur",eraser:"Gomme",undo:"Annuler",clear:"Effacer",custom:"Autre couleur",canvasLabel:"Zone de dessin",
+fold:"Plier et passer",foldOnline:"Plier et envoyer",finish:"Terminé ! On déplie",emptyConfirm:"Cette partie est vide. Continuer quand même ?",clearConfirm:"Tout effacer ?",
+"fold!":"On plie !",handTo:"Passe l’appareil à {name}",handPart:"{name} dessine : {part}. On ne triche pas !",ready:"Je suis prêt·e",
+faceTitle:"Retiens ce visage !",faceText:"Dans un instant, tu dessines {name} de mémoire.",
+waitTitle:"Attends ton tour",waitTurn:"{name} dessine : {part}.",yourNext:"Tu dessineras : {parts}.",noTurn:"Tu ne dessines pas cette fois-ci, mais tu verras la révélation.",
+lobbyTitle:"En attente des joueurs",codeLabel:"Code de la partie",codeHint:"Demande aux autres d’ouvrir l’app, de choisir Rejoindre une partie en ligne et de saisir le code.",joined:"{n} sur {m} sont là",startNow:"Lancer la partie",hostWait:"L’hôte lance la partie quand tout le monde est là.",hostStartHint:"Tu peux lancer dès que deux personnes sont là.",leave:"Quitter la partie",
+joinTitle:"Rejoindre une partie",joinBtn:"Rejoindre",notFound:"Aucune partie avec ce code.",started:"Cette partie a déjà commencé.",full:"La partie est complète.",
+needDb:"Le jeu en ligne nécessite d’être connecté·e avec accès à l’app. Le jeu dans la pièce fonctionne quand même.",you:"toi",host:"hôte",
+andNow:"Et maintenant …",stageWait:"Toutes les parties sont dessinées. L’hôte va déplier.",unfold:"Déplier !",replay:"Rejouer la révélation",naming:"On lui trouve un nom …",livesIn:"Habite à {place}",midNote:"à mi-chemin entre vous",drawnBy:"Dessiné par {names}",
+rename:"Renommer",saveName:"Enregistrer le nom",saved:"Enregistré",playAgain:"Rejouer",home:"Accueil",toGallery:"Voir la galerie",
+continent:"Continent",country:"Pays",city:"Ville",all:"Tous",galEmpty:"Aucune créature pour l’instant. Dessinez la première !",galLocal:"Tu n’es pas connecté·e, la galerie ne dure que tant que la page est ouverte.",
+eu:"Europe",as:"Asie",af:"Afrique",na:"Amérique du Nord",sa:"Amérique du Sud",oc:"Océanie",
+facesHint:"Téléverse une photo par personne avec son prénom. Pense à demander l’accord des collègues.",faceName:"Prénom",addFace:"Ajouter un visage",remove:"Supprimer",noFaces:"Aucun visage pour l’instant.",facesNoAccess:"Seules les personnes qui peuvent modifier l’app peuvent ajouter des visages.",faceMissing:"Saisis un prénom et choisis une image.",
+nameless:"Sans nom",as_:"en"},
+es:{tagline:"Cada persona dibuja una parte sin ver las demás. Desplegadlo juntos.",newGame:"Nueva partida",join:"Unirse a una partida en línea",gallery:"Galería",manageFaces:"Caras de Äventyret",language:"Idioma",soundOn:"Sonido activado",soundOff:"Sonido apagado",
+players:"Jugadores",parts:"Partes",dir:"Dirección",vertical:"De arriba abajo",horizontal:"De izquierda a derecha",dirHint:"En horizontal van bien caballos, coches y dragones.",
+mode:"¿Dónde jugáis?",room:"En la sala, un dispositivo",online:"En línea, cada uno con el suyo",order:"¿Quién dibuja qué?",strict:"Por orden",random:"Al azar",category:"Categoría",free:"Libre",staff:"Equipo de Äventyret",
+staffHint:"Quien dibuja la cabeza ve una cara durante cinco segundos y luego la dibuja de memoria.",staffNone:"Añade caras en Caras de Äventyret para desbloquear esta categoría.",
+theme:"Tema (opcional)",themePh:"Por ejemplo, extraterrestres",whereRoom:"¿Dónde estáis?",whereMe:"¿Dónde estás?",whereRoomHint:"La figura vive donde la dibujáis.",whereOnline:"La figura se muda a un lugar a medio camino entre todos.",
+next:"Siguiente",namesTitle:"¿Quién juega?",namesHint:"Opcional. Si no, seréis Jugador 1, 2, etc.",player:"Jugador {n}",startDrawing:"Empezar a dibujar",
+hat:"Sombrero",head:"Cabeza",neck:"Cuello y hombros",body:"Torso y brazos",legs:"Piernas",feet:"Pies",legsfeet:"Piernas y pies",snout:"Hocico",front:"Parte delantera",middle:"Centro",rear:"Parte trasera",tail:"Cola",headfront:"Cabeza y parte delantera",rearTail:"Parte trasera y cola",
+guideV:"Alarga tus líneas por debajo de la línea discontinua para que la siguiente persona sepa dónde seguir.",guideH:"Alarga tus líneas más allá de la línea discontinua de la derecha para que la siguiente persona sepa dónde seguir.",guideLast:"¡Última parte! Sigue desde las líneas y termina la figura.",
+hintLabel:"La tira junto al papel es lo que asoma de la parte anterior.",partOf:"Parte {i} de {n}",themeIs:"Tema: {t}",pen:"Lápiz",brush:"Pincel",sizeLabel:"Grosor",eraser:"Goma",undo:"Deshacer",clear:"Borrar",custom:"Otro color",canvasLabel:"Zona de dibujo",
+fold:"Doblar y pasar",foldOnline:"Doblar y enviar",finish:"¡Listo! A desplegar",emptyConfirm:"Esta parte está vacía. ¿Seguir igualmente?",clearConfirm:"¿Borrar toda la parte?",
+"fold!":"¡A doblar!",handTo:"Pásale el dispositivo a {name}",handPart:"{name} dibuja: {part}. ¡Sin mirar!",ready:"Estoy listo",
+faceTitle:"¡Recuerda esta cara!",faceText:"Enseguida dibujarás a {name} de memoria.",
+waitTitle:"Espera tu turno",waitTurn:"{name} está dibujando: {part}.",yourNext:"Dibujarás: {parts}.",noTurn:"Esta vez no dibujas, pero verás la revelación.",
+lobbyTitle:"Esperando jugadores",codeLabel:"Código de la partida",codeHint:"Pide a los demás que abran la app, elijan Unirse a una partida en línea y escriban el código.",joined:"{n} de {m} se han unido",startNow:"Empezar la partida",hostWait:"El anfitrión empieza cuando estén todos.",hostStartHint:"Puedes empezar cuando haya al menos dos.",leave:"Salir de la partida",
+joinTitle:"Unirse a una partida",joinBtn:"Unirse",notFound:"No hay ninguna partida con ese código.",started:"Esa partida ya ha empezado.",full:"La partida está llena.",
+needDb:"Para jugar en línea hay que iniciar sesión con acceso a la app. Jugar en la sala sí funciona.",you:"tú",host:"anfitrión",
+andNow:"Y ahora …",stageWait:"Todas las partes están dibujadas. El anfitrión desplegará.",unfold:"¡Desplegar!",replay:"Repetir la revelación",naming:"Buscando un nombre …",livesIn:"Vive en {place}",midNote:"a medio camino entre vosotros",drawnBy:"Dibujado por {names}",
+rename:"Renombrar",saveName:"Guardar nombre",saved:"Guardado",playAgain:"Jugar otra vez",home:"Inicio",toGallery:"Ver la galería",
+continent:"Continente",country:"País",city:"Ciudad",all:"Todos",galEmpty:"Aún no hay figuras. ¡Dibujad la primera!",galLocal:"No has iniciado sesión, así que la galería solo dura mientras la página esté abierta.",
+eu:"Europa",as:"Asia",af:"África",na:"América del Norte",sa:"América del Sur",oc:"Oceanía",
+facesHint:"Sube una foto por persona con su nombre. Conviene preguntar antes a los compañeros.",faceName:"Nombre",addFace:"Añadir cara",remove:"Quitar",noFaces:"Aún no hay caras.",facesNoAccess:"Solo quien puede editar la app puede añadir caras.",faceMissing:"Escribe un nombre y elige una imagen.",
+nameless:"Sin nombre",as_:"como"},
+de:{tagline:"Jede Person zeichnet einen Teil, ohne die anderen zu sehen. Gemeinsam aufklappen.",newGame:"Neues Spiel",join:"Online-Spiel beitreten",gallery:"Galerie",manageFaces:"Äventyret-Gesichter",language:"Sprache",soundOn:"Ton an",soundOff:"Ton aus",
+players:"Spieler",parts:"Teile",dir:"Richtung",vertical:"Von oben nach unten",horizontal:"Von links nach rechts",dirHint:"Quer passt für Pferde, Autos und Drachen.",
+mode:"Wo spielt ihr?",room:"Im Raum, ein Gerät",online:"Online, jede:r mit eigenem Gerät",order:"Wer zeichnet was?",strict:"Der Reihe nach",random:"Zufällig",category:"Kategorie",free:"Frei",staff:"Äventyret-Team",
+staffHint:"Wer den Kopf zeichnet, sieht fünf Sekunden lang ein Gesicht und zeichnet es dann aus dem Gedächtnis.",staffNone:"Füge unter Äventyret-Gesichter Gesichter hinzu, um diese Kategorie freizuschalten.",
+theme:"Thema (optional)",themePh:"Zum Beispiel Außerirdische",whereRoom:"Wo seid ihr?",whereMe:"Wo bist du?",whereRoomHint:"Die Figur wohnt dort, wo ihr sie zeichnet.",whereOnline:"Die Figur zieht an einen Ort genau zwischen euch allen.",
+next:"Weiter",namesTitle:"Wer spielt?",namesHint:"Optional. Sonst heißt ihr Spieler 1, 2 und so weiter.",player:"Spieler {n}",startDrawing:"Loslegen",
+hat:"Hut",head:"Kopf",neck:"Hals und Schultern",body:"Oberkörper und Arme",legs:"Beine",feet:"Füße",legsfeet:"Beine und Füße",snout:"Schnauze",front:"Vorderteil",middle:"Mitte",rear:"Hinterteil",tail:"Schwanz",headfront:"Kopf und Vorderteil",rearTail:"Hinterteil und Schwanz",
+guideV:"Zieh deine Linien über die gestrichelte Linie unten, damit die nächste Person weiß, wo es weitergeht.",guideH:"Zieh deine Linien über die gestrichelte Linie rechts, damit die nächste Person weiß, wo es weitergeht.",guideLast:"Letzter Teil! Mach an den Linien weiter und vollende die Figur.",
+hintLabel:"Der Streifen neben dem Papier schaut vom letzten Teil hervor.",partOf:"Teil {i} von {n}",themeIs:"Thema: {t}",pen:"Stift",brush:"Pinsel",sizeLabel:"Stärke",eraser:"Radierer",undo:"Rückgängig",clear:"Leeren",custom:"Eigene Farbe",canvasLabel:"Zeichenfläche",
+fold:"Falten und weitergeben",foldOnline:"Falten und senden",finish:"Fertig! Aufklappen",emptyConfirm:"Dieser Teil ist leer. Trotzdem weiter?",clearConfirm:"Ganzen Teil leeren?",
+"fold!":"Falten!",handTo:"Gib das Gerät an {name}",handPart:"{name} zeichnet: {part}. Nicht spicken!",ready:"Ich bin bereit",
+faceTitle:"Merk dir das Gesicht!",faceText:"Gleich zeichnest du {name} – aus dem Gedächtnis.",
+waitTitle:"Warte, bis du dran bist",waitTurn:"{name} zeichnet gerade: {part}.",yourNext:"Du zeichnest: {parts}.",noTurn:"Diesmal zeichnest du keinen Teil, aber du siehst die Enthüllung.",
+lobbyTitle:"Warten auf Spieler",codeLabel:"Spielcode",codeHint:"Bitte die anderen, die App zu öffnen, Online-Spiel beitreten zu wählen und den Code einzugeben.",joined:"{n} von {m} sind dabei",startNow:"Spiel starten",hostWait:"Der Gastgeber startet, wenn alle da sind.",hostStartHint:"Du kannst starten, sobald mindestens zwei da sind.",leave:"Spiel verlassen",
+joinTitle:"Spiel beitreten",joinBtn:"Beitreten",notFound:"Kein Spiel mit diesem Code.",started:"Dieses Spiel hat schon begonnen.",full:"Das Spiel ist voll.",
+needDb:"Für Online-Spiele musst du mit Zugriff auf die App angemeldet sein. Im Raum spielen geht trotzdem.",you:"du",host:"Gastgeber",
+andNow:"Und jetzt …",stageWait:"Alle Teile sind gezeichnet. Der Gastgeber klappt auf.",unfold:"Aufklappen!",replay:"Nochmal abspielen",naming:"Name wird erfunden …",livesIn:"Wohnt in {place}",midNote:"genau zwischen euch",drawnBy:"Gezeichnet von {names}",
+rename:"Umbenennen",saveName:"Namen speichern",saved:"Gespeichert",playAgain:"Nochmal spielen",home:"Start",toGallery:"Zur Galerie",
+continent:"Kontinent",country:"Land",city:"Stadt",all:"Alle",galEmpty:"Noch keine Figuren. Zeichnet die erste!",galLocal:"Du bist nicht angemeldet, deshalb bleibt die Galerie nur, solange die Seite offen ist.",
+eu:"Europa",as:"Asien",af:"Afrika",na:"Nordamerika",sa:"Südamerika",oc:"Ozeanien",
+facesHint:"Lade pro Person ein Foto mit Vornamen hoch. Frag die Kolleg:innen am besten vorher.",faceName:"Vorname",addFace:"Gesicht hinzufügen",remove:"Entfernen",noFaces:"Noch keine Gesichter.",facesNoAccess:"Nur wer die App bearbeiten darf, kann Gesichter hinzufügen.",faceMissing:"Gib einen Namen ein und wähle ein Bild.",
+nameless:"Namenlos",as_:"als"}
+};
+
+let lang = (() => {
+  try { const s = localStorage.getItem("vg-lang"); if (s && T[s]) return s; } catch (e) {}
+  const n = (navigator.language || "sv").slice(0, 2);
+  return T[n] ? n : "sv";
+})();
+let soundOn = (() => { try { return localStorage.getItem("vg-sound") !== "off"; } catch (e) { return true; } })();
+
+function t(k, v = {}) {
+  let s = (T[lang][k] ?? T.en[k] ?? k);
+  for (const x in v) s = s.split("{" + x + "}").join(v[x]);
+  return s;
+}
+const $ = id => document.getElementById(id);
+const lc = s => lang === "de" ? s : s.toLowerCase();
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---------- Städer (alla på land, så gubben alltid bor på land) ---------- */
+// [namn, landskod, världsdel, latitud, longitud]
+const CITIES = [
+["Stockholm","SE","eu",59.33,18.07],["Göteborg","SE","eu",57.71,11.97],["Malmö","SE","eu",55.6,13],["Uppsala","SE","eu",59.86,17.64],["Umeå","SE","eu",63.83,20.26],["Luleå","SE","eu",65.58,22.15],["Kiruna","SE","eu",67.86,20.23],
+["Oslo","NO","eu",59.91,10.75],["Bergen","NO","eu",60.39,5.32],["Skien","NO","eu",59.21,9.61],["Tromsø","NO","eu",69.65,18.96],["København","DK","eu",55.68,12.57],["Aarhus","DK","eu",56.16,10.2],
+["Helsinki","FI","eu",60.17,24.94],["Mariehamn","AX","eu",60.1,19.94],["Reykjavík","IS","eu",64.15,-21.94],["Tórshavn","FO","eu",62.01,-6.77],
+["London","GB","eu",51.51,-0.13],["Edinburgh","GB","eu",55.95,-3.19],["Dublin","IE","eu",53.35,-6.26],["Paris","FR","eu",48.86,2.35],["Lyon","FR","eu",45.76,4.84],["Marseille","FR","eu",43.3,5.37],
+["Madrid","ES","eu",40.42,-3.7],["Barcelona","ES","eu",41.39,2.17],["Sevilla","ES","eu",37.39,-5.98],["Lisboa","PT","eu",38.72,-9.14],["Ponta Delgada","PT","eu",37.74,-25.67],
+["Berlin","DE","eu",52.52,13.4],["Hamburg","DE","eu",53.55,9.99],["München","DE","eu",48.14,11.58],["Wien","AT","eu",48.21,16.37],["Zürich","CH","eu",47.38,8.54],["Amsterdam","NL","eu",52.37,4.9],["Bruxelles","BE","eu",50.85,4.35],
+["Roma","IT","eu",41.9,12.5],["Milano","IT","eu",45.46,9.19],["Athína","GR","eu",37.98,23.73],["Warszawa","PL","eu",52.23,21.01],["Praha","CZ","eu",50.08,14.44],["Budapest","HU","eu",47.5,19.04],
+["Tallinn","EE","eu",59.44,24.75],["Riga","LV","eu",56.95,24.11],["Vilnius","LT","eu",54.69,25.28],["Kyiv","UA","eu",50.45,30.52],["Bucureşti","RO","eu",44.43,26.1],["İstanbul","TR","eu",41.01,28.98],["Moskva","RU","eu",55.76,37.62],
+["Kairo","EG","af",30.04,31.24],["Casablanca","MA","af",33.57,-7.59],["Tunis","TN","af",36.81,10.18],["Dakar","SN","af",14.72,-17.47],["Timbuktu","ML","af",16.77,-3.01],["Agadez","NE","af",16.97,7.99],
+["Lagos","NG","af",6.52,3.38],["Accra","GH","af",5.6,-0.19],["Khartoum","SD","af",15.5,32.56],["Addis Abeba","ET","af",9.03,38.74],["Nairobi","KE","af",-1.29,36.82],["Kinshasa","CD","af",-4.44,15.27],
+["Dar es Salaam","TZ","af",-6.79,39.21],["Windhoek","NA","af",-22.56,17.08],["Johannesburg","ZA","af",-26.2,28.05],["Kapstaden","ZA","af",-33.92,18.42],["Antananarivo","MG","af",-18.88,47.51],
+["Tokyo","JP","as",35.68,139.69],["Osaka","JP","as",34.69,135.5],["Seoul","KR","as",37.57,126.98],["Beijing","CN","as",39.9,116.4],["Shanghai","CN","as",31.23,121.47],["Ürümqi","CN","as",43.83,87.62],["Lhasa","CN","as",29.65,91.12],
+["Hong Kong","HK","as",22.32,114.17],["Taipei","TW","as",25.03,121.57],["Bangkok","TH","as",13.76,100.5],["Hà Nội","VN","as",21.03,105.85],["Singapore","SG","as",1.35,103.82],["Jakarta","ID","as",-6.21,106.85],["Manila","PH","as",14.6,120.98],
+["Delhi","IN","as",28.61,77.21],["Mumbai","IN","as",19.08,72.88],["Bengaluru","IN","as",12.97,77.59],["Kathmandu","NP","as",27.72,85.32],["Dhaka","BD","as",23.81,90.41],["Karachi","PK","as",24.86,67.01],
+["Dubai","AE","as",25.2,55.27],["Tehran","IR","as",35.69,51.39],["Riyadh","SA","as",24.71,46.68],["Almaty","KZ","as",43.24,76.89],["Ulaanbaatar","MN","as",47.89,106.91],
+["Novosibirsk","RU","as",55.01,82.93],["Irkutsk","RU","as",52.29,104.28],["Jakutsk","RU","as",62.03,129.73],
+["New York","US","na",40.71,-74.01],["Boston","US","na",42.36,-71.06],["Chicago","US","na",41.88,-87.63],["Denver","US","na",39.74,-104.99],["Austin","US","na",30.27,-97.74],["Miami","US","na",25.76,-80.19],
+["Los Angeles","US","na",34.05,-118.24],["San Francisco","US","na",37.77,-122.42],["Seattle","US","na",47.61,-122.33],["Anchorage","US","na",61.22,-149.9],["Honolulu","US","oc",21.31,-157.86],
+["Toronto","CA","na",43.65,-79.38],["Montréal","CA","na",45.5,-73.57],["Vancouver","CA","na",49.28,-123.12],["Winnipeg","CA","na",49.9,-97.14],["Iqaluit","CA","na",63.75,-68.52],["St. John’s","CA","na",47.56,-52.71],
+["Nuuk","GL","na",64.18,-51.69],["Hamilton","BM","na",32.29,-64.78],["Ciudad de México","MX","na",19.43,-99.13],["La Habana","CU","na",23.11,-82.37],["Panamá","PA","na",8.98,-79.52],
+["São Paulo","BR","sa",-23.55,-46.63],["Rio de Janeiro","BR","sa",-22.91,-43.17],["Brasília","BR","sa",-15.79,-47.88],["Manaus","BR","sa",-3.12,-60.02],["Buenos Aires","AR","sa",-34.6,-58.38],
+["Santiago","CL","sa",-33.45,-70.67],["Lima","PE","sa",-12.05,-77.04],["Bogotá","CO","sa",4.71,-74.07],["Quito","EC","sa",-0.18,-78.47],["Puerto Ayora","EC","sa",-0.74,-90.31],["Caracas","VE","sa",10.48,-66.9],["Montevideo","UY","sa",-34.9,-56.16],["La Paz","BO","sa",-16.5,-68.15],
+["Sydney","AU","oc",-33.87,151.21],["Melbourne","AU","oc",-37.81,144.96],["Brisbane","AU","oc",-27.47,153.03],["Perth","AU","oc",-31.95,115.86],["Alice Springs","AU","oc",-23.7,133.88],
+["Auckland","NZ","oc",-36.85,174.76],["Wellington","NZ","oc",-41.29,174.78],["Suva","FJ","oc",-18.14,178.44],["Nouméa","NC","oc",-22.28,166.46],["Papeete","PF","oc",-17.54,-149.57],["Port Moresby","PG","oc",-9.44,147.18]
+];
+const CONTS = ["eu","as","af","na","sa","oc"];
+const cityKey = c => c[0] + "|" + c[1];
+const findCity = k => CITIES.find(c => cityKey(c) === k);
+const DEFAULT_CITY = { sv:"Stockholm|SE", en:"London|GB", fr:"Paris|FR", es:"Madrid|ES", de:"Berlin|DE" };
+function countryName(cc) {
+  try { return new Intl.DisplayNames([lang], { type: "region" }).of(cc) || cc; } catch (e) { return cc; }
+}
+function placeLabel(key) { const c = findCity(key); return c ? `${c[0]}, ${countryName(c[1])}` : ""; }
+
+// Mittpunkt på jordklotet, sedan närmaste stad i listan (alltid på land)
+function midpointCity(keys) {
+  const list = keys.map(findCity).filter(Boolean);
+  if (!list.length) return DEFAULT_CITY[lang];
+  let x = 0, y = 0, z = 0;
+  for (const c of list) {
+    const la = c[3] * Math.PI / 180, lo = c[4] * Math.PI / 180;
+    x += Math.cos(la) * Math.cos(lo); y += Math.cos(la) * Math.sin(lo); z += Math.sin(la);
+  }
+  const best = { d: Infinity, c: list[0] };
+  for (const c of CITIES) {
+    const la = c[3] * Math.PI / 180, lo = c[4] * Math.PI / 180;
+    const cx = Math.cos(la) * Math.cos(lo), cy = Math.cos(la) * Math.sin(lo), cz = Math.sin(la);
+    const n = Math.hypot(x, y, z) || 1;
+    const d = (cx - x / n) ** 2 + (cy - y / n) ** 2 + (cz - z / n) ** 2;
+    if (d < best.d) { best.d = d; best.c = c; }
+  }
+  return cityKey(best.c);
+}
+function fillCitySelect(sel, value) {
+  sel.innerHTML = "";
+  for (const ct of CONTS) {
+    const g = document.createElement("optgroup"); g.label = t(ct);
+    CITIES.filter(c => c[2] === ct).sort((a, b) => a[0].localeCompare(b[0])).forEach(c => {
+      const o = document.createElement("option"); o.value = cityKey(c); o.textContent = `${c[0]}, ${countryName(c[1])}`; g.appendChild(o);
+    });
+    sel.appendChild(g);
+  }
+  sel.value = value || DEFAULT_CITY[lang];
+}
+
+/* ---------- Kroppsdelar ---------- */
+const PARTSETS = {
+  v: { 3:["head","body","legsfeet"], 4:["hat","head","body","legsfeet"], 5:["hat","head","body","legs","feet"], 6:["hat","head","neck","body","legs","feet"] },
+  h: { 3:["headfront","middle","rearTail"], 4:["head","front","rear","tail"], 5:["snout","head","front","rear","tail"], 6:["snout","head","front","middle","rear","tail"] }
+};
+const partKey = (dir, n, i) => PARTSETS[dir][n][i];
+const headIndex = (dir, n) => PARTSETS[dir][n].findIndex(k => k === "head" || k === "headfront");
+const DIMS = { v: { W: 600, H: 340 }, h: { W: 340, H: 600 } };
+const GAP = 40; // så mycket som syns av förra delen
+
+/* ---------- Plattformsfunktioner (databas, AI, inloggning) ---------- */
+const caps = { db: null, user: null, sample: null, assets: null, uid: null, canEdit: false, canWrite: false };
+let faces = [];
+(async () => {
+  if (!window.claude || !window.claude.use) return;
+  const [db, user, sample, assets] = await Promise.all(["db", "user", "sample", "assets"].map(n => window.claude.use(n).catch(() => null)));
+  Object.assign(caps, { db, user, sample, assets });
+  if (user) {
+    try { caps.uid = await user.id(); } catch (e) {}
+    try { caps.canEdit = await user.canEdit(); } catch (e) {}
+    try { const w = await user.can("data.write"); caps.canWrite = w !== false; } catch (e) { caps.canWrite = true; }
+  }
+  if (db) {
+    db.collection("faces").onSnapshot(s => {
+      faces = s.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderFaces(); renderSetupChips();
+    }, () => {});
+  }
+  $("goFaces").hidden = !caps.canEdit;
+})();
+
+/* ---------- Ljud: trumvirvel och fanfar (syntetiserat) ---------- */
+let AC = null;
+function ac() {
+  if (!soundOn) return null;
+  try {
+    if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+    if (AC.state === "suspended") AC.resume();
+  } catch (e) { return null; }
+  return AC;
+}
+document.addEventListener("pointerdown", () => { if (soundOn) ac(); }, { once: true });
+function noiseBuffer(a) {
+  const b = a.createBuffer(1, a.sampleRate * 0.2, a.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  return b;
+}
+function drumroll(sec) {
+  const a = ac(); if (!a) return;
+  const buf = noiseBuffer(a), t0 = a.currentTime;
+  for (let tt = 0; tt < sec; tt += 0.045) {
+    const s = a.createBufferSource(); s.buffer = buf;
+    const f = a.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 1800; f.Q.value = .8;
+    const g = a.createGain(); const v = 0.05 + 0.25 * (tt / sec);
+    g.gain.setValueAtTime(v, t0 + tt); g.gain.exponentialRampToValueAtTime(0.001, t0 + tt + 0.06);
+    s.connect(f).connect(g).connect(a.destination); s.start(t0 + tt); s.stop(t0 + tt + 0.08);
+  }
+}
+function fanfare() {
+  const a = ac(); if (!a) return;
+  const t0 = a.currentTime + 0.02;
+  const notes = [[0,392,.11],[.13,392,.11],[.26,392,.11],[.39,523.25,.6],[1.05,466.16,.16],[1.24,523.25,.16],[1.43,659.25,1.3]];
+  const master = a.createGain(); master.gain.value = 0.22; master.connect(a.destination);
+  const lp = a.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 2600; lp.connect(master);
+  const play = (st, f, d, vol = 1) => {
+    for (const det of [-6, 6]) {
+      const o = a.createOscillator(); o.type = "sawtooth"; o.frequency.value = f; o.detune.value = det;
+      const g = a.createGain();
+      g.gain.setValueAtTime(0, t0 + st); g.gain.linearRampToValueAtTime(.5 * vol, t0 + st + .03);
+      g.gain.setValueAtTime(.45 * vol, t0 + st + d * .8); g.gain.exponentialRampToValueAtTime(.001, t0 + st + d + .25);
+      o.connect(g).connect(lp); o.start(t0 + st); o.stop(t0 + st + d + .3);
+    }
+  };
+  notes.forEach(([s, f, d]) => play(s, f, d));
+  [523.25, 783.99].forEach(f => play(1.43, f, 1.3, .6));
+  // cymbal i slutet
+  const s = a.createBufferSource(); s.buffer = noiseBuffer(a); s.loop = true;
+  const hp = a.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 6000;
+  const g = a.createGain(); g.gain.setValueAtTime(.35, t0 + 1.43); g.gain.exponentialRampToValueAtTime(.001, t0 + 3.2);
+  s.connect(hp).connect(g).connect(a.destination); s.start(t0 + 1.43); s.stop(t0 + 3.3);
+}
+
+/* ---------- Rök och konfetti på en egen canvas ---------- */
+const fx = $("fx"), fctx = fx.getContext("2d");
+let particles = [], fxOn = false;
+function fxSize() { const d = devicePixelRatio || 1; fx.width = innerWidth * d; fx.height = innerHeight * d; fctx.setTransform(d, 0, 0, d, 0, 0); }
+fxSize(); addEventListener("resize", fxSize);
+function smoke() {
+  const w = innerWidth, h = innerHeight;
+  for (let i = 0; i < 70; i++) particles.push({ k: "s", x: Math.random() * w, y: h + Math.random() * 80, r: 50 + Math.random() * 70, vx: (Math.random() - .5) * .5, vy: -(0.5 + Math.random() * 1.3), life: 0, max: 240 + Math.random() * 160 });
+}
+function confetti() {
+  const w = innerWidth, h = innerHeight, cols = ["#e2481e", "#c19c61", "#ffffff", "#e86d4b", "#f2c12e"];
+  for (const side of [0, 1]) for (let i = 0; i < 130; i++) particles.push({
+    k: "c", x: side ? w - 10 : 10, y: h - 10, vx: (side ? -1 : 1) * (3 + Math.random() * 9), vy: -(11 + Math.random() * 11),
+    rot: Math.random() * 6, vr: (Math.random() - .5) * .4, w: 6 + Math.random() * 6, h: 9 + Math.random() * 9, col: cols[i % cols.length], life: 0, max: 320
+  });
+  for (let i = 0; i < 80; i++) particles.push({ k: "c", x: Math.random() * w, y: -20 - Math.random() * 200, vx: (Math.random() - .5) * 2, vy: 2 + Math.random() * 2,
+    rot: Math.random() * 6, vr: (Math.random() - .5) * .3, w: 6 + Math.random() * 6, h: 9 + Math.random() * 9, col: cols[i % cols.length], life: 0, max: 360 });
+}
+function fxLoop() {
+  fctx.clearRect(0, 0, innerWidth, innerHeight);
+  particles = particles.filter(p => p.life < p.max);
+  for (const p of particles) {
+    p.life++;
+    if (p.k === "s") {
+      p.x += p.vx; p.y += p.vy; p.r += .35;
+      const a = Math.min(1, p.life / 40) * Math.max(0, 1 - p.life / p.max) * .32;
+      const g = fctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
+      g.addColorStop(0, `rgba(225,220,235,${a})`); g.addColorStop(1, "rgba(225,220,235,0)");
+      fctx.fillStyle = g; fctx.beginPath(); fctx.arc(p.x, p.y, p.r, 0, 7); fctx.fill();
+    } else {
+      p.vy += .22; p.vx *= .99; p.vy = Math.min(p.vy, 4.5); p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+      fctx.save(); fctx.translate(p.x, p.y); fctx.rotate(p.rot); fctx.scale(1, Math.cos(p.life * .15));
+      fctx.fillStyle = p.col; fctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); fctx.restore();
+    }
+  }
+  if (particles.length) requestAnimationFrame(fxLoop); else { fxOn = false; fctx.clearRect(0, 0, innerWidth, innerHeight); }
+}
+function fxStart() { if (reduceMotion) { particles = []; return; } if (!fxOn) { fxOn = true; requestAnimationFrame(fxLoop); } }
+
+/* ---------- Penndrag ---------- */
+function drawStroke(c, s) {
+  const p = s.p;
+  c.strokeStyle = c.fillStyle = s.e ? "#ffffff" : s.c;
+  c.lineWidth = s.w; c.lineCap = "round"; c.lineJoin = "round";
+  if (p.length <= 2) { c.beginPath(); c.arc(p[0], p[1], s.w / 2, 0, Math.PI * 2); c.fill(); return; }
+  c.beginPath(); c.moveTo(p[0], p[1]);
+  // mjuka kurvor genom mittpunkter
+  for (let i = 2; i < p.length - 2; i += 2) {
+    const mx = (p[i] + p[i + 2]) / 2, my = (p[i + 1] + p[i + 3]) / 2;
+    c.quadraticCurveTo(p[i], p[i + 1], mx, my);
+  }
+  c.lineTo(p[p.length - 2], p[p.length - 1]);
+  c.stroke();
+}
+function paint(c, strokes, W, H) {
+  c.fillStyle = "#ffffff"; c.fillRect(0, 0, W, H);
+  (strokes || []).forEach(s => drawStroke(c, s));
+}
+// Rita en del till en ny canvas i valfri skala
+function partCanvas(strokes, dir, scale) {
+  const { W, H } = DIMS[dir], c = document.createElement("canvas");
+  c.width = Math.round(W * scale); c.height = Math.round(H * scale);
+  const x = c.getContext("2d"); x.scale(scale, scale); paint(x, strokes, W, H);
+  return c;
+}
+// Hela gubben i en bild
+function figureCanvas(parts, dir, scale) {
+  const { W, H } = DIMS[dir], n = parts.length, c = document.createElement("canvas");
+  c.width = Math.round((dir === "v" ? W : W * n) * scale); c.height = Math.round((dir === "v" ? H * n : H) * scale);
+  const x = c.getContext("2d");
+  parts.forEach((s, i) => {
+    x.save(); x.scale(scale, scale);
+    if (dir === "v") x.translate(0, i * H); else x.translate(i * W, 0);
+    x.beginPath(); x.rect(0, 0, W, H); x.clip(); paint(x, s, W, H); x.restore();
+  });
+  return c;
+}
+// Gör datan mindre innan den sparas
+function compact(strokes, step = 1) {
+  return strokes.map(s => {
+    if (step === 1) return s;
+    const p = [];
+    for (let i = 0; i < s.p.length; i += 2 * step) p.push(s.p[i], s.p[i + 1]);
+    if (p[p.length - 2] !== s.p[s.p.length - 2]) p.push(s.p[s.p.length - 2], s.p[s.p.length - 1]);
+    return { ...s, p };
+  });
+}
+function fitSize(obj, partsKey) {
+  let step = 1, out = obj;
+  while (JSON.stringify(out).length > 230000 && step < 8) {
+    step++;
+    out = { ...obj, [partsKey]: obj[partsKey].map(pt => ({ s: compact(pt.s, step) })) };
+  }
+  return out;
+}
+
+/* ---------- Ritskärmen ---------- */
+const pad = $("pad"), pctx = pad.getContext("2d"), hint = $("hint");
+const PALETTE = ["#222222","#e2481e","#c19c61","#8a6a35","#1f6fd1","#5bc0de","#2e9e4f","#f2c12e","#e85d9c","#8e44ad","#7a4b2a","#9aa0a6"];
+const toolMem = {};
+const D = { dir: "v", strokes: [], prev: null, cur: null, color: "#222222", size: 5, erase: false, who: "", onDone: null, meta: null };
+
+function openDraw(meta) {
+  // meta: {dir, i, n, who, whoKey, prev, theme, online, onDone}
+  Object.assign(D, { dir: meta.dir, strokes: [], prev: meta.prev, cur: null, erase: false, meta, onDone: meta.onDone });
+  const mem = toolMem[meta.whoKey] || { color: "#222222", size: 5 };
+  D.color = mem.color; D.size = mem.size;
+  const { W, H } = DIMS[D.dir];
+  pad.width = W; pad.height = H;
+  $("sheet").className = "sheet paperclip " + D.dir;
+  hint.hidden = !D.prev;
+  $("hintLabel").hidden = !D.prev;
+  $("foldline").hidden = meta.i === meta.n - 1;
+  buildPalette(); syncTools();
+  renderDrawTexts();
+  show("s-draw");
+  requestAnimationFrame(() => requestAnimationFrame(fitPad));
+}
+function renderDrawTexts() {
+  const m = D.meta; if (!m) return;
+  $("partTitle").textContent = t(partKey(m.dir, m.n, m.i));
+  $("partCount").textContent = t("partOf", { i: m.i + 1, n: m.n });
+  $("whoDraws").textContent = m.who;
+  $("guide").textContent = m.i === m.n - 1 ? t("guideLast") : t(m.dir === "v" ? "guideV" : "guideH");
+  $("themeLine").hidden = !m.theme; $("themeLine").textContent = t("themeIs", { t: m.theme || "" });
+  $("hintLabel").textContent = t("hintLabel");
+  $("foldBtn").textContent = m.i === m.n - 1 ? t("finish") : t(m.online ? "foldOnline" : "fold");
+  pad.setAttribute("aria-label", t("canvasLabel"));
+}
+function fitPad() {
+  const r = pad.getBoundingClientRect(); if (!r.width) return;
+  const d = devicePixelRatio || 1;
+  pad.width = Math.round(r.width * d); pad.height = Math.round(r.height * d);
+  redraw();
+  if (D.prev) {
+    const hr = hint.getBoundingClientRect(), { W, H } = DIMS[D.dir];
+    hint.width = Math.round(hr.width * d); hint.height = Math.round(hr.height * d);
+    const hc = hint.getContext("2d"), k = hint.width / (D.dir === "v" ? W : GAP);
+    hc.setTransform(k, 0, 0, k, 0, 0);
+    // Visa bara kanten av förra delen: nedersta remsan (lodrätt) eller högra remsan (vågrätt)
+    if (D.dir === "v") hc.translate(0, -(H - GAP)); else hc.translate(-(W - GAP), 0);
+    paint(hc, D.prev, W, H);
+  }
+}
+function redraw() {
+  const k = pad.width / DIMS[D.dir].W;
+  pctx.setTransform(k, 0, 0, k, 0, 0);
+  paint(pctx, D.strokes, DIMS[D.dir].W, DIMS[D.dir].H);
+}
+function toLogical(e) {
+  const r = pad.getBoundingClientRect(), { W, H } = DIMS[D.dir];
+  return [Math.round((e.clientX - r.left) / r.width * W * 10) / 10, Math.round((e.clientY - r.top) / r.height * H * 10) / 10];
+}
+pad.addEventListener("pointerdown", e => {
+  e.preventDefault(); pad.setPointerCapture(e.pointerId);
+  const [x, y] = toLogical(e);
+  D.cur = { c: D.color, w: D.erase ? D.size * 2 : D.size, e: D.erase ? 1 : 0, p: [x, y] };
+  D.strokes.push(D.cur); drawStroke(pctx, D.cur);
+});
+pad.addEventListener("pointermove", e => {
+  if (!D.cur) return;
+  const [x, y] = toLogical(e), p = D.cur.p, lx = p[p.length - 2], ly = p[p.length - 1];
+  if (Math.hypot(x - lx, y - ly) < 1.2) return;
+  p.push(x, y);
+  pctx.strokeStyle = D.cur.e ? "#ffffff" : D.cur.c; pctx.lineWidth = D.cur.w; pctx.lineCap = "round";
+  pctx.beginPath(); pctx.moveTo(lx, ly); pctx.lineTo(x, y); pctx.stroke();
+});
+["pointerup", "pointercancel"].forEach(ev => pad.addEventListener(ev, () => { if (D.cur) { D.cur = null; redraw(); } }));
+addEventListener("resize", () => { if ($("s-draw").classList.contains("active")) fitPad(); });
+
+function buildPalette() {
+  const box = $("palette"); box.innerHTML = ""; box.setAttribute("aria-label", t("custom"));
+  PALETTE.forEach(c => {
+    const b = document.createElement("button"); b.className = "sw"; b.style.background = c; b.dataset.c = c;
+    b.setAttribute("aria-label", c);
+    b.onclick = () => { D.color = c; D.erase = false; syncTools(); };
+    box.appendChild(b);
+  });
+  const w = document.createElement("label"); w.className = "customc"; w.title = t("custom");
+  w.innerHTML = `<span class="sr">${t("custom")}</span><input type="color" value="#e2481e">`;
+  w.querySelector("input").oninput = e => { D.color = e.target.value; D.erase = false; syncTools(); };
+  box.appendChild(w);
+}
+function syncTools() {
+  $("palette").querySelectorAll(".sw").forEach(b => b.setAttribute("aria-pressed", !D.erase && b.dataset.c === D.color));
+  $("eraser").setAttribute("aria-pressed", D.erase);
+  $("sizeRange").value = D.size;
+  const dot = $("sizeDot"), s = Math.max(2, Math.min(44, D.size));
+  dot.style.width = dot.style.height = s + "px"; dot.style.background = D.erase ? "#ccc" : D.color;
+  if (D.meta) toolMem[D.meta.whoKey] = { color: D.color, size: D.size };
+}
+$("sizeRange").oninput = e => { D.size = +e.target.value; syncTools(); };
+$("eraser").onclick = () => { D.erase = !D.erase; syncTools(); };
+$("undo").onclick = () => { D.strokes.pop(); redraw(); };
+$("clear").onclick = () => { if (D.strokes.length && confirm(t("clearConfirm"))) { D.strokes = []; redraw(); } };
+document.addEventListener("keydown", e => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && $("s-draw").classList.contains("active")) { e.preventDefault(); D.strokes.pop(); redraw(); }
+});
+$("foldBtn").onclick = () => {
+  if (!D.strokes.length && !confirm(t("emptyConfirm"))) return;
+  const s = D.strokes; D.meta = null; D.onDone(s);
+};
+
+/* ---------- Skärmhantering ---------- */
+let currentScreen = "s-home";
+function show(id) {
+  currentScreen = id;
+  document.querySelectorAll(".screen").forEach(s => s.classList.toggle("active", s.id === id));
+  document.body.classList.toggle("night", id === "s-stage");
+  if (id !== "s-stage") particles = [];
+  scrollTo(0, 0);
+}
+
+/* ---------- Inställningar ---------- */
+const S = { players: 3, parts: 3, dir: "v", mode: "room", order: "strict", cat: "free" };
+function chips(id, opts, key) {
+  const box = $(id); box.innerHTML = "";
+  opts.forEach(o => {
+    const b = document.createElement("button"); b.className = "chip";
+    b.textContent = o.label; b.disabled = !!o.disabled;
+    b.setAttribute("aria-pressed", S[key] === o.v);
+    b.onclick = () => { S[key] = o.v; renderSetupChips(); };
+    box.appendChild(b);
+  });
+}
+function renderSetupChips() {
+  if (S.cat === "staff" && !faces.length) S.cat = "free";
+  chips("c-players", [3, 4, 5, 6].map(v => ({ v, label: v })), "players");
+  chips("c-parts", [3, 4, 5, 6].map(v => ({ v, label: v })), "parts");
+  chips("c-dir", [{ v: "v", label: "↓ " + t("vertical") }, { v: "h", label: "→ " + t("horizontal") }], "dir");
+  chips("c-mode", [{ v: "room", label: t("room") }, { v: "online", label: t("online") }], "mode");
+  chips("c-order", [{ v: "strict", label: t("strict") }, { v: "random", label: t("random") }], "order");
+  chips("c-cat", [{ v: "free", label: t("free") }, { v: "staff", label: t("staff"), disabled: !faces.length }], "cat");
+  $("catHint").textContent = faces.length ? t("staffHint") : t("staffNone");
+  $("cityLbl").textContent = S.mode === "room" ? t("whereRoom") : t("whereMe");
+  $("cityHint").textContent = S.mode === "room" ? t("whereRoomHint") : t("whereOnline");
+}
+$("goSetup").onclick = () => { $("setupErr").textContent = ""; renderSetupChips(); show("s-setup"); };
+$("setupNext").onclick = () => {
+  if (S.mode === "room") { renderNameInputs(); show("s-names"); }
+  else createOnline();
+};
+
+/* ---------- Spel i rummet ---------- */
+const G = {};
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function makeAssign(nParts, ids, random) {
+  const out = [];
+  while (out.length < nParts) {
+    const round = random ? shuffle([...ids]) : [...ids];
+    if (random && out.length && round.length > 1 && round[0] === out[out.length - 1]) round.push(round.shift());
+    out.push(...round);
+  }
+  return out.slice(0, nParts);
+}
+function renderNameInputs() {
+  const box = $("nameInputs"), old = [...box.querySelectorAll("input")].map(i => i.value);
+  box.innerHTML = "";
+  for (let i = 0; i < S.players; i++) {
+    const id = "pn" + i, l = document.createElement("label");
+    l.className = "sr"; l.htmlFor = id; l.textContent = t("player", { n: i + 1 });
+    const inp = document.createElement("input"); inp.type = "text"; inp.id = id; inp.placeholder = t("player", { n: i + 1 }); inp.value = old[i] || ""; inp.autocomplete = "off";
+    box.append(l, inp);
+  }
+}
+$("namesGo").onclick = () => {
+  const names = [...$("nameInputs").querySelectorAll("input")].map((i, n) => i.value.trim() || t("player", { n: n + 1 }));
+  startRoom(names);
+};
+function startRoom(names) {
+  Object.assign(G, {
+    mode: "room", dir: S.dir, n: S.parts, cat: S.cat, theme: $("theme").value.trim(), home: $("citySel").value,
+    names, assign: makeAssign(S.parts, names.map((_, i) => i), S.order === "random"), idx: 0, parts: [],
+    face: S.cat === "staff" && faces.length ? faces[Math.floor(Math.random() * faces.length)] : null,
+    name: "", galleryId: null
+  });
+  roomTurn();
+}
+function roomTurn() {
+  const i = G.idx, who = G.names[G.assign[i]], part = t(partKey(G.dir, G.n, i));
+  $("handTitle").textContent = t("handTo", { name: who });
+  $("handText").textContent = t("handPart", { name: who, part: lc(part) });
+  $("foldShout").hidden = i === 0;
+  $("handReady").onclick = () => {
+    const go = () => openDraw({ dir: G.dir, i, n: G.n, who, whoKey: "r" + G.assign[i], prev: i ? G.parts[i - 1] : null, theme: G.theme, online: false,
+      onDone: s => { G.parts[i] = s; G.idx++; if (G.idx < G.n) roomTurn(); else roomStage(); } });
+    if (G.face && i === headIndex(G.dir, G.n)) showFace(G.face, go); else go();
+  };
+  show("s-handoff");
+}
+async function showFace(face, then) {
+  $("faceText").textContent = t("faceText", { name: face.name });
+  $("faceImg").src = "/_blob/" + face.asset; $("faceImg").alt = face.name;
+  show("s-face");
+  for (let n = 5; n > 0; n--) { $("faceCount").textContent = n; await sleep(1000); }
+  $("faceImg").removeAttribute("src");
+  then();
+}
+function roomStage() {
+  openStage({ parts: G.parts, dir: G.dir, home: G.home, by: G.names.join(", "), staff: G.face?.name, theme: G.theme, name: "" }, {
+    canUnfold: true,
+    afterShow: async rec => {
+      const r = await aiName(rec);
+      setStageName(r.name);
+      G.name = r.name;
+      G.galleryId = await saveGallery({ name: r.name, what: r.what, dir: G.dir, parts: G.parts.map(s => ({ s })), home: G.home, names: G.names, staff: G.face?.name || "", theme: G.theme, mode: "room", createdAt: new Date().toISOString() });
+    },
+    onRename: async name => { G.name = name; if (G.galleryId) await renameGallery(G.galleryId, name); },
+    again: () => startRoom(G.names)
+  });
+}
+
+/* ---------- Scenen: avtäckningen ---------- */
+let ST = null;
+function openStage(rec, opts) {
+  ST = { rec, opts, shown: false };
+  const fig = $("figure"); fig.className = "figure " + rec.dir; fig.innerHTML = ""; fig.style.setProperty("--n", rec.parts.length);
+  const scale = Math.min(2, (devicePixelRatio || 1) * 1.2);
+  rec.parts.forEach((s, i) => {
+    const c = partCanvas(s, rec.dir, scale); c.className = "fold closed";
+    c.setAttribute("aria-label", t(partKey(rec.dir, rec.parts.length, i)));
+    fig.appendChild(c);
+  });
+  $("stage").classList.remove("lit");
+  $("preShow").hidden = false;
+  $("postShow").hidden = true;
+  $("unfoldBtn").textContent = opts.replay ? t("replay") : t("unfold");
+  $("unfoldBtn").hidden = !opts.canUnfold;
+  $("stageWait").textContent = opts.canUnfold ? "" : t("stageWait");
+  $("againBtn").hidden = !opts.again;
+  show("s-stage");
+}
+$("unfoldBtn").onclick = () => { if (ST.opts.onUnfoldClick) ST.opts.onUnfoldClick(); else playShow(); };
+async function playShow() {
+  if (!ST || ST.playing) return;
+  ST.playing = true;
+  const rec = ST.rec;
+  $("unfoldBtn").hidden = true; $("stageWait").textContent = "";
+  $("postShow").hidden = true;
+  [...$("figure").children].forEach(c => c.classList.add("closed"));
+  $("stage").classList.add("lit");
+  if (!reduceMotion) { smoke(); fxStart(); }
+  drumroll(1.8);
+  await sleep(reduceMotion ? 200 : 1900);
+  $("preShow").hidden = true;
+  fanfare();
+  if (!reduceMotion) { confetti(); fxStart(); }
+  const folds = [...$("figure").children];
+  for (const f of folds) { f.classList.remove("closed"); await sleep(reduceMotion ? 0 : 280); }
+  $("postShow").hidden = false;
+  $("figPlace").textContent = rec.home ? t("livesIn", { place: placeLabel(rec.home) }) + (rec.mid ? ` (${t("midNote")})` : "") : "";
+  $("figBy").textContent = rec.by ? t("drawnBy", { names: rec.by }) : "";
+  if (rec.name) setStageName(rec.name);
+  else { $("figName").textContent = t("naming"); $("figName").classList.add("blur"); }
+  ST.playing = false;
+  if (!ST.shown) { ST.shown = true; if (ST.opts.afterShow) ST.opts.afterShow(rec); }
+}
+function setStageName(name) {
+  if (!ST) return;
+  ST.rec.name = name;
+  const el = $("figName"); el.textContent = name || t("nameless");
+  requestAnimationFrame(() => el.classList.remove("blur"));
+  $("renameIn").value = name || "";
+}
+$("renameBtn").onclick = async () => {
+  const v = $("renameIn").value.trim(); if (!v || !ST) return;
+  setStageName(v);
+  if (ST.opts.onRename) await ST.opts.onRename(v);
+  $("renameBtn").textContent = t("saved"); setTimeout(() => $("renameBtn").textContent = t("saveName"), 1500);
+};
+$("againBtn").onclick = () => ST?.opts.again?.();
+$("stageGallery").onclick = () => { leaveOnline(); openGallery(); };
+$("stageHome").onclick = () => { leaveOnline(); show("s-home"); };
+
+/* ---------- AI-namn utifrån en snabbtolkning av teckningen ---------- */
+const SYL = ["bo","ka","zi","lu","mo","fi","ra","pe","nu","gu","ti","ve","so","dra","plu","snu","kri","mi"];
+function fallbackName(staff) {
+  const n = 2 + Math.floor(Math.random() * 2); let s = "";
+  for (let i = 0; i < n; i++) s += SYL[Math.floor(Math.random() * SYL.length)];
+  s = s[0].toUpperCase() + s.slice(1);
+  return { name: staff ? `${staff} ${t("as_")} ${s}` : s, what: "" };
+}
+async function aiName(rec) {
+  if (!caps.sample) return fallbackName(rec.staff);
+  try {
+    const big = figureCanvas(rec.parts, rec.dir, 1);
+    const k = Math.min(1, 700 / Math.max(big.width, big.height));
+    const small = document.createElement("canvas"); small.width = Math.round(big.width * k); small.height = Math.round(big.height * k);
+    small.getContext("2d").drawImage(big, 0, 0, small.width, small.height);
+    const blob = await new Promise(r => small.toBlob(r, "image/png"));
+    const L = LANG_EN[lang];
+    let prompt = `This is a drawing from the folding drawing game "exquisite corpse": several people each drew one part without seeing the others (${rec.dir === "v" ? "top to bottom" : "left to right"}). Quickly interpret what the whole figure looks like. Then invent a playful, family-friendly name for it, at most five words, in ${L}. Reply ONLY with JSON: {"what": "<1-4 words in ${L} for what it most looks like>", "name": "<the name>"}.`;
+    if (rec.staff) prompt += ` The head was drawn from memory as a person called ${rec.staff}. The name must follow the pattern "${rec.staff} ${t("as_")} <what it looks like>" written naturally in ${L}, for example in Swedish "${rec.staff} som häst".`;
+    if (rec.theme) prompt += ` The theme was: ${rec.theme}.`;
+    const r = await caps.sample.json(prompt, { images: [blob], modelTier: "quick" });
+    if (r && typeof r.name === "string" && r.name.trim()) return { name: r.name.trim().slice(0, 80), what: String(r.what || "").slice(0, 60) };
+  } catch (e) { console.warn("Namngivning misslyckades", e); }
+  return fallbackName(rec.staff);
+}
+
+/* ---------- Galleri ---------- */
+let gallery = [], localGallery = [], galSub = null;
+async function saveGallery(rec) {
+  if (caps.db && caps.canWrite) {
+    try { const ref = await caps.db.collection("gallery").add(fitSize(rec, "parts")); return ref.id; }
+    catch (e) { console.warn(e); }
+  }
+  localGallery.unshift({ id: "local" + Date.now(), ...rec });
+  return null;
+}
+async function renameGallery(id, name) {
+  if (!id) return;
+  if (id.startsWith("local")) { const r = localGallery.find(x => x.id === id); if (r) r.name = name; return; }
+  try { await caps.db.doc("gallery/" + id).update({ name }); } catch (e) { console.warn(e); }
+}
+function openGallery() {
+  $("galNote").textContent = caps.db ? "" : t("galLocal");
+  if (caps.db && !galSub) {
+    galSub = caps.db.collection("gallery").orderBy("createdAt", "desc").limit(120).onSnapshot(s => {
+      gallery = s.docs.map(d => ({ id: d.id, ...d.data() }));
+      if (currentScreen === "s-gallery") renderGallery();
+    }, () => {});
+  }
+  renderGallery(); show("s-gallery");
+}
+function allGallery() { return [...localGallery, ...gallery]; }
+function renderGallery() {
+  const items = allGallery(), fc = $("fCont"), fco = $("fCountry"), fci = $("fCity");
+  const keep = { c: fc.value, co: fco.value, ci: fci.value };
+  const withCity = items.map(r => ({ r, c: findCity(r.home) })).filter(x => x.c);
+  const fill = (sel, vals, label, cur) => {
+    sel.innerHTML = `<option value="">${t("all")}</option>` + vals.map(([v, l]) => `<option value="${v}">${l}</option>`).join("");
+    sel.value = vals.some(([v]) => v === cur) ? cur : "";
+  };
+  fill(fc, CONTS.filter(ct => withCity.some(x => x.c[2] === ct)).map(ct => [ct, t(ct)]), "", keep.c);
+  const inCont = withCity.filter(x => !fc.value || x.c[2] === fc.value);
+  const countries = [...new Set(inCont.map(x => x.c[1]))].map(cc => [cc, countryName(cc)]).sort((a, b) => a[1].localeCompare(b[1]));
+  fill(fco, countries, "", keep.co);
+  const inCountry = inCont.filter(x => !fco.value || x.c[1] === fco.value);
+  const cities = [...new Set(inCountry.map(x => cityKey(x.c)))].map(k => [k, k.split("|")[0]]).sort((a, b) => a[1].localeCompare(b[1]));
+  fill(fci, cities, "", keep.ci);
+  const shown = inCountry.filter(x => !fci.value || cityKey(x.c) === fci.value).map(x => x.r);
+  const grid = $("galGrid"); grid.innerHTML = "";
+  if (!shown.length) { grid.innerHTML = `<p class="fine">${t("galEmpty")}</p>`; return; }
+  shown.forEach(r => {
+    const b = document.createElement("button"); b.className = "card";
+    const th = document.createElement("div"); th.className = "thumb";
+    try {
+      const parts = r.parts.map(p => p.s), c = figureCanvas(parts, r.dir, 0.4);
+      th.appendChild(c);
+    } catch (e) {}
+    const nm = document.createElement("b"); nm.textContent = r.name || t("nameless");
+    const pl = document.createElement("span"); pl.textContent = placeLabel(r.home);
+    b.append(th, nm, pl);
+    b.onclick = () => openGalleryItem(r);
+    grid.appendChild(b);
+  });
+}
+["fCont", "fCountry", "fCity"].forEach(id => $(id).onchange = renderGallery);
+async function byLabel(r) {
+  if (r.names) return r.names.join(", ");
+  if (r.uids && caps.user) {
+    try { const ps = await caps.user.profiles(r.uids); return r.uids.map((u, i) => ps[u]?.name || t("player", { n: i + 1 })).join(", "); } catch (e) {}
+  }
+  return "";
+}
+async function openGalleryItem(r) {
+  const rec = { parts: r.parts.map(p => p.s), dir: r.dir, home: r.home, by: await byLabel(r), name: r.name, staff: r.staff, mid: r.mode === "online" };
+  openStage(rec, { canUnfold: true, replay: true, onRename: n => { r.name = n; return renameGallery(r.id, n); } });
+}
+$("goGallery").onclick = openGallery;
+
+/* ---------- Onlinespel ---------- */
+let ON = null;
+function genCode() { const a = "ABCDEFGHJKLMNPQRSTUVWXYZ"; let s = ""; for (let i = 0; i < 4; i++) s += a[Math.floor(Math.random() * a.length)]; return s; }
+function onlineReady() { return caps.db && caps.uid && caps.canWrite; }
+async function createOnline() {
+  if (!onlineReady()) { $("setupErr").textContent = t("needDb"); return; }
+  $("setupNext").disabled = true;
+  try {
+    let code = genCode();
+    for (let i = 0; i < 5; i++) { const g = await caps.db.doc("games/" + code).get(); if (!g.exists) break; code = genCode(); }
+    await caps.db.doc("games/" + code).set({
+      host: caps.uid, players: S.players, n: S.parts, dir: S.dir, order: S.order, cat: S.cat, theme: $("theme").value.trim(),
+      status: "lobby", current: 0, createdAt: new Date().toISOString()
+    });
+    await caps.db.doc(`games/${code}/players/${caps.uid}`).set({ city: $("citySel").value, at: Date.now() });
+    enterGame(code);
+  } catch (e) { console.warn(e); $("setupErr").textContent = t("needDb"); }
+  $("setupNext").disabled = false;
+}
+$("goJoin").onclick = () => { $("joinErr").textContent = onlineReady() ? "" : t("needDb"); show("s-join"); };
+$("joinBtn").onclick = async () => {
+  if (!onlineReady()) { $("joinErr").textContent = t("needDb"); return; }
+  const code = $("joinCode").value.trim().toUpperCase();
+  if (code.length !== 4) { $("joinErr").textContent = t("notFound"); return; }
+  try {
+    const g = await caps.db.doc("games/" + code).get();
+    if (!g.exists) { $("joinErr").textContent = t("notFound"); return; }
+    const gd = g.data(), ps = await caps.db.collection(`games/${code}/players`).get();
+    const already = ps.docs.some(d => d.id === caps.uid);
+    if (!already && gd.status !== "lobby") { $("joinErr").textContent = t("started"); return; }
+    if (!already && ps.size >= gd.players) { $("joinErr").textContent = t("full"); return; }
+    if (!already) await caps.db.doc(`games/${code}/players/${caps.uid}`).set({ city: $("joinCity").value, at: Date.now() });
+    enterGame(code);
+  } catch (e) { console.warn(e); $("joinErr").textContent = t("needDb"); }
+};
+function enterGame(code) {
+  leaveOnline();
+  ON = { code, game: null, players: [], names: {}, view: "", unsub: [], sent: {} };
+  $("lobbyCode").textContent = code;
+  ON.unsub.push(caps.db.collection(`games/${code}/players`).onSnapshot(async s => {
+    ON.players = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => a.at - b.at);
+    await resolveNames(ON.players.map(p => p.id));
+    if (ON?.game?.status === "lobby") renderLobby();
+    if (currentScreen === "s-wait") renderWait();
+  }, () => {}));
+  ON.unsub.push(caps.db.doc("games/" + code).onSnapshot(s => { if (s.exists && ON) { ON.game = s.data(); handleGame(); } }, () => {}));
+}
+function leaveOnline() { if (ON) { ON.unsub.forEach(u => { try { u(); } catch (e) {} }); ON = null; } }
+async function resolveNames(ids) {
+  if (!caps.user || !ids.length) return;
+  try { const ps = await caps.user.profiles(ids); ids.forEach(id => { if (ps[id]?.name) ON.names[id] = ps[id].name; }); } catch (e) {}
+}
+function nameOf(id) {
+  if (!ON) return "";
+  const i = ON.players.findIndex(p => p.id === id);
+  const n = ON.names[id] || t("player", { n: i + 1 });
+  return id === caps.uid ? `${n} (${t("you")})` : n;
+}
+const isHost = () => ON?.game?.host === caps.uid;
+function renderLobby() {
+  if (!ON?.game) return;
+  const g = ON.game;
+  $("joinedLbl").textContent = t("joined", { n: ON.players.length, m: g.players });
+  $("lobbyList").innerHTML = "";
+  ON.players.forEach(p => {
+    const li = document.createElement("li");
+    li.textContent = `${nameOf(p.id)}${p.id === g.host ? " · " + t("host") : ""} – ${placeLabel(p.city)}`;
+    $("lobbyList").appendChild(li);
+  });
+  $("lobbyStart").hidden = !isHost();
+  $("lobbyStart").disabled = ON.players.length < 2;
+  $("lobbyNote").textContent = isHost() ? t("hostStartHint") : t("hostWait");
+}
+$("lobbyStart").onclick = async () => {
+  const g = ON.game, ids = ON.players.map(p => p.id);
+  const face = g.cat === "staff" && faces.length ? faces[Math.floor(Math.random() * faces.length)] : null;
+  await caps.db.doc("games/" + ON.code).update({
+    status: "drawing", current: 0, order: makeAssign(g.n, ids, g.order === "random"), playerIds: ids,
+    home: midpointCity(ON.players.map(p => p.city)), faceId: face ? face.id : null, faceName: face ? face.name : null
+  });
+};
+$("lobbyLeave").onclick = () => { leaveOnline(); show("s-home"); };
+
+async function handleGame() {
+  const g = ON.game;
+  if (g.status === "lobby") { if (ON.view !== "lobby") { ON.view = "lobby"; show("s-lobby"); } renderLobby(); return; }
+  if (g.status === "drawing") {
+    const i = g.current;
+    if (g.order[i] === caps.uid && !ON.sent[i]) {
+      if (ON.view !== "draw" + i) { ON.view = "draw" + i; startOnlineTurn(i); }
+    } else { if (ON.view !== "wait") { ON.view = "wait"; show("s-wait"); } renderWait(); }
+    return;
+  }
+  if (g.status === "done" || g.status === "revealed") {
+    if (!ON.stageRec) {
+      if (ON.loading) return;
+      ON.loading = true;
+      const snaps = await Promise.all(Array.from({ length: g.n }, (_, i) => caps.db.doc(`games/${ON.code}/parts/${i}`).get()));
+      const by = (g.playerIds || []).map(nameOf).join(", ");
+      if (!ON) return;
+      ON.stageRec = { parts: snaps.map(s => (s.data() || {}).s || []), dir: g.dir, home: g.home, by, staff: g.faceName || "", theme: g.theme, name: g.name || "", mid: true };
+      ON.loading = false;
+      return handleGame();
+    }
+    if (ON.view !== "stage") {
+      ON.view = "stage";
+      const code = ON.code;
+      openStage(ON.stageRec, {
+        canUnfold: isHost() && g.status === "done",
+        onUnfoldClick: () => caps.db.doc("games/" + code).update({ status: "revealed", revealAt: Date.now() }),
+        afterShow: async rec => {
+          if (!isHost() || ON?.game?.name) return;
+          const r = await aiName(rec);
+          await caps.db.doc("games/" + code).update({ name: r.name, what: r.what });
+          const gid = await saveGallery({ name: r.name, what: r.what, dir: rec.dir, parts: rec.parts.map(s => ({ s })), home: rec.home, uids: ON.game.playerIds, staff: rec.staff, theme: rec.theme || "", mode: "online", createdAt: new Date().toISOString() });
+          if (gid) await caps.db.doc("games/" + code).update({ galleryId: gid });
+        },
+        onRename: async name => {
+          await caps.db.doc("games/" + code).update({ name });
+          if (ON?.game?.galleryId) await renameGallery(ON.game.galleryId, name);
+        },
+        again: null
+      });
+    }
+    if (g.status === "revealed" && !ON.showStarted) { ON.showStarted = true; playShow(); }
+    if (g.name && ST && ST.shown && ST.rec.name !== g.name) setStageName(g.name);
+  }
+}
+function renderWait() {
+  const g = ON?.game; if (!g || g.status !== "drawing") return;
+  $("waitProg").innerHTML = Array.from({ length: g.n }, (_, i) => `<span class="${i < g.current ? "done" : ""}"></span>`).join("");
+  $("waitText").textContent = t("waitTurn", { name: nameOf(g.order[g.current]), part: lc(t(partKey(g.dir, g.n, g.current))) });
+  const mine = g.order.map((u, i) => u === caps.uid && i > g.current ? lc(t(partKey(g.dir, g.n, i))) : null).filter(Boolean);
+  $("waitMine").textContent = mine.length ? t("yourNext", { parts: mine.join(", ") }) : (g.order.includes(caps.uid) ? "" : t("noTurn"));
+}
+async function startOnlineTurn(i) {
+  const g = ON.game, code = ON.code;
+  let prev = null;
+  if (i > 0) { try { prev = ((await caps.db.doc(`games/${code}/parts/${i - 1}`).get()).data() || {}).s || []; } catch (e) { prev = []; } }
+  const go = () => openDraw({ dir: g.dir, i, n: g.n, who: nameOf(caps.uid), whoKey: "me", prev, theme: g.theme, online: true,
+    onDone: async s => {
+      ON.sent[i] = true; ON.view = "wait"; show("s-wait"); renderWait();
+      const doc = fitSize({ s: [{ s }] }, "s"); // komprimera vid behov
+      await caps.db.doc(`games/${code}/parts/${i}`).set({ s: doc.s[0].s });
+      await caps.db.doc("games/" + code).update(i + 1 < g.n ? { current: i + 1 } : { status: "done" });
+    } });
+  const face = g.faceId && faces.find(f => f.id === g.faceId);
+  if (face && i === headIndex(g.dir, g.n)) showFace(face, go); else go();
+}
+
+/* ---------- Ansikten (Äventyrare) ---------- */
+function renderFaces() {
+  const box = $("faceList"); box.innerHTML = "";
+  if (!faces.length) { box.innerHTML = `<p class="fine">${t("noFaces")}</p>`; return; }
+  faces.forEach(f => {
+    const fig = document.createElement("figure");
+    const img = document.createElement("img"); img.src = "/_blob/" + f.asset; img.alt = f.name;
+    const cap = document.createElement("figcaption");
+    const n = document.createElement("span"); n.textContent = f.name;
+    const rm = document.createElement("button"); rm.className = "linkbtn"; rm.textContent = t("remove");
+    rm.onclick = async () => { try { await caps.db.doc("faces/" + f.id).delete(); await caps.assets?.delete(f.asset); } catch (e) { console.warn(e); } };
+    cap.append(n, rm); fig.append(img, cap); box.appendChild(fig);
+  });
+}
+$("goFaces").onclick = () => { $("faceErr").textContent = caps.assets ? "" : t("facesNoAccess"); renderFaces(); show("s-faces"); };
+$("faceAdd").onclick = async () => {
+  const name = $("faceName").value.trim(), file = $("faceFile").files[0];
+  if (!name || !file) { $("faceErr").textContent = t("faceMissing"); return; }
+  if (!caps.assets || !caps.db) { $("faceErr").textContent = t("facesNoAccess"); return; }
+  $("faceAdd").disabled = true;
+  try {
+    const up = await caps.assets.upload(file);
+    await caps.db.collection("faces").add({ name, asset: up.id });
+    $("faceName").value = ""; $("faceFile").value = ""; $("faceErr").textContent = "";
+  } catch (e) { console.warn(e); $("faceErr").textContent = t("facesNoAccess"); }
+  $("faceAdd").disabled = false;
+};
+
+/* ---------- Språkväljare, ljud och översättning av allt ---------- */
+function applyI18n() {
+  document.documentElement.lang = lang;
+  document.querySelectorAll("[data-i]").forEach(el => el.textContent = t(el.dataset.i));
+  document.querySelectorAll("[data-ph]").forEach(el => el.placeholder = t(el.dataset.ph));
+  $("soundBtn").textContent = soundOn ? "♪ " + t("soundOn") : t("soundOff");
+  $("soundBtn").setAttribute("aria-pressed", soundOn);
+  fillCitySelect($("citySel"), $("citySel").value);
+  fillCitySelect($("joinCity"), $("joinCity").value);
+  renderSetupChips();
+  if (currentScreen === "s-names") renderNameInputs();
+  if (currentScreen === "s-draw") renderDrawTexts(), buildPalette(), syncTools();
+  if (currentScreen === "s-lobby") renderLobby();
+  if (currentScreen === "s-wait") renderWait();
+  if (currentScreen === "s-gallery") renderGallery();
+  if (currentScreen === "s-faces") renderFaces();
+  if (currentScreen === "s-stage" && ST) {
+    $("unfoldBtn").textContent = ST.opts.replay ? t("replay") : t("unfold");
+    if (!$("postShow").hidden) {
+      $("figPlace").textContent = ST.rec.home ? t("livesIn", { place: placeLabel(ST.rec.home) }) + (ST.rec.mid ? ` (${t("midNote")})` : "") : "";
+      $("figBy").textContent = ST.rec.by ? t("drawnBy", { names: ST.rec.by }) : "";
+    }
+  }
+}
+const ls = $("langSel");
+Object.entries(LANGS).forEach(([k, v]) => { const o = document.createElement("option"); o.value = k; o.textContent = v; ls.appendChild(o); });
+ls.value = lang;
+ls.onchange = () => { lang = ls.value; try { localStorage.setItem("vg-lang", lang); } catch (e) {} applyI18n(); };
+$("soundBtn").onclick = () => { soundOn = !soundOn; try { localStorage.setItem("vg-sound", soundOn ? "on" : "off"); } catch (e) {} if (soundOn) ac(); applyI18n(); };
+$("brand").onclick = () => { leaveOnline(); show("s-home"); };
+
+fillCitySelect($("citySel"), DEFAULT_CITY[lang]);
+fillCitySelect($("joinCity"), DEFAULT_CITY[lang]);
+applyI18n();
+</script>
+</body>
+</html>

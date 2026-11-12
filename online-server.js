@@ -121,7 +121,7 @@ function newGame(b) {
     // time: sekunder per del (0 = ingen gräns). turnStart: när den som har tur började rita (0 = inte än).
     // hands: för varje del, om den som ritade överkroppen också ritade händer
     time: [0, 30, 60, 90, 120].includes(+b.time) ? +b.time : 60, turnStart: 0, hands: [],
-    power: b.power === true, round: 0, assign: [], figs: [], handsF: [], names: [], galleryIds: []
+    power: b.power === true, round: 0, assign: [], figs: [], handsF: [], galleryIds: []
   };
   if (g.power) g.cat = "free";   // Äventyrare går inte ihop med flera gubbar samtidigt
   g.keys = PARTSETS[g.dir][g.n];
@@ -260,7 +260,7 @@ function stateFor(g, me) {
   };
   if (g.power) {
     const mid = ["drawing", "paused", "seeking"].includes(g.status);
-    Object.assign(out, { power: true, round: g.round, assign: g.assign, hands: g.handsF, names: g.names, galleryIds: g.galleryIds,
+    Object.assign(out, { power: true, round: g.round, assign: g.assign, hands: g.handsF, galleryIds: g.galleryIds,
       drawn: g.figs.map(f => Array.from({ length: g.n }, (_, r) => !!f[r])) });
     // Remsan från förra delen, bara för de gubbar jag ska rita i den här rundan
     if (mid && g.round > 0) {
@@ -479,7 +479,6 @@ module.exports = function makeGamesApi({ send, readJson, str, cleanStroke }) {
         g.what = str(b.what, 60);
         g.galleryId = str(b.galleryId, 40);
         if (g.power) {
-          g.names = (Array.isArray(b.names) ? b.names : []).slice(0, g.n).map(x => str(x, 80));
           g.galleryIds = (Array.isArray(b.galleryIds) ? b.galleryIds : []).slice(0, g.n).map(x => str(x, 40));
         }
         pushAll(g, "done");

@@ -4,7 +4,8 @@
 // i runda 1 ritar alla ett huvud, i runda 2 en överkropp och så vidare, varje gång i en ny gubbe.
 // Ingen ritar samma sorts del två gånger. Servern bestämmer vem som ritar vad (online-server.js).
 // När alla har ritat sin del börjar nästa runda. Timern gäller hela rundan.
-// På slutet vecklar värden ut alla gubbar på en gång, som en gruppbild, och sparar eller raderar dem.
+// På slutet vecklar värden ut alla gubbar på en gång, som en gruppbild, ger gänget ett namn och sparar
+// eller raderar dem. Gubbarna får inga egna namn, de heter som gänget.
 
 /* ---------- Under omgången ---------- */
 // Gubbarna jag ska rita i den här rundan och inte har skickat än
@@ -56,10 +57,10 @@ function handlePower(g) {
           keep: async () => {
             const R = GR.rec, ids = [];
             for (let f = 0; f < R.figs.length; f++) {
-              ids.push(await saveGallery({ name: R.names[f], what: R.whats[f] || "", dir: R.dir, parts: R.figs[f].map(s => ({ s })), home: R.home,
+              ids.push(await saveGallery({ name: R.gang, what: "", dir: R.dir, parts: R.figs[f].map(s => ({ s })), home: R.home,
                 names: R.by[f], staff: "", mode: "online", gang: R.gang, createdAt: new Date().toISOString() }) || "");
             }
-            const s = await api("POST", `/api/games/${id}/save`, { name: R.gang, names: R.names, galleryIds: ids });
+            const s = await api("POST", `/api/games/${id}/save`, { name: R.gang, galleryIds: ids });
             if (ON) applyGame(s);
           },
           drop: async () => { const s = await api("POST", `/api/games/${id}/discard`); if (ON) applyGame(s); }
@@ -98,7 +99,7 @@ function groupRec(g) {
   const figs = g.figs || [];
   return { figs, dir: g.dir, home: g.home,
     by: figs.map((_, f) => [...new Set(g.assign.map(row => row[f]))].map(id => g.players.find(p => p.id === id)?.name).filter(Boolean)),
-    names: figs.map((_, f) => g.names?.[f] || ""), whats: [], gang: g.status === "saved" ? g.name : "" };
+    gang: g.status === "saved" ? g.name : "" };
 }
 function openGroup(rec, opts) {
   GR.rec = rec; GR.opts = opts; GR.decided = !opts.decide; GR.playing = false;
@@ -109,9 +110,8 @@ function openGroup(rec, opts) {
     const body = document.createElement("div"); body.className = "mini " + rec.dir;
     parts.forEach(s => { const c = partCanvas(s, rec.dir, scale); c.className = "fold closed"; body.appendChild(c); });
     const cap = document.createElement("figcaption");
-    const nm = document.createElement("b"); nm.textContent = rec.names[f] || "";
     const by = document.createElement("span"); by.textContent = rec.by[f].join(", ");
-    cap.append(nm, by);
+    cap.append(by);
     fig.append(body, cap);
     box.appendChild(fig);
   });
@@ -147,14 +147,6 @@ async function playGroup() {
   $("groupPlace").textContent = GR.rec.home ? t("livesIn", { place: placeLabel(GR.rec.home) }) + ` (${t("midNote")})` : "";
   $("groupPost").hidden = false;
   if (!GR.decided) {
-    // Värden: varje gubbe får ett namn, sedan spara eller radera alla
-    const caps = [...$("groupFigs").querySelectorAll("figcaption b")];
-    caps.forEach(b => { b.textContent = t("naming"); });
-    for (let f = 0; f < GR.rec.figs.length; f++) {
-      const r = await aiName({ parts: GR.rec.figs[f], dir: GR.rec.dir });
-      GR.rec.names[f] = r.name; GR.rec.whats[f] = r.what;
-      if (caps[f]) caps[f].textContent = r.name;
-    }
     // Ett förslag på gängets namn, som värden kan skriva om
     if (!$("gangIn").value) $("gangIn").value = t("gangOf", { name: fallbackName().name });
     setGangTitle($("gangIn").value);

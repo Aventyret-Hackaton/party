@@ -62,7 +62,7 @@ async function playShow() {
   if (!ST.shown) { ST.shown = true; if (ST.opts.afterShow) ST.opts.afterShow(rec); }
 }
 // "Ritad av Anna, Signe och Joel", och gänget om gubben kommer från en power-omgång
-const byText = rec => [rec.by ? t("drawnBy", { names: rec.by }) : "", rec.gang ? t("inGang", { name: rec.gang }) : ""].filter(Boolean).join(" · ");
+const byText = rec => [rec.by ? t("drawnBy", { names: rec.by }) : "", rec.gang && rec.gang !== rec.name ? t("inGang", { name: rec.gang }) : ""].filter(Boolean).join(" · ");
 // Namnet, och för värden rutan där gubben sparas eller raderas
 function revealName() {
   const rec = ST.rec;

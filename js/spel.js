@@ -33,6 +33,7 @@ function navOpen(id) {
 addEventListener("popstate", e => {
   if (navSkip) { navSkip = false; return; }
   navDepth = Math.max(0, navDepth - 1);
+  if (typeof DANCE !== "undefined" && DANCE.on) { stopDance(); return; }          // bakåt under dansen: sluta dansa, stanna kvar
   if (currentScreen === "s-stage" && ST?.opts.back) { backToGallery(); return; }   // gubbe → galleriet
   if (NAV_GAME.includes(currentScreen) || currentScreen === "s-stage") { navPush({ party: "game" }); return; }
   navOpen(e.state?.party === "screen" ? e.state.id : "s-home");

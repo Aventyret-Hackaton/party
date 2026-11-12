@@ -114,6 +114,9 @@ async function startDance() {
   $("moreBelow").hidden = true;
   addEventListener("mousemove", onMouse);
   fig.scrollIntoView({ block: "center", behavior: reduceMotion ? "auto" : "smooth" });
+  // Dansen får en egen plats i historiken, så att telefonens bakåt (eller svep på Android)
+  // avslutar dansen i stället för att lämna gubben
+  navPush({ party: "dance" });
   DANCE.raf = requestAnimationFrame(danceFrame);
   setTimeout(() => { if (DANCE.on) voiceSay(true); }, 1200);   // catchphrase när dansen börjar
 }
@@ -132,7 +135,11 @@ function stopDance() {
   if (typeof syncMoreBelow === "function") syncMoreBelow();
 }
 $("danceBtn").onclick = startDance;
-$("danceStop").onclick = stopDance;
+// Klar: avsluta dansen och ta bort dansens plats i historiken
+$("danceStop").onclick = () => {
+  stopDance();
+  if (history.state?.party === "dance") { navSkip = true; navDepth = Math.max(0, navDepth - 1); history.back(); }
+};
 // Ljudknappen: av och på mitt i dansen
 $("soundBtn").addEventListener("click", () => setTimeout(() => { if (!DANCE.on) return; if (soundOn) startDanceMusic(); else introAudio.pause(); }));
 document.addEventListener("visibilitychange", () => { if (document.hidden && DANCE.on) stopDance(); });

@@ -12,7 +12,8 @@
 //   GET  /api/games/:id?v=           – läget i omgången (kräver spelarens nyckel)
 //   POST /api/games/:id/join         – gå med {name, city}
 //   POST /api/games/:id/leave        – lämna väntrummet
-//   POST /api/games/:id/part         – skicka in sin del {i, s}
+//   POST /api/games/:id/start        – den som har tur har börjat rita, tiden börjar gå
+//   POST /api/games/:id/part         – skicka in sin del {i, s, hands}
 //   POST /api/games/:id/reveal       – värden vecklar ut (bara värden ser gubben)
 //   POST /api/games/:id/save         – värden sparar gubben {name, what, galleryId}, alla får se den
 //   POST /api/games/:id/discard      – värden raderar gubben, de andra får veta det
@@ -32,7 +33,7 @@ const path = require("path");
 const vm = require("vm");
 const crypto = require("crypto");
 const { savePush, pushAll } = require("./push-server.js");
-const { nearFrom, howNear } = require("./nara-server.js");
+const { nearFrom, howNear, sameRoom } = require("./nara-server.js");
 
 const PASSWORD = process.env.ONLINE_PASSWORD || "";
 const LOBBY_IDLE_MS = 25 * 1000;        // en spelare i väntrummet som inte hörs av på 25 s tas bort
@@ -88,11 +89,17 @@ function makeAssign(nParts, ids, random) {
   }
   return out.slice(0, nParts);
 }
-function touch(g) { g.v++; g.touched = Date.now(); }
-function addPlayer(g, name, city) {
+function touch(g) {
+  // Byts den som ska rita (ny del, eller någon annan tar över) börjar tiden om när den nya börjar rita
+  const who = g.status === "drawing" || g.status === "paused" || g.status === "seeking" ? g.current + ":" + g.turns[g.current] : "";
+  if (who !== g.turnWho) { g.turnWho = who; g.turnStart = 0; }
+  g.v++; g.touched = Date.now();
+}
+// near: { net, loc } från nearFrom(), för att se vilka som sitter i samma rum (musiken delas upp)
+function addPlayer(g, name, city, near) {
   const id = crypto.randomBytes(6).toString("hex"), key = crypto.randomBytes(18).toString("base64url");
   // left = har lämnat (eller ersatts), missing = har inte hörts av på länge men kan komma tillbaka
-  g.players.push({ id, name, city, keyHash: hash(key), seen: Date.now(), left: false, missing: false });
+  g.players.push({ id, name, city, keyHash: hash(key), seen: Date.now(), left: false, missing: false, near: near || null });
   return { playerId: id, key };
 }
 // En ny omgång i väntrummet. b = {players, dir, order, cat}
@@ -102,7 +109,10 @@ function newGame(b) {
     id: genCode(), v: 1, createdAt: Date.now(), touched: Date.now(), status: "lobby",
     max, n: max, dir: b.dir === "h" ? "h" : "v", orderMode: b.order === "random" ? "random" : "strict",
     cat: b.cat === "staff" ? "staff" : "free", players: [], keys: [], turns: [], current: 0, parts: [],
-    home: "", face: null, name: "", what: "", galleryId: "", revealAt: 0, hostId: ""
+    home: "", face: null, name: "", what: "", galleryId: "", revealAt: 0, hostId: "",
+    // time: sekunder per del (0 = ingen gräns). turnStart: när den som har tur började rita (0 = inte än).
+    // hands: för varje del, om den som ritade överkroppen också ritade händer
+    time: [0, 30, 60, 90, 120].includes(+b.time) ? +b.time : 60, turnStart: 0, hands: []
   };
   g.keys = PARTSETS[g.dir][g.n];
   return g;
@@ -204,6 +214,7 @@ function stateFor(g, me) {
     hostId: g.hostId, players: g.players.map(p => ({ id: p.id, name: p.name, city: p.city, left: p.left, missing: p.missing })),
     gone: blocking(g).map(p => p.id),
     keys: g.keys, next: g.next || "",
+    time: g.time, turnStart: g.turnStart, hands: g.hands, band: bandFor(g, me.id),
     turns: g.turns, current: g.current, home: g.home, face: g.face,
     name: g.name, what: g.what, galleryId: g.galleryId, revealAt: g.revealAt
   };
@@ -212,6 +223,15 @@ function stateFor(g, me) {
   // Medan värden bestämmer om gubben ska sparas ser bara värden den. Raderas den får ingen annan se den.
   if (g.status === "saved" || ((g.status === "done" || g.status === "revealed") && me.id === g.hostId)) out.parts = g.parts;
   return out;
+}
+
+// Spelare som sitter i samma rum (samma wifi) spelar musiken tillsammans: varje telefon tar några av stämmorna.
+// k = min plats i gruppen, m = hur många vi är i rummet. m = 1: jag spelar allt själv.
+function bandFor(g, meId) {
+  const me = g.players.find(p => p.id === meId);
+  if (!me) return { k: 0, m: 1 };
+  const room = active(g).filter(p => p.id === meId || sameRoom(p.near, me.near));
+  return { k: Math.max(0, room.findIndex(p => p.id === meId)), m: Math.max(1, room.length) };
 }
 
 /* ---------- Anropen ---------- */
@@ -258,14 +278,14 @@ module.exports = function makeGamesApi({ send, readJson, str, cleanStroke }) {
       const b = await readJson(req) || {};
       const g = newGame(b);
       g.near = nearFrom(req, b);   // för Party i närheten
-      const me = addPlayer(g, cleanName(b.name), cleanCity(b.city));
+      const me = addPlayer(g, cleanName(b.name), cleanCity(b.city), g.near);
       g.hostId = me.playerId;
       games.set(g.id, g);
       send(req, res, 201, { ...me, game: stateFor(g, { id: me.playerId }) });
       return true;
     }
 
-    const m = p.match(/^\/api\/games\/([A-Z]{4})(?:\/(join|leave|part|reveal|save|discard|push|resolve|again))?$/);
+    const m = p.match(/^\/api\/games\/([A-Z]{4})(?:\/(join|leave|start|part|reveal|save|discard|push|resolve|again))?$/);
     if (!m) { deny(req, res, 404, "Finns inte."); return true; }
     const g = games.get(m[1]), action = m[2];
     if (!g) { deny(req, res, 404, "Omgången finns inte längre."); return true; }
@@ -275,7 +295,7 @@ module.exports = function makeGamesApi({ send, readJson, str, cleanStroke }) {
       const b = await readJson(req) || {};
       // En omgång som söker en ny spelare: den nya tar över delarna efter den som lämnade
       if (g.status === "seeking") {
-        const me = addPlayer(g, cleanName(b.name), cleanCity(b.city));
+        const me = addPlayer(g, cleanName(b.name), cleanCity(b.city), nearFrom(req, b));
         takeOver(g, me.playerId);
         settle(g);
         touch(g);
@@ -284,7 +304,7 @@ module.exports = function makeGamesApi({ send, readJson, str, cleanStroke }) {
       }
       if (g.status !== "lobby") { deny(req, res, 409, "started"); return true; }
       if (g.players.length >= g.max) { deny(req, res, 409, "full"); return true; }
-      const me = addPlayer(g, cleanName(b.name), cleanCity(b.city));
+      const me = addPlayer(g, cleanName(b.name), cleanCity(b.city), nearFrom(req, b));
       startIfFull(g);
       if (g.status === "drawing") pushAll(g, "full");
       touch(g);
@@ -314,12 +334,21 @@ module.exports = function makeGamesApi({ send, readJson, str, cleanStroke }) {
       send(req, res, 200, { ok: true });
       return true;
     }
+    if (action === "start") {
+      if (["drawing", "paused", "seeking"].includes(g.status) && g.turns[g.current] === me.id && !g.turnStart) {
+        touch(g);
+        g.turnStart = Date.now();
+      }
+      send(req, res, 200, stateFor(g, me));
+      return true;
+    }
     if (action === "part") {
       const b = await readJson(req) || {};
       // Den som redan ritar får rita klart sin del även om någon annan har lämnat under tiden
       if (!["drawing", "paused", "seeking"].includes(g.status) || +b.i !== g.current || g.turns[g.current] !== me.id) { deny(req, res, 409, "Det är inte din tur."); return true; }
       if (!Array.isArray(b.s) || b.s.length > 3000) { deny(req, res, 400, "Delen gick inte att läsa."); return true; }
       g.parts[g.current] = b.s.map(cleanStroke).filter(Boolean);
+      g.hands[g.current] = typeof b.hands === "boolean" ? b.hands : null;
       g.current++;
       if (g.current >= g.n) g.status = "done";
       else settle(g);   // nästa del kan vara någons som har lämnat   // notisen "gubben är klar" skickas först när värden har sparat den
@@ -344,7 +373,7 @@ module.exports = function makeGamesApi({ send, readJson, str, cleanStroke }) {
       if (!["saved", "deleted", "ended"].includes(g.status)) { deny(req, res, 409, "Omgången är inte klar."); return true; }
       let n = g.next && games.get(g.next);
       if (n && n.status === "lobby" && n.players.length < n.max) {
-        const joined = addPlayer(n, cleanName(b.name), cleanCity(b.city));
+        const joined = addPlayer(n, cleanName(b.name), cleanCity(b.city), nearFrom(req, b));
         startIfFull(n);
         if (n.status === "drawing") pushAll(n, "full");
         touch(n);
@@ -353,9 +382,9 @@ module.exports = function makeGamesApi({ send, readJson, str, cleanStroke }) {
       }
       if (games.size >= MAX_GAMES) sweep();
       if (games.size >= MAX_GAMES) { deny(req, res, 503, "För många omgångar just nu. Försök snart igen."); return true; }
-      n = newGame({ players: g.max, dir: g.dir, order: g.orderMode, cat: g.cat });
+      n = newGame({ players: g.max, dir: g.dir, order: g.orderMode, cat: g.cat, time: g.time });
       n.near = nearFrom(req, b);
-      const host = addPlayer(n, cleanName(b.name), cleanCity(b.city));
+      const host = addPlayer(n, cleanName(b.name), cleanCity(b.city), n.near);
       n.hostId = host.playerId;
       games.set(n.id, n);
       g.next = n.id;

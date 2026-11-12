@@ -47,4 +47,11 @@ function howNear(g, me) {
   return "";
 }
 
-module.exports = { nearFrom, howNear };
+// Sitter två spelare i samma rum? Samma nätverk (wifi), och inte långt ifrån varandra om båda har delat sin plats.
+// Används för att dela upp musikens stämmor mellan telefonerna, se js/musik.js.
+function sameRoom(a, b) {
+  if (!a || !b || !a.net || a.net !== b.net) return false;
+  return !(a.loc && b.loc && distM(a.loc, b.loc) > 1000);
+}
+
+module.exports = { nearFrom, howNear, sameRoom };

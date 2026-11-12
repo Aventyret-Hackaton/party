@@ -87,6 +87,8 @@
     <p class="fine" data-i="dirHint"></p>
     <p class="parts-info" id="setupParts"></p>
     <div class="lbl" data-i="order"></div><div class="chips" id="c-order"></div>
+    <div class="lbl" data-i="timeLabel"></div><div class="chips" id="c-time"></div>
+    <p class="fine" data-i="timeHint"></p>
     <div class="lbl" data-i="category"></div><div class="chips" id="c-cat"></div>
     <p class="fine" id="catHint"></p>
     <div id="roomCity">
@@ -134,9 +136,13 @@
   <div class="turnhead">
     <h2 id="partTitle"></h2>
     <span class="fine" id="partCount"></span>
+    <!-- Tiden som är kvar, och övertid när den har gått ut (js/timer.js) -->
+    <span class="timer" id="drawTimer" hidden></span>
   </div>
   <div class="who" id="whoDraws"></div>
   <p class="fine" id="guide"></p>
+  <!-- Har förra delen ritat händer? (js/rita.js) -->
+  <p class="hands-note" id="handsNote" hidden></p>
   <div class="sheet-wrap">
     <div class="sheet paperclip" id="sheet">
       <div class="stage-box">
@@ -164,6 +170,13 @@
     </div>
   </div>
   <button class="btn primary wide" id="foldBtn"></button>
+  <!-- Överkroppen: har du ritat händer? Svaret får nästa veta. -->
+  <div class="hands-ask" id="handsAsk" hidden>
+    <p class="hands-q" data-i="handsQ"></p>
+    <button class="btn primary wide" id="handsYes" data-i="handsYes"></button>
+    <button class="btn secondary wide" id="handsNo" data-i="handsNo"></button>
+    <button class="link-btn" id="handsBack" data-i="handsBack"></button>
+  </div>
 </section>
 
 <!-- Lobby -->
@@ -175,6 +188,9 @@
   <ul class="diamonds" id="lobbyList"></ul>
   <div class="progress" id="lobbySeats"></div>
   <p class="fine" id="lobbyNote"></p>
+  <p class="fine band-note" id="lobbyBand" hidden></p>
+  <!-- Gubbar från galleriet som dansar medan man väntar (js/vantdans.js) -->
+  <div class="dancers" id="lobbyDancers" aria-hidden="true"></div>
   <!-- Ropa ut inbjudan med ultraljud (js/narhet.js, js/ultraljud.js) -->
   <div id="shoutRow" hidden>
     <div class="chips"><button class="chip" id="shoutBtn" aria-pressed="false"></button></div>
@@ -189,7 +205,10 @@
   <p class="parts-info" id="waitParts"></p>
   <div class="progress" id="waitProg"></div>
   <p id="waitText"></p>
+  <p class="timer-line" id="waitTimer" hidden></p>
   <p class="fine" id="waitMine"></p>
+  <p class="fine band-note" id="waitBand" hidden></p>
+  <div class="dancers" id="waitDancers" aria-hidden="true"></div>
   <p class="fine" id="waitAgainNote"></p>
   <button class="btn primary wide" id="waitAgain" data-i="playAgain" hidden></button>
   <button class="btn secondary wide" id="waitHome" data-i="home" hidden></button>
@@ -274,6 +293,12 @@
     <label><span data-i="city"></span><select id="fCity"></select></label>
   </div>
   <div class="grid" id="galGrid"></div>
+  <!-- Bläddra mellan sidorna i galleriet (js/galleri.js) -->
+  <nav class="pager" id="galPager" hidden>
+    <button class="chip" id="pagePrev" data-i="pagePrev"></button>
+    <span id="pageNow" aria-live="polite"></span>
+    <button class="chip" id="pageNext" data-i="pageNext"></button>
+  </nav>
 </section>
 
 <!-- Ansikten -->
@@ -346,6 +371,8 @@
 <script src="js/ansikten.js"></script>
 <script src="js/intro.js"></script>
 <script src="js/dans.js"></script>
+<script src="js/timer.js"></script>
+<script src="js/vantdans.js"></script>
 <script src="js/start.js"></script>
 </body>
 </html>

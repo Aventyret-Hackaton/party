@@ -6,7 +6,7 @@
 //
 // API:
 //   GET   /api/health          – finns servern, och var sparas bilderna?
-//   GET   /api/gallery         – de senaste gubbarna
+//   GET   /api/gallery         – de senaste gubbarna (?since=id: bara de som är nyare än id)
 //   POST  /api/gallery         – spara en ny gubbe, svarar med id och en nyckel
 //   PATCH /api/gallery/:id     – byt namn, kräver nyckeln från POST
 //   GET   /api/gallery/:id.svg – gubben som tryckbar SVG för Tryckskaparen, se tryck-svg.js
@@ -23,7 +23,7 @@ const zlib = require("zlib");
 const PORT = process.env.PORT || 3000;
 const ROOT = __dirname;
 const MAX_BODY = 400 * 1024;      // största tillåtna gubbe i byte
-const LIST_LIMIT = 150;           // hur många gubbar galleriet visar
+const LIST_LIMIT = 300;           // hur många gubbar galleriet visar (spelet visar dem en sida i taget)
 const POSTS_PER_HOUR = 40;        // per IP-adress, mot spam
 const MAX_VOICE = 300 * 1024;     // största catchphrase i byte (sex sekunder brukar vara 30–60 kB)
 
@@ -64,12 +64,13 @@ async function getGallery(id) {
   const m = memory.find(x => x.id === id);
   return m ? m.data : null;
 }
-async function listGallery() {
+// since: bara gubbar med högre id än så (nya sedan förra hämtningen)
+async function listGallery(since = 0) {
   if (pool) {
-    const r = await pool.query("SELECT id, created_at, data FROM gallery ORDER BY id DESC LIMIT $1", [LIST_LIMIT]);
+    const r = await pool.query("SELECT id, created_at, data FROM gallery WHERE id > $2 ORDER BY id DESC LIMIT $1", [LIST_LIMIT, since]);
     return r.rows.map(row => ({ ...row.data, id: String(row.id), createdAt: row.created_at.toISOString() }));
   }
-  return memory.slice(0, LIST_LIMIT).map(m => ({ ...m.data, id: m.id, createdAt: m.createdAt }));
+  return memory.filter(m => +m.id > since).slice(0, LIST_LIMIT).map(m => ({ ...m.data, id: m.id, createdAt: m.createdAt }));
 }
 async function addGallery(data) {
   const token = crypto.randomBytes(18).toString("base64url");
@@ -172,7 +173,7 @@ const APP_VERSION = (() => {
 })();
 function send(req, res, status, body, type = "application/json; charset=utf-8", extra = {}) {
   let buf = Buffer.isBuffer(body) ? body : Buffer.from(typeof body === "string" ? body : JSON.stringify(body));
-  const headers = { "Content-Type": type, "X-Content-Type-Options": "nosniff", "X-App-Version": APP_VERSION, ...extra };
+  const headers = { "Content-Type": type, "X-Content-Type-Options": "nosniff", "X-App-Version": APP_VERSION, "X-Now": String(Date.now()), ...extra };
   if (buf.length > 1024 && /\bgzip\b/.test(req.headers["accept-encoding"] || "") && /json|text|javascript|svg/.test(type)) {
     buf = zlib.gzipSync(buf); headers["Content-Encoding"] = "gzip"; headers["Vary"] = "Accept-Encoding";
   }
@@ -259,7 +260,8 @@ const server = http.createServer(async (req, res) => {
       return send(req, res, 200, { ok: true, storage: pool ? "postgres" : "memory", online: true, password: !!process.env.ONLINE_PASSWORD, pushKey: pushKey() });
     }
     if (p === "/api/gallery" && req.method === "GET") {
-      return send(req, res, 200, await listGallery(), undefined, { "Cache-Control": "no-store" });
+      const since = Math.max(0, Math.floor(+url.searchParams.get("since") || 0));
+      return send(req, res, 200, await listGallery(since), undefined, { "Cache-Control": "no-store" });
     }
     if (p === "/api/gallery" && req.method === "POST") {
       const ip = String(req.headers["x-forwarded-for"] || req.socket.remoteAddress || "").split(",")[0].trim();

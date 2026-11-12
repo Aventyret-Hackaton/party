@@ -7,7 +7,8 @@ const toolMem = {};
 const D = { dir: "v", strokes: [], prev: null, cur: null, color: "#222222", size: 5, erase: false, who: "", onDone: null, meta: null };
 
 function openDraw(meta) {
-  // meta: {dir, i, n, who, whoKey, prev, online, onDone}
+  // meta: {dir, i, n, key, who, whoKey, prev, online, time, handsPrev, onDone}
+  //   time: sekunder för delen (0 = ingen gräns), handsPrev: om förra delen ritade händer (true/false/undefined)
   Object.assign(D, { dir: meta.dir, strokes: [], prev: meta.prev, cur: null, erase: false, meta, onDone: meta.onDone });
   const mem = toolMem[meta.whoKey] || { color: "#222222", size: 5 };
   D.color = mem.color; D.size = mem.size;
@@ -18,7 +19,10 @@ function openDraw(meta) {
   $("foldline").hidden = meta.i === meta.n - 1;
   buildPalette(); syncTools();
   renderDrawTexts();
+  $("handsAsk").hidden = true; $("foldBtn").hidden = false;
   show("s-draw");
+  startDrawTimer(meta.time || 0);   // js/timer.js
+  if (meta.onStart) meta.onStart();  // online: servern får veta att tiden börjar gå
   Z.s = 1; Z.x = Z.y = 0; applyZoom();
   requestAnimationFrame(() => requestAnimationFrame(fitPad));
 }
@@ -31,7 +35,13 @@ function renderDrawTexts() {
   $("hintLabel").textContent = t("hintLabel");
   $("foldBtn").textContent = m.i === m.n - 1 ? t("finish") : t(m.online ? "foldOnline" : "fold");
   pad.setAttribute("aria-label", t("canvasLabel"));
+  // Händerna: överkroppen har ritats, med eller utan händer. Nästa del får veta det.
+  $("handsNote").hidden = m.handsPrev == null;
+  $("handsNote").textContent = m.handsPrev == null ? "" : t(m.handsPrev ? "handsDone" : "handsTodo");
+  $("handsNote").classList.toggle("todo", m.handsPrev === false);
 }
+// Delen där man ritar armar: då frågar vi om händerna innan man viker
+const drawsArms = m => (m.key || partKey(m.dir, m.n, m.i)) === "body" && m.i < m.n - 1;
 function fitPad() {
   const r = pad.getBoundingClientRect(); if (!r.width) return;
   const d = devicePixelRatio || 1;
@@ -186,5 +196,12 @@ document.addEventListener("keydown", e => {
 });
 $("foldBtn").onclick = () => {
   if (!D.strokes.length && !confirm(t("emptyConfirm"))) return;
-  const s = D.strokes; D.meta = null; D.onDone(s);
+  if (D.meta && drawsArms(D.meta)) { $("foldBtn").hidden = true; $("handsAsk").hidden = false; $("handsYes").focus(); return; }
+  foldDone({});
 };
+function foldDone(extra) {
+  const s = D.strokes; D.meta = null; stopDrawTimer(); D.onDone(s, extra);
+}
+$("handsYes").onclick = () => foldDone({ hands: true });
+$("handsNo").onclick = () => foldDone({ hands: false });
+$("handsBack").onclick = () => { $("handsAsk").hidden = true; $("foldBtn").hidden = false; };

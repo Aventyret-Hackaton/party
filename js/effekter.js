@@ -54,3 +54,8 @@ function fxLoop() {
   if (particles.length) requestAnimationFrame(fxLoop); else { fxOn = false; fctx.clearRect(0, 0, innerWidth, innerHeight); }
 }
 function fxStart() { if (reduceMotion) { particles = []; return; } if (!fxOn) { fxOn = true; requestAnimationFrame(fxLoop); } }
+// Lätt regn som fortsätter så länge man ritar på övertid (js/timer.js)
+function rain() {
+  const w = innerWidth;
+  for (let i = 0; i < 28; i++) particles.push({ k: "r", x: Math.random() * (w + 120) - 60, y: -Math.random() * 200, vx: -1.2, vy: 10 + Math.random() * 5, len: 10 + Math.random() * 12, life: 0, max: 200 });
+}

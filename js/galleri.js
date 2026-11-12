@@ -40,11 +40,17 @@ async function renameGallery(id, name) {
   }
   try { await caps.db.doc("gallery/" + id).update({ name }); } catch (e) { console.warn(e); }
 }
+// Första gången hämtas hela listan. Sedan bara gubbar som är nyare än den nyaste vi har.
+let galNewest = 0;
 async function loadApiGallery() {
   try {
-    const r = await fetch("/api/gallery", { cache: "no-store" });
+    const r = await fetch("/api/gallery" + (galNewest ? "?since=" + galNewest : ""), { cache: "no-store" });
     if (!r.ok) return;
-    gallery = (await r.json()).map(g => ({ ...g, id: "api:" + g.id }));
+    const fresh = (await r.json()).map(g => ({ ...g, id: "api:" + g.id }));
+    if (galNewest && !fresh.length) return;
+    const known = new Set(gallery.map(g => g.id));
+    gallery = galNewest ? [...fresh.filter(g => !known.has(g.id)), ...gallery] : fresh;
+    galNewest = Math.max(galNewest, ...gallery.map(g => +apiId(g.id) || 0));
     if (currentScreen === "s-gallery") renderGallery();
   } catch (e) { console.warn(e); }
 }
@@ -68,6 +74,9 @@ async function openGallery(fromNav) {
   renderGallery(); show("s-gallery", fromNav);
 }
 function allGallery() { return [...localGallery, ...gallery]; }
+// Galleriet visas en sida i taget, så att det går fort även när det finns många gubbar
+const GAL_PAGE = 24;
+let galPage = 0;
 function renderGallery() {
   const items = allGallery(), fc = $("fCont"), fco = $("fCountry"), fci = $("fCity");
   const keep = { c: fc.value, co: fco.value, ci: fci.value };
@@ -89,7 +98,10 @@ function renderGallery() {
   renderSheetHint();
   const grid = $("galGrid"); grid.innerHTML = "";
   if (!shown.length) grid.innerHTML = `<p class="fine">${t("galEmpty")}</p>`;
-  shown.forEach(r => {
+  const pages = Math.max(1, Math.ceil(shown.length / GAL_PAGE));
+  galPage = Math.min(galPage, pages - 1);
+  renderPager(pages);
+  shown.slice(galPage * GAL_PAGE, (galPage + 1) * GAL_PAGE).forEach(r => {
     const b = document.createElement("button"); b.className = "card";
     const th = document.createElement("div"); th.className = "thumb";
     try {
@@ -103,7 +115,20 @@ function renderGallery() {
     grid.appendChild(b);
   });
 }
-["fCont", "fCountry", "fCity"].forEach(id => $(id).onchange = renderGallery);
+["fCont", "fCountry", "fCity"].forEach(id => $(id).onchange = () => { galPage = 0; renderGallery(); });
+// Bläddra: Föregående, Sida 2 av 5, Nästa. Syns bara när gubbarna inte får plats på en sida.
+function renderPager(pages) {
+  $("galPager").hidden = pages < 2;
+  $("pagePrev").disabled = galPage === 0;
+  $("pageNext").disabled = galPage >= pages - 1;
+  $("pageNow").textContent = t("pageOf", { i: galPage + 1, n: pages });
+}
+function goPage(d) {
+  galPage += d; renderGallery();
+  scrollTo({ top: Math.max(0, $("galGrid").getBoundingClientRect().top + scrollY - 76), behavior: reduceMotion ? "auto" : "smooth" });
+}
+$("pagePrev").onclick = () => goPage(-1);
+$("pageNext").onclick = () => goPage(1);
 // Rita galleribilden i den storlek den visas (rutan är högst cirka 240 × 320), gånger skärmens pixeltäthet,
 // så att strecken blir skarpa. Högst 2× för att inte äta minne när galleriet har många gubbar.
 function thumbScale(n, dir) {
@@ -179,6 +204,7 @@ function renderSheetHint() {
 function pickCity(key) {
   const c = findCity(key); if (!c) return;
   const same = $("fCity").value === key;
+  galPage = 0;
   $("fCont").value = same ? "" : c[2]; renderGallery();
   $("fCountry").value = same ? "" : c[1]; renderGallery();
   $("fCity").value = same ? "" : key; renderGallery();
@@ -256,7 +282,7 @@ async function byLabel(r) {
 let galScroll = 0;
 async function openGalleryItem(r) {
   const rec = { parts: r.parts.map(p => p.s), dir: r.dir, home: r.home, by: await byLabel(r), name: r.name, staff: r.staff, mid: r.mode === "online", galleryId: r.id, voiceUrl: voiceUrlFor(r) };
-  galScroll = scrollY;
+  galScroll = scrollY;   // sidan i galleriet (galPage) står kvar
   navPush({ party: "item" });
   openStage(rec, { canUnfold: true, replay: true, back: true });
 }

@@ -59,7 +59,10 @@ function show(id, fromNav) {
 
 /* ---------- Inställningar ---------- */
 // online: "new" = nytt onlinespel, "join" = gå med i en omgång, "" = inte valt än
-const S = { players: 3, parts: 3, dir: "v", mode: "online", order: "strict", cat: "free", online: "" };
+// time: sekunder per del, 0 = ingen tidsgräns
+const S = { players: 3, parts: 3, dir: "v", mode: "online", order: "strict", cat: "free", online: "", time: 60 };
+const TIMES = [30, 60, 90, 120, 0];
+const timeLabel = v => v ? (v < 120 ? v + " s" : v / 60 + " min") : t("noLimit");
 function chips(id, opts, key) {
   const box = $(id); box.innerHTML = "";
   opts.forEach(o => {
@@ -78,6 +81,7 @@ function renderSetupChips() {
   chips("c-players", [3, 4, 5, 6].map(v => ({ v, label: v })), "players");
   chips("c-dir", [{ v: "v", label: "↓ " + t("vertical") }, { v: "h", label: "→ " + t("horizontal") }], "dir");
   chips("c-order", [{ v: "strict", label: t("strict") }, { v: "random", label: t("random") }], "order");
+  chips("c-time", TIMES.map(v => ({ v, label: timeLabel(v) })), "time");
   chips("c-cat", [{ v: "free", label: t("free") }, { v: "staff", label: t("staff"), disabled: !faces.length }], "cat");
   $("catHint").textContent = faces.length ? t("staffHint") : t("staffNone");
   $("setupParts").textContent = partsInfo(S.dir, S.players);
@@ -129,7 +133,7 @@ $("namesGo").onclick = async () => {
 };
 function startRoom(names) {
   Object.assign(G, {
-    mode: "room", dir: S.dir, n: S.parts, cat: S.cat, home: HERE.key || EASTER_ISLAND,
+    mode: "room", dir: S.dir, n: S.parts, cat: S.cat, home: HERE.key || EASTER_ISLAND, time: S.time, hands: [],
     names, assign: makeAssign(S.parts, names.map((_, i) => i), S.order === "random"), idx: 0, parts: [],
     face: S.cat === "staff" && faces.length ? faces[Math.floor(Math.random() * faces.length)] : null,
     name: "", galleryId: null
@@ -149,7 +153,8 @@ function roomTurn() {
   renderHand();
   $("handReady").onclick = () => {
     const go = () => openDraw({ dir: G.dir, i, n: G.n, who, whoKey: "r" + G.assign[i], prev: i ? G.parts[i - 1] : null, online: false,
-      onDone: s => { G.parts[i] = s; G.idx++; if (G.idx < G.n) roomTurn(); else roomStage(); } });
+      time: G.time, handsPrev: i ? G.hands[i - 1] : undefined,
+      onDone: (s, extra) => { G.parts[i] = s; G.hands[i] = extra?.hands; G.idx++; if (G.idx < G.n) roomTurn(); else roomStage(); } });
     if (G.face && i === headIndex(G.dir, G.n)) showFace(G.face, go); else go();
   };
   show("s-handoff");

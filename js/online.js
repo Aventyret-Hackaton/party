@@ -12,7 +12,9 @@ async function api(method, url, body) {
   const pw = $("onPw").value || lsGet(PW_KEY);
   if (pw) headers["X-Party-Password"] = pw;
   if (ON && ON.me) { headers["X-Player"] = ON.me.playerId; headers["X-Key"] = ON.me.key; }
+  const t0 = Date.now();
   const r = await fetch(url, { method, headers, body: body ? JSON.stringify(body) : undefined, cache: "no-store", keepalive: /\/leave$/.test(url) });
+  clockSample(t0, Date.now(), +r.headers.get("X-Now"));
   let data = null; try { data = await r.json(); } catch (e) {}
   const v = r.headers.get("X-App-Version");
   if (v && caps.version && v !== caps.version) showUpdate();
@@ -23,6 +25,19 @@ async function api(method, url, body) {
 }
 // En ny version av spelet har kommit ut medan sidan var öppen. Alla bör ha samma version.
 function showUpdate() { $("updateBar").hidden = false; }
+
+/* ---------- Serverns klocka ---------- */
+// Telefonernas klockor går lite olika. Varje svar från servern har serverns tid (X-Now). Det svar som kom
+// snabbast tillbaka ger den bästa gissningen av skillnaden. Används av timern och av musiken, som
+// måste spela exakt i takt på flera telefoner i samma rum.
+const CLOCK = { offset: 0, samples: [] };
+function clockSample(t0, t1, server) {
+  if (!server) return;
+  CLOCK.samples.push({ rtt: t1 - t0, off: server - (t0 + t1) / 2 });
+  if (CLOCK.samples.length > 12) CLOCK.samples.shift();
+  CLOCK.offset = CLOCK.samples.reduce((a, b) => b.rtt < a.rtt ? b : a).off;
+}
+const serverNow = () => Date.now() + CLOCK.offset;
 $("updateBtn").onclick = () => { leaveOnline(); location.reload(); };
 // Delens namn i en onlineomgång. Servern bestämmer delarna, så alla ser samma.
 const gPart = (g, i) => (g.keys && g.keys[i]) || partKey(g.dir, g.n, i);
@@ -37,7 +52,8 @@ function needName(errEl) {
   errEl.textContent = t("nameNeeded"); $("onName").focus();
   return true;
 }
-const gameSummary = g => [g.dir === "v" ? "↓ " + t("vertical") : "→ " + t("horizontal"), g.orderMode === "random" ? t("random") : t("strict"), g.cat === "staff" ? t("staff") : t("free")].join(" · ");
+const gameSummary = g => [g.dir === "v" ? "↓ " + t("vertical") : "→ " + t("horizontal"), g.orderMode === "random" ? t("random") : t("strict"), g.cat === "staff" ? t("staff") : t("free"),
+  "⏱ " + timeLabel(g.time ?? 60)].join(" · ");
 
 /* ---------- Listan med öppna omgångar ---------- */
 let openTimer = null;
@@ -89,7 +105,7 @@ async function createOnline() {
   if (needName($("setupErr"))) return;
   $("setupNext").disabled = true;
   try {
-    enterGame(await api("POST", "/api/games", { name: myName(), city: await locate(), loc: HERE.loc || null, players: S.players, dir: S.dir, order: S.order, cat: S.cat }));
+    enterGame(await api("POST", "/api/games", { name: myName(), city: await locate(), loc: HERE.loc || null, players: S.players, dir: S.dir, order: S.order, cat: S.cat, time: S.time }));
   } catch (e) {
     $("setupErr").textContent = onlineError(e);
     if (e.code === "pw") $("onPw").focus();
@@ -99,7 +115,7 @@ async function createOnline() {
 async function joinOnline(id, btn) {
   if (needName($("onlineErr"))) return;
   btn.disabled = true;
-  try { enterGame(await api("POST", `/api/games/${id}/join`, { name: myName(), city: await locate() })); }
+  try { enterGame(await api("POST", `/api/games/${id}/join`, { name: myName(), city: await locate(), loc: HERE.loc || null })); }
   catch (e) { $("onlineErr").textContent = onlineError(e); $("onlineErr").dataset.from = "join"; btn.disabled = false; loadOpenList(); }
 }
 
@@ -163,6 +179,8 @@ function renderLobby() {
   });
   $("lobbySeats").innerHTML = Array.from({ length: g.max }, (_, i) => `<span class="${i < g.players.length ? "done" : ""}"></span>`).join("");
   $("lobbyNote").textContent = t("waitFull", { m: g.max });
+  renderBand("lobbyBand");
+  if (typeof startDancers === "function") startDancers("lobbyDancers");
 }
 $("lobbyLeave").onclick = () => { leaveOnline(); show("s-home"); };
 $("waitHome").onclick = () => { leaveOnline(); show("s-home"); };
@@ -295,11 +313,15 @@ function renderWait() {
   $("waitParts").hidden = end;
   $("waitLeave").hidden = gone;
   $("waitProg").innerHTML = Array.from({ length: g.n }, (_, i) => `<span class="${end || i < g.current ? "done" : ""}"></span>`).join("");
+  renderBand("waitBand");
+  if (typeof startDancers === "function") startDancers("waitDancers");
   if (end) {
     $("waitText").textContent = t(gone ? "hostDropped" : "hostDeciding", { name: nameOf(g.hostId) });
     $("waitMine").textContent = "";
+    $("waitTimer").hidden = true;
     return;
   }
+  renderWaitTimer();   // js/timer.js
   $("waitText").textContent = t("waitTurn", { name: nameOf(g.turns[g.current]), part: lc(t(gPart(g, g.current))) });
   // Vad jag ska rita, och hur många som ritar före mig
   const mineIdx = g.turns.map((u, i) => u === meId() && i > g.current ? i : -1).filter(i => i >= 0);
@@ -308,14 +330,23 @@ function renderWait() {
   $("waitMine").textContent = mineIdx.length ? t(before === 1 ? "yourNext1" : "yourNextN", { parts: mine, n: before })
     : (g.turns.includes(meId()) ? "" : t("noTurn"));
 }
+// Musiken: sitter flera i samma rum spelar telefonerna varsin stämma. Visa vilken.
+function renderBand(id) {
+  const b = ON?.game?.band, el = $(id);
+  el.hidden = !(b && b.m > 1 && soundOn);
+  if (el.hidden) return;
+  el.textContent = t("bandNote", { m: b.m, parts: myVoices().map(v => lc(t("voice_" + v))).join(", ") });
+}
 function startOnlineTurn(i) {
   const g = ON.game, id = g.id;
   const go = () => openDraw({ dir: g.dir, i, n: g.n, key: gPart(g, i), who: nameOf(meId()), whoKey: "me", prev: i > 0 ? (g.prev || []) : null, online: true,
-    onDone: async s => {
+    time: g.time ?? 60, handsPrev: i > 0 && g.hands?.[i - 1] != null ? g.hands[i - 1] : undefined,
+    onStart: () => api("POST", `/api/games/${id}/start`).catch(() => {}),
+    onDone: async (s, extra) => {
       if (!ON) return;
       ON.sent[i] = true; ON.view = "wait"; show("s-wait"); renderWait();
       const doc = fitSize({ s: [{ s }] }, "s"); // komprimera vid behov
-      try { const st = await api("POST", `/api/games/${id}/part`, { i, s: doc.s[0].s }); if (ON) applyGame(st); }
+      try { const st = await api("POST", `/api/games/${id}/part`, { i, s: doc.s[0].s, hands: extra?.hands }); if (ON) applyGame(st); }
       catch (e) { console.warn(e); if (ON) { ON.sent[i] = false; ON.view = ""; ON.v = 0; $("waitText").textContent = onlineError(e); } }
     } });
   if (g.face && i === gHead(g)) showFace(g.face, go); else go();

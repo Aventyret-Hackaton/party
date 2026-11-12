@@ -115,3 +115,40 @@ eu:"Europa",as:"Asien",af:"Afrika",na:"Nordamerika",sa:"Südamerika",oc:"Ozeanie
 facesHint:"Lade pro Person ein Foto mit Vornamen hoch. Frag die Kolleg:innen am besten vorher.",faceName:"Vorname",addFace:"Gesicht hinzufügen",remove:"Entfernen",noFaces:"Noch keine Gesichter.",facesNoAccess:"Nur wer die App bearbeiten darf, kann Gesichter hinzufügen.",faceMissing:"Gib einen Namen ein und wähle ein Bild.",
 galShared:"Die Galerie wird mit allen geteilt, die spielen.",gridView:"Raster",mapView:"Karte",mapFail:"Die Karte konnte nicht geladen werden. Prüfe die Verbindung und versuch es noch einmal.",figCount:"Hier wohnen {n} Figuren",figCount1:"Hier wohnt 1 Figur",onlineWhat:"Was möchtest du tun?",newOnline:"Neues Online-Spiel",joinRound:"Einem Spiel beitreten",inGame:"Dabei: {names}",introPlay:"Spielen",introGo:"Ja, hier steigt die Party",yourName:"Dein Name",onlinePw:"Passwort für Online-Spiele",openGames:"Offene Spiele",createOwn:"Eigenes Spiel starten",createBtn:"Spiel erstellen",backToList:"← Zurück zu den offenen Spielen",noOpen:"Gerade gibt es keine offenen Spiele. Starte dein eigenes!",gameBy:"Gestartet von {name}",seatsLeft:"{n} von {m} Plätzen frei",waitFull:"Das Spiel startet automatisch, sobald alle {m} Plätze belegt sind.",nameNeeded:"Schreib zuerst deinen Namen.",pwNeeded:"Gib das Passwort für Online-Spiele ein.",wrongPw:"Falsches Passwort. Frag die Person, die dich eingeladen hat.",gameGone:"Das Spiel gibt es nicht mehr.",noServer:"Online-Spiele funktionieren nur unter der Webadresse des Spiels, nicht beim direkten Öffnen der Datei.",onlineFail:"Etwas ist schiefgelaufen. Versuch es noch einmal.",voiceRec:"Spruch aufnehmen",voiceStop:"Fertig",voiceRecording:"Aufnahme … {n}",voicePlay:"Anhören",voiceRedo:"Neu aufnehmen",voiceHint:"Die Figur sagt deinen Spruch, wenn ihr Name erscheint.",voiceDenied:"Das Mikrofon ließ sich nicht verwenden. Erlaube der Seite das Mikrofon oder öffne das Spiel in Chrome oder Safari und versuch es nochmal.",voiceWaiting:"Warte auf das Mikrofon …",nameless:"Namenlos",as_:"als"}
 };
+
+// Galleriets sidor, timern, händerna och musiken som delas mellan telefonerna
+Object.assign(T.sv, { pagePrev: "‹ Föregående", pageNext: "Nästa ›", pageOf: "Sida {i} av {n}",
+  timeLabel: "Tid per del", timeHint: "Går tiden ut börjar det regna, men man får rita klart.", noLimit: "Ingen gräns",
+  timeLeft: "{t} kvar", overtime: "Övertid +{t}", waitLeft: "{name} har {t} kvar.", waitOvertime: "{name} jobbar på övertid! +{t}",
+  handsQ: "Har du ritat händer?", handsYes: "Ja, händerna är ritade", handsNo: "Nej, inga händer", handsBack: "Jag vill rita lite till",
+  handsDone: "Händerna är redan ritade. Du behöver inte rita några.", handsTodo: "Glöm inte händerna! Den förra ritade armar men inga händer.",
+  bandNote: "Ni är {m} telefoner i samma rum, så ni spelar låten tillsammans. Din spelar: {parts}.",
+  voice_drums: "Trummor", voice_bass: "Bas", voice_chords: "Ackord", voice_lead: "Melodi" });
+Object.assign(T.en, { pagePrev: "‹ Previous", pageNext: "Next ›", pageOf: "Page {i} of {n}",
+  timeLabel: "Time per part", timeHint: "When time runs out it starts to rain, but you can still finish.", noLimit: "No limit",
+  timeLeft: "{t} left", overtime: "Overtime +{t}", waitLeft: "{name} has {t} left.", waitOvertime: "{name} is working overtime! +{t}",
+  handsQ: "Did you draw hands?", handsYes: "Yes, the hands are drawn", handsNo: "No, no hands", handsBack: "I want to draw a bit more",
+  handsDone: "The hands are already drawn. You don’t need to draw any.", handsTodo: "Don’t forget the hands! The last player drew arms but no hands.",
+  bandNote: "You’re {m} phones in the same room, so you play the song together. Yours plays: {parts}.",
+  voice_drums: "Drums", voice_bass: "Bass", voice_chords: "Chords", voice_lead: "Melody" });
+Object.assign(T.fr, { pagePrev: "‹ Précédente", pageNext: "Suivante ›", pageOf: "Page {i} sur {n}",
+  timeLabel: "Temps par partie", timeHint: "Quand le temps est écoulé, il se met à pleuvoir, mais on peut finir.", noLimit: "Sans limite",
+  timeLeft: "Encore {t}", overtime: "Prolongation +{t}", waitLeft: "Il reste {t} à {name}.", waitOvertime: "{name} fait des heures sup ! +{t}",
+  handsQ: "As-tu dessiné des mains ?", handsYes: "Oui, les mains sont dessinées", handsNo: "Non, pas de mains", handsBack: "Je veux encore dessiner",
+  handsDone: "Les mains sont déjà dessinées. Pas besoin d’en ajouter.", handsTodo: "N’oublie pas les mains ! La personne précédente a dessiné des bras sans mains.",
+  bandNote: "Vous êtes {m} téléphones dans la même pièce, alors vous jouez le morceau ensemble. Le tien joue : {parts}.",
+  voice_drums: "Batterie", voice_bass: "Basse", voice_chords: "Accords", voice_lead: "Mélodie" });
+Object.assign(T.es, { pagePrev: "‹ Anterior", pageNext: "Siguiente ›", pageOf: "Página {i} de {n}",
+  timeLabel: "Tiempo por parte", timeHint: "Si se acaba el tiempo empieza a llover, pero se puede terminar.", noLimit: "Sin límite",
+  timeLeft: "Quedan {t}", overtime: "Prórroga +{t}", waitLeft: "A {name} le quedan {t}.", waitOvertime: "¡{name} está haciendo horas extra! +{t}",
+  handsQ: "¿Has dibujado manos?", handsYes: "Sí, las manos están dibujadas", handsNo: "No, sin manos", handsBack: "Quiero dibujar un poco más",
+  handsDone: "Las manos ya están dibujadas. No hace falta dibujar más.", handsTodo: "¡No olvides las manos! La persona anterior dibujó brazos sin manos.",
+  bandNote: "Sois {m} teléfonos en la misma sala, así que tocáis la canción juntos. El tuyo toca: {parts}.",
+  voice_drums: "Batería", voice_bass: "Bajo", voice_chords: "Acordes", voice_lead: "Melodía" });
+Object.assign(T.de, { pagePrev: "‹ Zurück", pageNext: "Weiter ›", pageOf: "Seite {i} von {n}",
+  timeLabel: "Zeit pro Teil", timeHint: "Wenn die Zeit um ist, fängt es an zu regnen, aber man darf fertig zeichnen.", noLimit: "Ohne Limit",
+  timeLeft: "Noch {t}", overtime: "Überstunden +{t}", waitLeft: "{name} hat noch {t}.", waitOvertime: "{name} macht Überstunden! +{t}",
+  handsQ: "Hast du Hände gezeichnet?", handsYes: "Ja, die Hände sind gezeichnet", handsNo: "Nein, keine Hände", handsBack: "Ich will noch etwas zeichnen",
+  handsDone: "Die Hände sind schon gezeichnet. Du musst keine zeichnen.", handsTodo: "Vergiss die Hände nicht! Die Person vor dir hat Arme ohne Hände gezeichnet.",
+  bandNote: "Ihr seid {m} Handys im selben Raum und spielt den Song zusammen. Deins spielt: {parts}.",
+  voice_drums: "Schlagzeug", voice_bass: "Bass", voice_chords: "Akkorde", voice_lead: "Melodie" });

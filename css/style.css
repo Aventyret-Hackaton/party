@@ -126,8 +126,11 @@ a.btn{text-decoration:none}
 .palette{display:flex;flex-wrap:wrap;gap:.45rem;align-items:center}
 .sw{width:2.1rem;height:2.1rem;border-radius:50%;border:2px solid var(--line);padding:0}
 .sw[aria-pressed="true"]{outline:2px solid var(--ink);outline-offset:2px}
-.customc{position:relative;width:2.1rem;height:2.1rem;border-radius:50%;overflow:hidden;border:2px dashed var(--line)}
-.customc input{position:absolute;inset:-6px;width:150%;height:150%;border:0;padding:0;cursor:pointer}
+.customc{position:relative;display:grid;place-items:center;width:2.1rem;height:2.1rem;border-radius:50%;overflow:hidden;border:2px solid var(--line);background:#fff;cursor:pointer}   /* vit som pappret, så att pipetten syns i alla färger */
+.customc[aria-pressed="true"]{outline:2px solid var(--ink);outline-offset:2px}
+.customc svg{width:1.35rem;height:1.35rem;pointer-events:none}
+.customc input{position:absolute;inset:0;width:100%;height:100%;border:0;padding:0;opacity:0;cursor:pointer}
+.customc:focus-within{outline:2px solid var(--focus);outline-offset:2px}
 .sizerow{display:flex;align-items:center;gap:.75rem;font-size:.9375rem}
 .sizerow input{flex:1;accent-color:var(--accent)}
 .dot{width:3rem;height:3rem;display:grid;place-items:center}

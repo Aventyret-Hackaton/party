@@ -148,12 +148,26 @@ function buildPalette() {
     box.appendChild(b);
   });
   const w = document.createElement("label"); w.className = "customc"; w.title = t("custom");
-  w.innerHTML = `<span class="sr">${t("custom")}</span><input type="color" value="#e2481e">`;
+  // Pipetten har den färg som är vald just nu (syncTools). Vätskan och spetsen fylls med färgen,
+  // konturen är mörk så att den syns även när färgen är ljus.
+  w.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">
+      <path class="liquid" d="M13.6 8.4 5.9 16.1c-.5.5-.8 1.2-.8 1.9l-1.3 2.3 2.3-1.3c.7 0 1.4-.3 1.9-.8l7.7-7.7z" fill="currentColor"/>
+      <path d="M13.6 8.4 5.9 16.1c-.5.5-.8 1.2-.8 1.9l-1.3 2.3 2.3-1.3c.7 0 1.4-.3 1.9-.8l7.7-7.7" fill="none" stroke="#222" stroke-width="1.4" stroke-linejoin="round"/>
+      <path d="m11.6 6.4 6 6" stroke="#222" stroke-width="2" stroke-linecap="round"/>
+      <path d="M14.6 4.1a2.7 2.7 0 0 1 3.8 0l1.5 1.5a2.7 2.7 0 0 1 0 3.8l-2.4 2.4-5.3-5.3z" fill="currentColor" stroke="#222" stroke-width="1.4" stroke-linejoin="round"/>
+    </svg><span class="sr">${t("custom")}</span><input type="color" value="${D.color}">`;
   w.querySelector("input").oninput = e => { D.color = e.target.value; D.erase = false; syncTools(); };
   box.appendChild(w);
 }
 function syncTools() {
   $("palette").querySelectorAll(".sw").forEach(b => b.setAttribute("aria-pressed", !D.erase && b.dataset.c === D.color));
+  // Pipetten visar vald färg, och är markerad när färgen inte finns i paletten
+  const cc = $("palette").querySelector(".customc");
+  if (cc) {
+    cc.style.color = D.color;
+    cc.setAttribute("aria-pressed", !D.erase && !PALETTE.includes(D.color));
+    const inp = cc.querySelector("input"); if (inp.value !== D.color && /^#[0-9a-f]{6}$/i.test(D.color)) inp.value = D.color;
+  }
   $("eraser").setAttribute("aria-pressed", D.erase);
   $("sizeRange").value = D.size;
   const dot = $("sizeDot"), s = Math.max(2, Math.min(44, D.size));

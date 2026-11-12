@@ -4,6 +4,11 @@ Ett onödigt vikgubbespel för Äventyrets Stupid hackathon, grupp 7.
 Tilldelad teknik: Canvas – användaren ritar på skärmen. Den måste synas tydligt i lösningen.
 Regel: lösningen får inte bli för användbar.
 
+## Spelet live
+- Adress: https://party-fold-draw-caa6e6b2ffe4.herokuapp.com/
+- Körs på Heroku (appen heter party-fold-draw) och byggs om automatiskt när något pushas till main. Se docs/heroku.md.
+- Kolla att servern lever och var galleriet sparas: https://party-fold-draw-caa6e6b2ffe4.herokuapp.com/api/health
+
 ## Läs först
 - docs/krav.md – gruppens 15 krav, status och beslut
 - docs/vikgubbar.md – spelreglerna

@@ -27,6 +27,8 @@ The interface is available in Swedish, English, French, Spanish and German.
 
 ## Running it
 
+**Live:** https://party-fold-draw-caa6e6b2ffe4.herokuapp.com/
+
 **Live:** The game runs on Heroku and redeploys automatically on every push to `main`. See [docs/heroku.md](docs/heroku.md).
 
 **Locally:** You need Node 20 or newer.

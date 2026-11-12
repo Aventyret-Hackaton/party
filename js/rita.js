@@ -67,6 +67,7 @@ function dropStroke() {
   D.cur = null; curId = null; redraw();
 }
 pad.addEventListener("pointerdown", e => {
+  if (e.isPrimary) { fingers.clear(); pinching = false; }   // första fingret i en ny beröring: börja om räkningen
   fingers.add(e.pointerId);
   if (fingers.size > 1) { pinching = true; dropStroke(); return; }
   if (pinching) return;
@@ -91,6 +92,12 @@ pad.addEventListener("pointerup", e => {
   if (!fingers.size) pinching = false;
   if (D.cur && e.pointerId === curId) { D.cur = null; curId = null; redraw(); }
 });
+// Safari på iPhone skickar inte alltid pointerdown för andra fingret när den själv tar över zoomningen.
+// Touch- och gesture-händelserna kommer däremot alltid, så de räknar också fingrar.
+const startPinch = () => { pinching = true; dropStroke(); };
+pad.addEventListener("touchstart", e => { if (e.touches.length > 1) startPinch(); }, { passive: true });
+["touchend", "touchcancel"].forEach(ev => pad.addEventListener(ev, e => { if (!e.touches.length) { fingers.clear(); pinching = false; } }, { passive: true }));
+pad.addEventListener("gesturestart", startPinch);
 addEventListener("resize", () => { if ($("s-draw").classList.contains("active")) fitPad(); });
 
 function buildPalette() {

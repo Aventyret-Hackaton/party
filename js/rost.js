@@ -36,9 +36,19 @@ function voiceRender() {
 
 /* ---------- Spela in ---------- */
 async function voiceStartRec() {
-  if (VOICE.rec) return voiceStopRec();
-  try { VOICE.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
-  catch (e) { VOICE.msg = "voiceDenied"; voiceRender(); return; }
+  if (VOICE.rec || VOICE.asking) return voiceStopRec();
+  // Vissa inbyggda webbläsare (till exempel den i VS Code) svarar aldrig på frågan om mikrofonen.
+  // Då ger vi upp efter åtta sekunder och säger åt spelaren att byta webbläsare.
+  VOICE.asking = true; VOICE.msg = "voiceWaiting"; voiceRender();
+  const ask = navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+  let stream = null;
+  try { stream = await Promise.race([ask, sleep(8000).then(() => null)]); } catch (e) {}
+  VOICE.asking = false;
+  if (!stream) {
+    ask.then(s => s.getTracks().forEach(tr => tr.stop()), () => {});   // svarar den sent ändå: stäng av mikrofonen
+    VOICE.msg = "voiceDenied"; voiceRender(); return;
+  }
+  VOICE.stream = stream;
   const type = voiceType(), chunks = [];
   let r;
   try { r = new MediaRecorder(VOICE.stream, type ? { mimeType: type, audioBitsPerSecond: 48000 } : undefined); }

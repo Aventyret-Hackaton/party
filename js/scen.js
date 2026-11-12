@@ -55,12 +55,14 @@ async function playShow() {
   for (const f of folds) { f.classList.remove("closed"); await sleep(reduceMotion ? 0 : 280); }
   $("postShow").hidden = false;
   $("figPlace").textContent = rec.home ? t("livesIn", { place: placeLabel(rec.home) }) + (rec.mid ? ` (${t("midNote")})` : "") : "";
-  $("figBy").textContent = rec.by ? t("drawnBy", { names: rec.by }) : "";
+  $("figBy").textContent = byText(rec);
   if (!ST.guessed) showGuess(); else revealName();
   ST.playing = false;
   syncMoreBelow();
   if (!ST.shown) { ST.shown = true; if (ST.opts.afterShow) ST.opts.afterShow(rec); }
 }
+// "Ritad av Anna, Signe och Joel", och gänget om gubben kommer från en power-omgång
+const byText = rec => [rec.by ? t("drawnBy", { names: rec.by }) : "", rec.gang ? t("inGang", { name: rec.gang }) : ""].filter(Boolean).join(" · ");
 // Namnet, och för värden rutan där gubben sparas eller raderas
 function revealName() {
   const rec = ST.rec;

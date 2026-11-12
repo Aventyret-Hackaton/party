@@ -281,7 +281,7 @@ async function byLabel(r) {
 // på samma ställe och med samma filter.
 let galScroll = 0;
 async function openGalleryItem(r) {
-  const rec = { parts: r.parts.map(p => p.s), dir: r.dir, home: r.home, by: await byLabel(r), name: r.name, staff: r.staff, mid: r.mode === "online", galleryId: r.id, voiceUrl: voiceUrlFor(r) };
+  const rec = { parts: r.parts.map(p => p.s), dir: r.dir, home: r.home, by: await byLabel(r), name: r.name, staff: r.staff, gang: r.gang || "", mid: r.mode === "online", galleryId: r.id, voiceUrl: voiceUrlFor(r) };
   galScroll = scrollY;   // sidan i galleriet (galPage) står kvar
   navPush({ party: "item" });
   openStage(rec, { canUnfold: true, replay: true, back: true });

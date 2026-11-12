@@ -154,35 +154,35 @@ Object.assign(T.de, { pagePrev: "‹ Zurück", pageNext: "Weiter ›", pageOf: "
   voice_drums: "Schlagzeug", voice_bass: "Bass", voice_chords: "Akkorde", voice_lead: "Melodie" });
 
 // Power-läget (js/power.js)
-Object.assign(T.sv, { powerLabel: "Spelläge", powerOff: "Vanligt", powerOn: "Power",
+Object.assign(T.sv, { gangLbl: "Gängets namn", gangOf: "Gänget {name}", inGang: "Med i {name}", powerLabel: "Spelläge", powerOff: "Vanligt", powerOn: "Power",
   powerHint: "Power: lika många gubbar som spelare. Alla ritar samtidigt, en del i varje gubbe, och ingen ritar samma del två gånger. På slutet blir det en gruppbild.",
   powerNoStaff: "Äventyrare går inte att spela i power-läget.", powerParts: "Ni ritar {n} gubbar samtidigt.", figOf: "Gubbe {f} av {n}",
   powerRound: "Runda {r} av {n}.", powerWaiting: "Väntar på {names}.", powerNext: "I nästa runda ritar du: {part}.",
   roundLeft: "{t} kvar av rundan.", roundOver: "Rundan är på övertid! +{t}",
-  groupTitle: "Gruppbild!", groupAsk: "Vill ni spara alla gubbarna i galleriet?", groupKeep: "Spara alla", groupDrop: "Radera alla",
+  groupTitle: "Gruppbild!", groupAsk: "Vill ni spara gänget i galleriet?", groupKeep: "Spara alla", groupDrop: "Radera alla",
   groupKept: "Gubbarna är sparade i galleriet.", groupDropped: "Gubbarna är raderade." });
-Object.assign(T.en, { powerLabel: "Game mode", powerOff: "Normal", powerOn: "Power",
+Object.assign(T.en, { gangLbl: "The gang’s name", gangOf: "The {name} Gang", inGang: "Part of {name}", powerLabel: "Game mode", powerOff: "Normal", powerOn: "Power",
   powerHint: "Power: as many figures as players. Everyone draws at once, one part in each figure, and nobody draws the same part twice. At the end you get a group photo.",
   powerNoStaff: "Äventyret staff can’t be played in power mode.", powerParts: "You draw {n} figures at once.", figOf: "Figure {f} of {n}",
   powerRound: "Round {r} of {n}.", powerWaiting: "Waiting for {names}.", powerNext: "Next round you draw: {part}.",
   roundLeft: "{t} left in this round.", roundOver: "The round is in overtime! +{t}",
-  groupTitle: "Group photo!", groupAsk: "Do you want to save all the figures in the gallery?", groupKeep: "Save all", groupDrop: "Delete all",
+  groupTitle: "Group photo!", groupAsk: "Do you want to save the gang in the gallery?", groupKeep: "Save all", groupDrop: "Delete all",
   groupKept: "The figures are saved in the gallery.", groupDropped: "The figures were deleted." });
-Object.assign(T.fr, { powerLabel: "Mode de jeu", powerOff: "Normal", powerOn: "Power",
+Object.assign(T.fr, { gangLbl: "Nom de la bande", gangOf: "La bande à {name}", inGang: "Membre de {name}", powerLabel: "Mode de jeu", powerOff: "Normal", powerOn: "Power",
   powerHint: "Power : autant de créatures que de joueurs. Tout le monde dessine en même temps, une partie dans chaque créature, et personne ne dessine deux fois la même partie. À la fin, photo de groupe.",
   powerNoStaff: "L’équipe Äventyret ne se joue pas en mode Power.", powerParts: "Vous dessinez {n} créatures en même temps.", figOf: "Créature {f} sur {n}",
   powerRound: "Manche {r} sur {n}.", powerWaiting: "On attend {names}.", powerNext: "À la prochaine manche, tu dessines : {part}.",
   roundLeft: "Encore {t} pour cette manche.", roundOver: "La manche est en prolongation ! +{t}",
   groupTitle: "Photo de groupe !", groupAsk: "Voulez-vous enregistrer toutes les créatures dans la galerie ?", groupKeep: "Tout enregistrer", groupDrop: "Tout supprimer",
   groupKept: "Les créatures sont dans la galerie.", groupDropped: "Les créatures ont été supprimées." });
-Object.assign(T.es, { powerLabel: "Modo de juego", powerOff: "Normal", powerOn: "Power",
+Object.assign(T.es, { gangLbl: "Nombre de la pandilla", gangOf: "La pandilla {name}", inGang: "Miembro de {name}", powerLabel: "Modo de juego", powerOff: "Normal", powerOn: "Power",
   powerHint: "Power: tantas figuras como jugadores. Todos dibujan a la vez, una parte en cada figura, y nadie dibuja la misma parte dos veces. Al final hay foto de grupo.",
   powerNoStaff: "El equipo de Äventyret no se puede jugar en modo Power.", powerParts: "Dibujáis {n} figuras a la vez.", figOf: "Figura {f} de {n}",
   powerRound: "Ronda {r} de {n}.", powerWaiting: "Esperando a {names}.", powerNext: "En la próxima ronda dibujas: {part}.",
   roundLeft: "Quedan {t} de la ronda.", roundOver: "¡La ronda está en prórroga! +{t}",
   groupTitle: "¡Foto de grupo!", groupAsk: "¿Queréis guardar todas las figuras en la galería?", groupKeep: "Guardar todas", groupDrop: "Borrar todas",
   groupKept: "Las figuras están guardadas en la galería.", groupDropped: "Las figuras se han borrado." });
-Object.assign(T.de, { powerLabel: "Spielmodus", powerOff: "Normal", powerOn: "Power",
+Object.assign(T.de, { gangLbl: "Name der Bande", gangOf: "Die {name}-Bande", inGang: "Mitglied von {name}", powerLabel: "Spielmodus", powerOff: "Normal", powerOn: "Power",
   powerHint: "Power: so viele Figuren wie Spieler. Alle zeichnen gleichzeitig, einen Teil in jeder Figur, und niemand zeichnet denselben Teil zweimal. Am Ende gibt es ein Gruppenfoto.",
   powerNoStaff: "Äventyret-Team geht im Power-Modus nicht.", powerParts: "Ihr zeichnet {n} Figuren gleichzeitig.", figOf: "Figur {f} von {n}",
   powerRound: "Runde {r} von {n}.", powerWaiting: "Warten auf {names}.", powerNext: "In der nächsten Runde zeichnest du: {part}.",

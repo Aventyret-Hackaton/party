@@ -298,9 +298,11 @@
     </div>
     <div class="group" id="groupFigs"></div>
     <div id="groupPost" hidden>
-      <div class="figname" data-i="groupTitle"></div>
+      <div class="figname" id="groupName" data-i="groupTitle"></div>
       <p class="place" id="groupPlace"></p>
       <div class="decide" id="groupDecide" hidden>
+        <label class="lbl" for="gangIn" data-i="gangLbl"></label>
+        <input type="text" id="gangIn" maxlength="80" autocomplete="off">
         <p class="place" data-i="groupAsk"></p>
         <div class="actions">
           <button class="btn primary" id="groupKeep" data-i="groupKeep"></button>

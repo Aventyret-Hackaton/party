@@ -57,9 +57,9 @@ function handlePower(g) {
             const R = GR.rec, ids = [];
             for (let f = 0; f < R.figs.length; f++) {
               ids.push(await saveGallery({ name: R.names[f], what: R.whats[f] || "", dir: R.dir, parts: R.figs[f].map(s => ({ s })), home: R.home,
-                names: R.by[f], staff: "", mode: "online", createdAt: new Date().toISOString() }) || "");
+                names: R.by[f], staff: "", mode: "online", gang: R.gang, createdAt: new Date().toISOString() }) || "");
             }
-            const s = await api("POST", `/api/games/${id}/save`, { name: R.names.join(", ").slice(0, 80), names: R.names, galleryIds: ids });
+            const s = await api("POST", `/api/games/${id}/save`, { name: R.gang, names: R.names, galleryIds: ids });
             if (ON) applyGame(s);
           },
           drop: async () => { const s = await api("POST", `/api/games/${id}/discard`); if (ON) applyGame(s); }
@@ -98,7 +98,7 @@ function groupRec(g) {
   const figs = g.figs || [];
   return { figs, dir: g.dir, home: g.home,
     by: figs.map((_, f) => [...new Set(g.assign.map(row => row[f]))].map(id => g.players.find(p => p.id === id)?.name).filter(Boolean)),
-    names: figs.map((_, f) => g.names?.[f] || ""), whats: [] };
+    names: figs.map((_, f) => g.names?.[f] || ""), whats: [], gang: g.status === "saved" ? g.name : "" };
 }
 function openGroup(rec, opts) {
   GR.rec = rec; GR.opts = opts; GR.decided = !opts.decide; GR.playing = false;
@@ -116,6 +116,9 @@ function openGroup(rec, opts) {
     box.appendChild(fig);
   });
   $("groupStage").classList.remove("lit");
+  // Gängets namn: värden skriver det, de andra ser det som rubrik när gänget är sparat
+  setGangTitle(rec.gang);
+  $("gangIn").value = "";
   $("groupPre").hidden = false; $("groupPost").hidden = true;
   $("groupUnfold").hidden = !opts.canUnfold;
   $("groupWait").textContent = opts.canUnfold ? "" : t("stageWait");
@@ -152,12 +155,23 @@ async function playGroup() {
       GR.rec.names[f] = r.name; GR.rec.whats[f] = r.what;
       if (caps[f]) caps[f].textContent = r.name;
     }
+    // Ett förslag på gängets namn, som värden kan skriva om
+    if (!$("gangIn").value) $("gangIn").value = t("gangOf", { name: fallbackName().name });
+    setGangTitle($("gangIn").value);
     $("groupDecide").hidden = false;
   } else $("groupActions").hidden = false;
   GR.playing = false;
 }
+function setGangTitle(name) {
+  const el = $("groupName");
+  el.dataset.i = name ? "" : "groupTitle";   // utan namn: "Gruppbild!", som översätts om man byter språk
+  el.textContent = name || t("groupTitle");
+}
+$("gangIn").oninput = () => setGangTitle($("gangIn").value.trim());
 async function decideGroup(keep) {
   if (!GR.opts?.decide || GR.decided) return;
+  GR.rec.gang = $("gangIn").value.trim() || t("gangOf", { name: fallbackName().name });
+  if (keep) setGangTitle(GR.rec.gang);
   $("groupKeep").disabled = $("groupDrop").disabled = true;
   $("groupMsg").textContent = "";
   try { await (keep ? GR.opts.decide.keep() : GR.opts.decide.drop()); }

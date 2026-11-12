@@ -148,6 +148,7 @@ function cleanRecord(b) {
     home: str(b.home, 60),
     names: Array.isArray(b.names) ? b.names.slice(0, 6).map(n => str(n, 40)) : [],
     staff: str(b.staff, 40),
+    gang: str(b.gang, 80),   // gänget, om gubben ritades i power-läget
     mode: b.mode === "online" ? "online" : "room"
   };
 }

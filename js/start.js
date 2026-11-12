@@ -3,7 +3,7 @@
 /* ---------- Språkväljare, ljud och översättning av allt ---------- */
 function applyI18n() {
   document.documentElement.lang = lang;
-  document.querySelectorAll("[data-i]").forEach(el => el.textContent = t(el.dataset.i));
+  document.querySelectorAll("[data-i]").forEach(el => { if (el.dataset.i) el.textContent = t(el.dataset.i); });
   document.querySelectorAll("[data-ph]").forEach(el => el.placeholder = t(el.dataset.ph));
   // Knappen säger vad som händer när man trycker: "Ljud av" när ljudet är på, "Ljud på" när det är av
   $("soundBtn").textContent = soundOn ? t("soundOff") : "♪ " + t("soundOn");
@@ -28,7 +28,7 @@ function applyI18n() {
     if (typeof renderNext === "function" && typeof ON !== "undefined" && ON) renderNext();
     if (!$("postShow").hidden) {
       $("figPlace").textContent = ST.rec.home ? t("livesIn", { place: placeLabel(ST.rec.home) }) + (ST.rec.mid ? ` (${t("midNote")})` : "") : "";
-      $("figBy").textContent = ST.rec.by ? t("drawnBy", { names: ST.rec.by }) : "";
+      $("figBy").textContent = byText(ST.rec);
     }
   }
 }

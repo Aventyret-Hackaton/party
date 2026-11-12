@@ -10,7 +10,7 @@
 
 ## Logga
 
-- Filerna `assets/party-logo.svg`, `assets/party-logo-dark.svg` och `assets/party-logo-transparent.svg`. De skapas av `tools/logo-generator.py`.
+- Filerna `assets/party-logo.svg`, `assets/party-logo-dark.svg`, `assets/party-logo-transparent.svg` och `assets/party-logo-dark-transparent.svg` (mörk utan bakgrund, används i spelet). De skapas av `tools/logo-generator.py`.
 - "Part" är satt i Caveat Brush, omvandlat till vektorformer. Handen är en ritad kontur i accentfärgen, utformad efter gruppens förlaga.
 - Ordet lutar 7 grader. T:et står inne i handflatan och fingrarna fortsätter som y:ets armar.
 - Status: godkänd för nu. Gruppen jobbar vidare på loggan senare i projektet.

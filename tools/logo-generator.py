@@ -1,7 +1,7 @@
 """Party-logga (Part + segerhand) - generator.
 
 Kör: python3 logo-generator.py
-Skapar party-logo.svg, party-logo-dark.svg, party-logo-transparent.svg och favicon.svg.
+Skapar party-logo.svg, party-logo-dark.svg, party-logo-transparent.svg, party-logo-dark-transparent.svg och favicon.svg.
 
 Parametrar som gav den godkända versionen (november 2026):
   HX=1420  handflatans vänsterkant i logo-koordinater
@@ -43,6 +43,8 @@ def svg(bg, ink, accent, mid):
 open('party-logo.svg','w').write(svg('#ffffff','#222222','#e2481e','m1'))
 open('party-logo-dark.svg','w').write(svg('#100e16','#c19c61','#e86d4b','m2'))
 open('party-logo-transparent.svg','w').write(svg(None,'#222222','#e2481e','m3'))
+# Mörk logga utan bakgrund, för mörka ytor som inte har exakt nattfärgen
+open('party-logo-dark-transparent.svg','w').write(svg(None,'#c19c61','#e86d4b','m4'))
 
 # Favikon: bara handen, med tjockare linje så att den syns i liten storlek.
 # Rutan är kvadratisk och centrerad runt den vridna handen.

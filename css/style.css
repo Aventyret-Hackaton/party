@@ -114,7 +114,7 @@ button{font:inherit;cursor:pointer}
 .sheet.v{width:100%}
 .sheet.h{display:flex}
 .paperclip{clip-path:polygon(8px 0,calc(100% - 8px) 0,100% 8px,100% calc(100% - 8px),calc(100% - 8px) 100%,8px 100%,0 calc(100% - 8px),0 8px)}
-.stage-box{position:relative}
+.stage-box{position:relative;overflow:hidden} /* klipper ritytan när man zoomar, annars blir sidan bredare och går att scrolla i sidled */
 #pad{display:block;touch-action:none;cursor:crosshair;background:transparent;mix-blend-mode:multiply}
 .sheet.v #pad{width:100%;aspect-ratio:600/340}
 .sheet.h #pad{height:min(56vh,520px);aspect-ratio:340/600}

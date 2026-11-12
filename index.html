@@ -143,6 +143,8 @@
         <canvas id="pad" width="600" height="340" data-arialabel="canvasLabel"></canvas>
         <div class="foldline" id="foldline"></div>
       </div>
+      <!-- Syns bara när man har zoomat in. Visar hur mycket, och ett tryck zoomar ut igen (js/rita.js). -->
+      <button class="zoom-badge" id="zoomOut" hidden><span id="zoomPct"></span> <span aria-hidden="true">↺</span></button>
     </div>
   </div>
   <p class="fine" id="hintLabel" style="text-align:center"></p>
@@ -159,7 +161,6 @@
       <button class="chip" id="eraser" aria-pressed="false" data-i="eraser"></button>
       <button class="chip" id="undo" data-i="undo"></button>
       <button class="chip" id="clear" data-i="clear"></button>
-      <button class="chip" id="zoomOut" data-i="zoomOut" hidden></button>
     </div>
   </div>
   <button class="btn primary wide" id="foldBtn"></button>

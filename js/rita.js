@@ -74,7 +74,10 @@ function applyZoom() {
   pad.style.transformOrigin = "0 0"; pad.style.transform = tr;
   const fl = $("foldline");   // samma förflyttning, räknat från ritytans hörn
   fl.style.transformOrigin = `${-fl.offsetLeft}px ${-fl.offsetTop}px`; fl.style.transform = tr;
+  // Den lilla brickan i hörnet: hur inzoomad man är. Ett tryck zoomar ut till utgångsläget.
   $("zoomOut").hidden = Z.s === 1;
+  $("zoomPct").textContent = Math.round(Z.s * 100) + " %";
+  $("zoomOut").setAttribute("aria-label", t("zoomOut") + " (" + Math.round(Z.s * 100) + " %)");
 }
 // Rita om i den nya upplösningen när man har zoomat klart, så att strecken blir skarpa
 function sharpenSoon() { clearTimeout(sharpenTimer); sharpenTimer = setTimeout(fitPad, 150); }

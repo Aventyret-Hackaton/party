@@ -115,6 +115,9 @@ a.btn{text-decoration:none}
 .sheet.v{width:100%}
 .sheet.h{display:flex}
 .paperclip{clip-path:polygon(8px 0,calc(100% - 8px) 0,100% 8px,100% calc(100% - 8px),calc(100% - 8px) 100%,8px 100%,0 calc(100% - 8px),0 8px)}
+.zoom-badge{position:absolute;top:.4rem;right:.4rem;z-index:3;display:flex;gap:.3rem;align-items:center;padding:.3rem .6rem;border:0;border-radius:999px;background:rgba(16,14,22,.55);color:#fff;font:600 .8125rem/1 var(--replica);font-variant-numeric:tabular-nums;cursor:pointer;backdrop-filter:blur(2px)}
+.zoom-badge[hidden]{display:none}
+.zoom-badge:hover{background:rgba(16,14,22,.75)}
 .stage-box{position:relative;overflow:hidden} /* klipper ritytan när man zoomar, annars blir sidan bredare och går att scrolla i sidled */
 #pad{display:block;touch-action:none;cursor:crosshair;background:transparent;mix-blend-mode:multiply}
 .sheet.v #pad{width:100%;aspect-ratio:600/340}

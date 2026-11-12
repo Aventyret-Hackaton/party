@@ -26,6 +26,8 @@ Utan databas fungerar galleriet ändå, men bara i minnet. Allt försvinner när
 | `GET /api/gallery` | De 150 senaste gubbarna |
 | `POST /api/gallery` | Sparar en gubbe. Svarar med `id` och en nyckel (`token`) |
 | `PATCH /api/gallery/:id` | Byter namn. Kräver nyckeln, så bara den som sparade gubben kan byta namn |
+| `PUT /api/gallery/:id/voice` | Sparar gubbens catchphrase (ljud, högst 300 kB). Kräver nyckeln i `X-Token`. Ljudet ligger i tabellen `gallery_voice` |
+| `GET /api/gallery/:id/voice` | Spelar upp catchphrasen |
 
 Nyckeln sparas i webbläsaren (`localStorage`). Servern kontrollerar allt som skickas in och tillåter högst 40 nya gubbar i timmen per IP-adress.
 

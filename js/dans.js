@@ -24,7 +24,7 @@ function onShake(e) {
   const a = e.acceleration || e.accelerationIncludingGravity; if (!a) return;
   const g = e.acceleration ? 0 : 9.8;
   const m = Math.abs(Math.hypot(a.x || 0, a.y || 0, a.z || 0) - g);
-  if (m > 14 && DANCE.jump === 0) DANCE.jumpV = -Math.min(22, m * .9);           // hopp
+  if (m > 14 && DANCE.jump === 0) { DANCE.jumpV = -Math.min(22, m * .9); voiceSay(); }   // hopp, och gubben säger sin catchphrase
   if (m > 28 && !reduceMotion) DANCE.spinV = (DANCE.tilt < 0 ? -1 : 1) * 26;    // snurr
 }
 function onMouse(e) { DANCE.mouse = (e.clientX / innerWidth - .5) * 2; }
@@ -115,6 +115,7 @@ async function startDance() {
   addEventListener("mousemove", onMouse);
   fig.scrollIntoView({ block: "center", behavior: reduceMotion ? "auto" : "smooth" });
   DANCE.raf = requestAnimationFrame(danceFrame);
+  setTimeout(() => { if (DANCE.on) voiceSay(true); }, 1200);   // catchphrase när dansen börjar
 }
 function stopDance() {
   if (!DANCE.on) return;

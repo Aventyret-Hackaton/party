@@ -228,6 +228,11 @@ body.night .invite-card h2{color:var(--head)}
 .update-bar[hidden]{display:none}
 .update-bar .btn{background:#fff;color:var(--accent);border-color:#fff}
 .parts-info{font-weight:600;margin:.75rem 0;padding:.6rem .8rem;border-left:3px solid var(--accent);background:color-mix(in srgb,var(--accent) 8%,transparent)}
+/* Catchphrase-inspelningen före avtäckningen */
+.voice{margin-top:1.25rem}
+.voice .actions{margin-top:0}
+.voice .btn.recording{background:var(--accent);border-color:var(--accent);color:#fff;animation:pulse 1.2s ease-in-out infinite}
+#voiceAgain{margin-top:.5rem}
 .decide{display:grid;gap:.4rem;max-width:26rem;margin:1rem auto 0;text-align:left}
 .decide .actions{margin-top:.5rem}
 .where-now{margin:.25rem 0 0;font-weight:600}

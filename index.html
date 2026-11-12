@@ -222,6 +222,11 @@
       <div class="andnow" data-i="andNow"></div>
       <p id="stageWait"></p>
       <button class="btn primary" id="unfoldBtn" data-i="unfold"></button>
+      <!-- Catchphrase: den som vecklar ut spelar in en replik som gubben säger (js/rost.js) -->
+      <div class="voice" id="voiceBox" hidden>
+        <div class="actions"><button class="btn" id="voiceRec"></button><button class="btn" id="voicePlay" hidden></button></div>
+        <p class="fine" id="voiceMsg" aria-live="polite"></p>
+      </div>
     </div>
     <div class="podium">
       <div class="figure-scroll"><div class="figure v" id="figure"></div></div>
@@ -237,6 +242,7 @@
       <p class="place" id="guessMsg"></p>
       <p class="place" id="figPlace"></p>
       <p class="place fine" id="figBy"></p>
+      <button class="btn small" id="voiceAgain" hidden></button>
       <!-- Den som håller i omgången bestämmer: spara gubben med namnet i rutan, eller radera den -->
       <div class="decide" id="decideBox" hidden>
         <label class="lbl" for="renameIn" data-i="figNameLbl"></label>
@@ -332,6 +338,7 @@
 <script src="js/rita.js"></script>
 <script src="js/spel.js"></script>
 <script src="js/scen.js"></script>
+<script src="js/rost.js"></script>
 <script src="js/tryck.js"></script>
 <script src="js/ai-namn.js"></script>
 <script src="js/galleri.js"></script>

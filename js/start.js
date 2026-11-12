@@ -21,6 +21,7 @@ function applyI18n() {
   if (currentScreen === "s-gallery") renderGallery();
   if (currentScreen === "s-faces") renderFaces();
   if (currentScreen === "s-stage" && ST) {
+    voiceRender();
     $("unfoldBtn").textContent = ST.opts.replay ? t("replay") : t("unfold");
     $("stageWait").textContent = ST.opts.canUnfold ? "" : t("stageWait");
     if (ST.guessing) { $("figName").textContent = t("guessTitle"); $("guessHint").textContent = guessHintText(); }

@@ -7,6 +7,7 @@ function openStage(rec, opts) {
   // guess: { answer, hint } – man gissar vilken Äventyrare huvudet föreställer innan namnet visas.
   if (typeof stopDance === "function") stopDance();
   ST = { rec, opts, shown: false, decided: !opts.decide, guessing: false, guessed: !opts.guess };
+  voiceSetup(rec, opts);   // catchphrase (js/rost.js)
   const fig = $("figure"); fig.className = "figure " + rec.dir; fig.innerHTML = ""; fig.style.setProperty("--n", rec.parts.length);
   // En del visas aldrig bredare än 600 punkter på skärmen, så skärmens pixeltäthet räcker för skarpa streck
   const scale = Math.min(3, Math.max(1, devicePixelRatio || 1));
@@ -38,6 +39,7 @@ $("unfoldBtn").onclick = () => { if (ST.opts.onUnfoldClick) ST.opts.onUnfoldClic
 async function playShow() {
   if (!ST || ST.playing) return;
   ST.playing = true;
+  voiceStopRec();          // spelar man fortfarande in blir det klart nu
   const rec = ST.rec;
   $("unfoldBtn").hidden = true; $("stageWait").textContent = "";
   $("postShow").hidden = true;
@@ -65,6 +67,7 @@ function revealName() {
   if (rec.name) setStageName(rec.name);
   else { $("figName").textContent = t("naming"); $("figName").classList.add("blur"); }
   if (!ST.decided) { $("decideBox").hidden = false; $("keepBtn").disabled = !rec.name; }
+  voiceSay(true);          // gubben säger sin catchphrase när namnet visas
   $("stageActions").hidden = !ST.decided;
   syncPrint();
 }
@@ -132,6 +135,7 @@ async function decideStage(keep) {
     return;
   }
   ST.decided = true;
+  if (keep) voiceUpload(ST.rec.galleryId);   // catchphrasen sparas med gubben
   $("decideBox").hidden = true;
   $("decideMsg").textContent = t(keep ? "keptFig" : "droppedFig");
   $("stageActions").hidden = false;

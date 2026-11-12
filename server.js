@@ -10,6 +10,8 @@
 //   POST  /api/gallery         – spara en ny gubbe, svarar med id och en nyckel
 //   PATCH /api/gallery/:id     – byt namn, kräver nyckeln från POST
 //   GET   /api/gallery/:id.svg – gubben som tryckbar SVG för Tryckskaparen, se tryck-svg.js
+//   PUT   /api/gallery/:id/voice – spara gubbens catchphrase (ljud), kräver nyckeln i X-Token
+//   GET   /api/gallery/:id/voice – spela upp catchphrasen
 //   /api/games/...             – onlinespel, se online-server.js
 
 const http = require("http");
@@ -23,6 +25,7 @@ const ROOT = __dirname;
 const MAX_BODY = 400 * 1024;      // största tillåtna gubbe i byte
 const LIST_LIMIT = 150;           // hur många gubbar galleriet visar
 const POSTS_PER_HOUR = 40;        // per IP-adress, mot spam
+const MAX_VOICE = 300 * 1024;     // största catchphrase i byte (sex sekunder brukar vara 30–60 kB)
 
 /* ---------- Lagring ---------- */
 let pool = null;
@@ -41,6 +44,12 @@ async function initDb() {
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     token_hash TEXT NOT NULL,
     data JSONB NOT NULL
+  )`);
+  // Catchphrasen ligger i en egen tabell, så att listan med gubbar inte blir tung att hämta
+  await pool.query(`CREATE TABLE IF NOT EXISTS gallery_voice (
+    id BIGINT PRIMARY KEY REFERENCES gallery(id) ON DELETE CASCADE,
+    mime TEXT NOT NULL,
+    audio BYTEA NOT NULL
   )`);
   console.log("Galleriet sparas i Postgres.");
 }
@@ -82,6 +91,30 @@ async function renameGallery(id, token, name) {
   const m = memory.find(x => x.id === id && x.tokenHash === hash(token));
   if (m) m.data.name = name;
   return !!m;
+}
+
+// Catchphrase: bara den som sparade gubben (med nyckeln) får lägga till ljud
+async function setVoice(id, token, mime, buf) {
+  if (pool) {
+    const ok = await pool.query("SELECT 1 FROM gallery WHERE id = $1 AND token_hash = $2", [id, hash(token)]);
+    if (!ok.rowCount) return false;
+    await pool.query(`INSERT INTO gallery_voice (id, mime, audio) VALUES ($1, $2, $3)
+      ON CONFLICT (id) DO UPDATE SET mime = EXCLUDED.mime, audio = EXCLUDED.audio`, [id, mime, buf]);
+    await pool.query("UPDATE gallery SET data = jsonb_set(data, '{voice}', 'true') WHERE id = $1", [id]);
+    return true;
+  }
+  const m = memory.find(x => x.id === id && x.tokenHash === hash(token));
+  if (!m) return false;
+  m.voice = { mime, buf }; m.data.voice = true;
+  return true;
+}
+async function getVoice(id) {
+  if (pool) {
+    const r = await pool.query("SELECT mime, audio FROM gallery_voice WHERE id = $1", [id]);
+    return r.rows[0] ? { mime: r.rows[0].mime, buf: r.rows[0].audio } : null;
+  }
+  const m = memory.find(x => x.id === id);
+  return m && m.voice ? m.voice : null;
 }
 
 /* ---------- Kontroll av det som skickas in ---------- */
@@ -146,6 +179,18 @@ function send(req, res, status, body, type = "application/json; charset=utf-8", 
   headers["Content-Length"] = buf.length;
   res.writeHead(status, headers);
   res.end(req.method === "HEAD" ? undefined : buf);
+}
+function readBody(req, max) {
+  return new Promise((resolve, reject) => {
+    let size = 0; const chunks = [];
+    req.on("data", c => {
+      size += c.length;
+      if (size > max) return;               // läs klart utan att spara, så att svaret 413 hinner fram
+      chunks.push(c);
+    });
+    req.on("end", () => size > max ? reject(Object.assign(new Error("too large"), { status: 413 })) : resolve(Buffer.concat(chunks)));
+    req.on("error", reject);
+  });
 }
 function readJson(req) {
   return new Promise((resolve, reject) => {
@@ -235,6 +280,23 @@ const server = http.createServer(async (req, res) => {
         "Cache-Control": "public, max-age=300",
         "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'"
       });
+    }
+    // Catchphrase: PUT sparar (kräver nyckeln i X-Token), GET spelar upp
+    const vm = p.match(/^\/api\/gallery\/(\d{1,15})\/voice$/);
+    if (vm && req.method === "PUT") {
+      const mime = String(req.headers["content-type"] || "").split(";")[0].trim().toLowerCase();
+      if (!/^audio\/(webm|mp4|ogg|mpeg|aac|x-m4a|wav)$/.test(mime)) return send(req, res, 415, { error: "Ljudet har ett okänt format." });
+      const token = String(req.headers["x-token"] || "");
+      if (!token) return send(req, res, 400, { error: "Nyckel behövs." });
+      const buf = await readBody(req, MAX_VOICE);
+      if (buf.length < 200) return send(req, res, 400, { error: "Ljudet är tomt." });
+      const ok = await setVoice(vm[1], token, mime, buf);
+      return send(req, res, ok ? 200 : 403, ok ? { ok: true } : { error: "Bara den som sparade gubben kan lägga till en catchphrase." });
+    }
+    if (vm && (req.method === "GET" || req.method === "HEAD")) {
+      const v = await getVoice(vm[1]);
+      if (!v) return send(req, res, 404, { error: "Gubben har ingen catchphrase." });
+      return send(req, res, 200, v.buf, v.mime, { "Cache-Control": "public, max-age=86400" });
     }
     const m = p.match(/^\/api\/gallery\/(\d+)$/);
     if (m && req.method === "PATCH") {

@@ -19,6 +19,7 @@ function openDraw(meta) {
   buildPalette(); syncTools();
   renderDrawTexts();
   show("s-draw");
+  Z.s = 1; Z.x = Z.y = 0; applyZoom();
   requestAnimationFrame(() => requestAnimationFrame(fitPad));
 }
 function renderDrawTexts() {
@@ -56,28 +57,72 @@ function toLogical(e) {
   const r = pad.getBoundingClientRect(), { W, H } = DIMS[D.dir];
   return [Math.round((e.clientX - r.left) / r.width * W * 10) / 10, Math.round((e.clientY - r.top) / r.height * H * 10) / 10];
 }
-// Ett finger ritar. Två fingrar zoomar (touch-action: pinch-zoom i CSS) och ritar aldrig:
+// Ett finger ritar. Två fingrar zoomar och flyttar bara ritarket (inte hela sidan) och ritar aldrig:
 // strecket som första fingret hann börja tas bort, och inget ritas förrän alla fingrar har lyfts.
-const fingers = new Set();
-let pinching = false, curId = null;
+const fingers = new Map();          // pointerId -> { x, y } på skärmen
+let pinching = false, curId = null, pinch = null, sharpenTimer = null;
+
+/* Zoom: ritytan (och den streckade linjen) skalas med CSS transform inuti arket, som klipper bort det som hamnar utanför.
+   toLogical() använder getBoundingClientRect, så fingret hamnar rätt även när man är inzoomad. */
+const Z = { s: 1, x: 0, y: 0 }, ZMAX = 3;
+function applyZoom() {
+  const w = pad.offsetWidth, h = pad.offsetHeight;
+  Z.s = Math.min(ZMAX, Math.max(1, Z.s));
+  Z.x = Math.min(0, Math.max(w - w * Z.s, Z.x));
+  Z.y = Math.min(0, Math.max(h - h * Z.s, Z.y));
+  const tr = Z.s === 1 ? "" : `translate(${Z.x}px, ${Z.y}px) scale(${Z.s})`;
+  pad.style.transformOrigin = "0 0"; pad.style.transform = tr;
+  const fl = $("foldline");   // samma förflyttning, räknat från ritytans hörn
+  fl.style.transformOrigin = `${-fl.offsetLeft}px ${-fl.offsetTop}px`; fl.style.transform = tr;
+  $("zoomOut").hidden = Z.s === 1;
+}
+// Rita om i den nya upplösningen när man har zoomat klart, så att strecken blir skarpa
+function sharpenSoon() { clearTimeout(sharpenTimer); sharpenTimer = setTimeout(fitPad, 150); }
+function resetZoom() { Z.s = 1; Z.x = Z.y = 0; applyZoom(); sharpenSoon(); }
+$("zoomOut").onclick = resetZoom;
+
 function dropStroke() {
   if (!D.cur) return;
   const i = D.strokes.lastIndexOf(D.cur);
   if (i >= 0) D.strokes.splice(i, 1);
   D.cur = null; curId = null; redraw();
 }
+function startPinch() {
+  pinching = true; dropStroke();
+  const pts = [...fingers.values()];
+  if (pts.length < 2) return;
+  const [a, b] = pts, r = $("sheet").getBoundingClientRect();
+  pinch = { d0: Math.hypot(a.x - b.x, a.y - b.y) || 1, mx: (a.x + b.x) / 2 - r.left, my: (a.y + b.y) / 2 - r.top, s0: Z.s, x0: Z.x, y0: Z.y };
+}
+function movePinch() {
+  const pts = [...fingers.values()];
+  if (!pinch || pts.length < 2) return;
+  const [a, b] = pts, r = $("sheet").getBoundingClientRect();
+  const s = Math.min(ZMAX, Math.max(1, pinch.s0 * Math.hypot(a.x - b.x, a.y - b.y) / pinch.d0));
+  // Punkten som låg under fingrarna när nypet började ska stanna under fingrarna
+  const px = (pinch.mx - pinch.x0) / pinch.s0, py = (pinch.my - pinch.y0) / pinch.s0;
+  Z.s = s; Z.x = (a.x + b.x) / 2 - r.left - px * s; Z.y = (a.y + b.y) / 2 - r.top - py * s;
+  applyZoom();
+}
+function liftFinger(e) {
+  fingers.delete(e.pointerId);
+  if (fingers.size < 2 && pinch) { pinch = null; sharpenSoon(); }
+  if (!fingers.size) pinching = false;
+}
 pad.addEventListener("pointerdown", e => {
-  if (e.isPrimary) { fingers.clear(); pinching = false; }   // första fingret i en ny beröring: börja om räkningen
-  fingers.add(e.pointerId);
-  if (fingers.size > 1) { pinching = true; dropStroke(); return; }
-  if (pinching) return;
+  if (e.isPrimary) { fingers.clear(); pinching = false; pinch = null; }   // första fingret i en ny beröring: börja om räkningen
+  fingers.set(e.pointerId, { x: e.clientX, y: e.clientY });
   e.preventDefault(); try { pad.setPointerCapture(e.pointerId); } catch (err) {}
+  if (fingers.size > 1) { startPinch(); return; }
+  if (pinching) return;
   const [x, y] = toLogical(e);
   curId = e.pointerId;
   D.cur = { c: D.color, w: D.erase ? D.size * 2 : D.size, e: D.erase ? 1 : 0, p: [x, y] };
   D.strokes.push(D.cur); drawStroke(pctx, D.cur);
 });
 pad.addEventListener("pointermove", e => {
+  if (fingers.has(e.pointerId)) fingers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pinch) { movePinch(); return; }
   if (!D.cur || e.pointerId !== curId) return;
   const [x, y] = toLogical(e), p = D.cur.p, lx = p[p.length - 2], ly = p[p.length - 1];
   if (Math.hypot(x - lx, y - ly) < 1.2) return;
@@ -85,19 +130,13 @@ pad.addEventListener("pointermove", e => {
   pctx.strokeStyle = D.cur.e ? "#ffffff" : D.cur.c; pctx.lineWidth = D.cur.w; pctx.lineCap = "round";
   pctx.beginPath(); pctx.moveTo(lx, ly); pctx.lineTo(x, y); pctx.stroke();
 });
-// pointercancel betyder att webbläsaren tog över, till exempel för att zooma. Då ska strecket inte bli kvar.
-pad.addEventListener("pointercancel", e => { fingers.delete(e.pointerId); if (e.pointerId === curId) dropStroke(); if (!fingers.size) pinching = false; });
+pad.addEventListener("pointercancel", e => { if (e.pointerId === curId) dropStroke(); liftFinger(e); });
 pad.addEventListener("pointerup", e => {
-  fingers.delete(e.pointerId);
-  if (!fingers.size) pinching = false;
   if (D.cur && e.pointerId === curId) { D.cur = null; curId = null; redraw(); }
+  liftFinger(e);
 });
-// Safari på iPhone skickar inte alltid pointerdown för andra fingret när den själv tar över zoomningen.
-// Touch- och gesture-händelserna kommer däremot alltid, så de räknar också fingrar.
-const startPinch = () => { pinching = true; dropStroke(); };
-pad.addEventListener("touchstart", e => { if (e.touches.length > 1) startPinch(); }, { passive: true });
-["touchend", "touchcancel"].forEach(ev => pad.addEventListener(ev, e => { if (!e.touches.length) { fingers.clear(); pinching = false; } }, { passive: true }));
-pad.addEventListener("gesturestart", startPinch);
+// Safari på iPhone: stoppa webbläsarens egen zoom av hela sidan när man nyper på ritytan
+pad.addEventListener("gesturestart", e => e.preventDefault());
 addEventListener("resize", () => { if ($("s-draw").classList.contains("active")) fitPad(); });
 
 function buildPalette() {

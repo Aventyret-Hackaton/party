@@ -24,7 +24,7 @@ Regel: lösningen får inte bli för användbar.
 - Gränssnittet finns på svenska, engelska, franska, spanska och tyska. Alla texter ligger i ordboken T i koden – lägg aldrig in text utan översättning. Använd tankstreck (–), aldrig em-streck (—).
 - Penndrag sparas som vektorer (färg, tjocklek, punkter). Behåll det, så att SVG-export (krav 15) går att bygga.
 - Prototypen anropar window.claude.use(...) för databas, inloggning, AI-namn och bilduppladdning. Det finns bara på claude.ai och ska ersättas, se tabellen i docs/krav.md.
-- Pointer events på canvas, med touch-action: pinch-zoom: ett finger ritar, två fingrar zoomar och ritar aldrig. Testa i Safari på iPhone.
+- Pointer events och touch-action: none på canvas. Ett finger ritar, två fingrar zoomar bara ritarket (egen zoom i js/rita.js) och ritar aldrig. Testa i Safari på iPhone.
 - API-nyckeln till Claude får aldrig hamna i klientkoden. AI-anropet ligger i en serverlös funktion (/api/describe) och nyckeln i miljövariabeln ANTHROPIC_API_KEY.
 - Loggor ligger i assets/. Ändra dem inte för hand, använd tools/logo-generator.py.
 - Användaren är inte utvecklare. Förklara på enkel svenska vad du gör och varför.

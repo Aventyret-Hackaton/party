@@ -90,7 +90,7 @@ Party hittar omgångar i närheten på tre sätt:
 
 1. **Samma nätverk.** Servern jämför spelarnas IP-adresser (`nara-server.js`). Det sker av sig själv på startskärmen och kräver inget tillstånd. IP-adressen sparas bara som en hash med ett salt som byts vid varje omstart.
 2. **Plats.** Har både värden och den som letar delat sin plats räknas omgångar inom 250 meter. Platsen sparas bara i minnet medan omgången är öppen och lämnas aldrig ut.
-3. **Ultraljud** (`js/ultraljud.js`). I väntrummet trycker man **📢 Ropa ut inbjudan**. Telefonen spelar då omgångens kod med toner mellan 17 och 20 kHz, som är för ljusa för att höras. Den som har tryckt **👂 Hitta party i närheten** på startskärmen lyssnar med mikrofonen i en minut och fångar upp koden.
+3. **Ultraljud** (`js/ultraljud.js`). I väntrummet trycker man **📢 Ropa ut inbjudan**. Telefonen spelar då omgångens kod med toner mellan 17 och 20 kHz, som är för ljusa för att höras. Knappen som lyssnade efter koden med mikrofonen (**Hitta party i närheten**) är borttagen från startskärmen, så just nu finns inget i spelet som tar emot ropet. Koden för att lyssna finns kvar i `js/ultraljud.js`.
 
 Adressen är `POST /api/games/nearby` med `{ loc: { lat, lon, acc } }`. Platsen skickas i en POST och aldrig i adressen. Svaret innehåller bara omgångens kod, värdens namn och hur den hittades.
 

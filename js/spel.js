@@ -8,7 +8,7 @@ let currentScreen = "s-home";
 // för att lämna spelet. Mitt i ett spel gör bakåt ingenting, så att ingen råkar svepa sig ut.
 // Historiken blir aldrig djupare än: start → meny (→ en gubbe från galleriet).
 const NAV_MENU = ["s-setup", "s-names", "s-gallery", "s-faces"];
-const NAV_GAME = ["s-lobby", "s-handoff", "s-draw", "s-face", "s-wait", "s-pause"];
+const NAV_GAME = ["s-lobby", "s-handoff", "s-draw", "s-face", "s-wait", "s-pause", "s-group"];
 let navDepth = 0, navSkip = false;
 function navPush(state) { history.pushState(state, ""); navDepth++; }
 function navTrack(id) {
@@ -52,15 +52,16 @@ function show(id, fromNav) {
   $("mapSheet").hidden = id !== "s-gallery";   // kartpanelen hör bara till galleriet
   document.body.classList.toggle("has-sheet", id === "s-gallery");
   document.querySelectorAll(".screen").forEach(s => s.classList.toggle("active", s.id === id));
-  document.body.classList.toggle("night", id === "s-stage");
-  if (id !== "s-stage") particles = [];
+  document.body.classList.toggle("night", id === "s-stage" || id === "s-group");
+  if (id !== "s-stage" && id !== "s-group") particles = [];
   scrollTo(0, 0);
 }
 
 /* ---------- Inställningar ---------- */
 // online: "new" = nytt onlinespel, "join" = gå med i en omgång, "" = inte valt än
 // time: sekunder per del, 0 = ingen tidsgräns
-const S = { players: 3, parts: 3, dir: "v", mode: "online", order: "strict", cat: "free", online: "", time: 60 };
+// power: power-läget, flera gubbar samtidigt (bara online)
+const S = { players: 3, parts: 3, dir: "v", mode: "online", order: "strict", cat: "free", online: "", time: 60, power: false };
 const TIMES = [30, 60, 90, 120, 0];
 const timeLabel = v => v ? (v < 120 ? v + " s" : v / 60 + " min") : t("noLimit");
 function chips(id, opts, key) {
@@ -74,7 +75,7 @@ function chips(id, opts, key) {
   });
 }
 function renderSetupChips() {
-  if (S.cat === "staff" && !faces.length) S.cat = "free";
+  if (S.cat === "staff" && (!faces.length || (S.power && S.mode === "online"))) S.cat = "free";
   S.parts = S.players; // antalet spelare styr antalet delar
   // Online är förvalt, att spela i rummet är tillvalet
   chips("c-mode", [{ v: "online", label: t("online") }, { v: "room", label: t("room") }], "mode");
@@ -82,9 +83,12 @@ function renderSetupChips() {
   chips("c-dir", [{ v: "v", label: "↓ " + t("vertical") }, { v: "h", label: "→ " + t("horizontal") }], "dir");
   chips("c-order", [{ v: "strict", label: t("strict") }, { v: "random", label: t("random") }], "order");
   chips("c-time", TIMES.map(v => ({ v, label: timeLabel(v) })), "time");
-  chips("c-cat", [{ v: "free", label: t("free") }, { v: "staff", label: t("staff"), disabled: !faces.length }], "cat");
-  $("catHint").textContent = faces.length ? t("staffHint") : t("staffNone");
-  $("setupParts").textContent = partsInfo(S.dir, S.players);
+  const power = S.power && S.mode === "online";
+  chips("c-power", [{ v: false, label: t("powerOff") }, { v: true, label: "⚡ " + t("powerOn") }], "power");
+  $("powerRow").hidden = S.mode !== "online";
+  chips("c-cat", [{ v: "free", label: t("free") }, { v: "staff", label: t("staff"), disabled: !faces.length || power }], "cat");
+  $("catHint").textContent = power ? t("powerNoStaff") : faces.length ? t("staffHint") : t("staffNone");
+  $("setupParts").textContent = partsInfo(S.dir, S.players) + (power ? " " + t("powerParts", { n: S.players }) : "");
   // Online väljer man först nytt onlinespel eller att gå med i en omgång som väntar på spelare
   const online = S.mode === "online";
   chips("c-online", [{ v: "new", label: t("newOnline") }, { v: "join", label: t("joinRound") }], "online");

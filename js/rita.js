@@ -21,7 +21,7 @@ function openDraw(meta) {
   renderDrawTexts();
   $("handsAsk").hidden = true; $("foldBtn").hidden = false;
   show("s-draw");
-  startDrawTimer(meta.time || 0);   // js/timer.js
+  startDrawTimer(meta.time || 0, meta.timeStart);   // js/timer.js
   if (meta.onStart) meta.onStart();  // online: servern får veta att tiden börjar gå
   Z.s = 1; Z.x = Z.y = 0; applyZoom();
   requestAnimationFrame(() => requestAnimationFrame(fitPad));
@@ -29,7 +29,7 @@ function openDraw(meta) {
 function renderDrawTexts() {
   const m = D.meta; if (!m) return;
   $("partTitle").textContent = t(m.key || partKey(m.dir, m.n, m.i));
-  $("partCount").textContent = t("partOf", { i: m.i + 1, n: m.n });
+  $("partCount").textContent = t("partOf", { i: m.i + 1, n: m.n }) + (m.fig != null ? " · " + t("figOf", { f: m.fig + 1, n: m.n }) : "");
   $("whoDraws").textContent = m.who;
   $("guide").textContent = m.i === m.n - 1 ? t("guideLast") : t(m.dir === "v" ? "guideV" : "guideH");
   $("hintLabel").textContent = t("hintLabel");

@@ -20,7 +20,13 @@
 //   POST /api/games/nearby           – öppna omgångar i närheten {loc: {lat, lon, acc}}, se nara-server.js
 //   POST /api/games/:id/again        – spela igen: gå med i nästa omgång, eller starta den med samma inställningar {name, city}
 //   POST /api/games/:id/resolve      – värden väljer hur omgången fortsätter när någon har lämnat {choice}
+//   POST /api/games/:id/part         – power-läget: {f, i, s, hands}, f = vilken gubbe, i = rundan
 // Läget (status): lobby → drawing → done → revealed → saved eller deleted.
+//
+// Power-läget (power: true): lika många gubbar som spelare. Alla ritar samtidigt, en runda per del.
+// I runda r ritar spelare p del r i gubbe (p + r) mod n. Då ritar alla varje sorts del exakt en gång,
+// och varje gubbe får en ny ritare för varje del. assign[r][f] = vem som ritar del r i gubbe f.
+// När alla har ritat sin del i rundan börjar nästa. På slutet visas alla gubbar som en gruppbild.
 // Lämnar någon som har delar kvar att rita: drawing → paused. Värden väljer då
 //   "share" (de som är kvar ritar de delarna) → drawing,
 //   "wait"  (omgången syns i listan och en ny spelare tar över) → seeking → drawing,
@@ -91,8 +97,10 @@ function makeAssign(nParts, ids, random) {
 }
 function touch(g) {
   // Byts den som ska rita (ny del, eller någon annan tar över) börjar tiden om när den nya börjar rita
-  const who = g.status === "drawing" || g.status === "paused" || g.status === "seeking" ? g.current + ":" + g.turns[g.current] : "";
-  if (who !== g.turnWho) { g.turnWho = who; g.turnStart = 0; }
+  const mid = g.status === "drawing" || g.status === "paused" || g.status === "seeking";
+  const who = !mid ? "" : g.power ? "round" + g.round : g.current + ":" + g.turns[g.current];
+  // Power-läget: alla börjar samtidigt, så tiden för rundan går från att rundan börjar
+  if (who !== g.turnWho) { g.turnWho = who; g.turnStart = g.power && mid ? Date.now() : 0; }
   g.v++; g.touched = Date.now();
 }
 // near: { net, loc } från nearFrom(), för att se vilka som sitter i samma rum (musiken delas upp)
@@ -112,8 +120,10 @@ function newGame(b) {
     home: "", face: null, name: "", what: "", galleryId: "", revealAt: 0, hostId: "",
     // time: sekunder per del (0 = ingen gräns). turnStart: när den som har tur började rita (0 = inte än).
     // hands: för varje del, om den som ritade överkroppen också ritade händer
-    time: [0, 30, 60, 90, 120].includes(+b.time) ? +b.time : 60, turnStart: 0, hands: []
+    time: [0, 30, 60, 90, 120].includes(+b.time) ? +b.time : 60, turnStart: 0, hands: [],
+    power: b.power === true, round: 0, assign: [], figs: [], handsF: [], names: [], galleryIds: []
   };
+  if (g.power) g.cat = "free";   // Äventyrare går inte ihop med flera gubbar samtidigt
   g.keys = PARTSETS[g.dir][g.n];
   return g;
 }
@@ -123,6 +133,13 @@ function startIfFull(g) {
   g.status = "drawing";
   g.current = 0;
   g.turns = makeAssign(g.n, ids, g.orderMode === "random");
+  if (g.power) {
+    const order = g.orderMode === "random" ? shuffle([...ids]) : ids;
+    g.assign = Array.from({ length: g.n }, (_, r) => Array.from({ length: g.n }, (_, f) => order[(f - r + g.n) % g.n]));
+    g.figs = Array.from({ length: g.n }, () => []);
+    g.handsF = Array.from({ length: g.n }, () => []);
+    g.round = 0;
+  }
   g.home = cityTools.midpointCity(g.players.map(p => p.city));
   g.face = g.cat === "staff" ? randomFace() : null;
 }
@@ -132,8 +149,15 @@ const MIDGAME = ["drawing", "paused", "seeking", "done", "revealed"];
 const isGone = p => p.left || p.missing;
 const active = g => g.players.filter(p => !isGone(p));
 // De som är borta men har delar kvar att rita
+// Power-läget: delarna som inte är ritade än, från den här rundan och framåt
+function pending(g) {
+  const out = [];
+  if (!g.assign.length) return out;   // i väntrummet är ingenting fördelat än
+  for (let r = g.round; r < g.n; r++) for (let f = 0; f < g.n; f++) if (!g.figs[f][r]) out.push({ r, f, id: g.assign[r][f] });
+  return out;
+}
 function blocking(g) {
-  const future = new Set(g.turns.slice(g.current));
+  const future = new Set(g.power ? pending(g).map(x => x.id) : g.turns.slice(g.current));
   return g.players.filter(p => isGone(p) && future.has(p.id));
 }
 // Har värden gått lämnar vi över till den som senast hördes av
@@ -157,6 +181,16 @@ function settle(g) {
 // "Rita klart själva": delarna som de borta skulle rita fördelas på de som är kvar
 function shareParts(g) {
   const gone = new Set(blocking(g).map(p => p.id)), left = active(g).map(p => p.id);
+  if (g.power) {
+    // Den som har minst att rita i rundan tar delen
+    for (const x of pending(g)) {
+      if (!gone.has(x.id)) continue;
+      const count = id => g.assign[x.r].filter(y => y === id).length;
+      g.assign[x.r][x.f] = [...left].sort((a, b) => count(a) - count(b))[0];
+    }
+    gone.forEach(id => { const p = g.players.find(x => x.id === id); if (p) p.left = true; });
+    return;
+  }
   const count = id => g.turns.slice(g.current).filter(x => x === id).length;
   for (let i = g.current; i < g.n; i++) {
     if (!gone.has(g.turns[i])) continue;
@@ -170,7 +204,8 @@ function shareParts(g) {
 // En ny spelare tar över delarna efter den första som är borta
 function takeOver(g, newId) {
   const old = blocking(g)[0]; if (!old) return;
-  for (let i = g.current; i < g.n; i++) if (g.turns[i] === old.id) g.turns[i] = newId;
+  if (g.power) for (const x of pending(g)) { if (x.id === old.id) g.assign[x.r][x.f] = newId; }
+  else for (let i = g.current; i < g.n; i++) if (g.turns[i] === old.id) g.turns[i] = newId;
   old.left = true;
 }
 
@@ -183,7 +218,12 @@ function sweep() {
       const before = g.status + g.hostId + blocking(g).length;
       const quiet = p => now - p.seen > (p.push ? MISSING_PUSH_MS : MISSING_MS);
       // Den som har tur och inte hörs av räknas som borta
-      const cur = g.status === "drawing" && g.players.find(p => p.id === g.turns[g.current]);
+      if (g.status === "drawing" && g.power) {
+        // Power-läget: alla som har en del kvar i rundan ritar just nu
+        const now = new Set(pending(g).filter(x => x.r === g.round).map(x => x.id));
+        g.players.forEach(p => { if (now.has(p.id) && !isGone(p) && quiet(p)) p.missing = true; });
+      }
+      const cur = g.status === "drawing" && !g.power && g.players.find(p => p.id === g.turns[g.current]);
       if (cur && !isGone(cur) && quiet(cur)) cur.missing = true;
       // Värden som inte hörs av när den ska bestämma något lämnar över till någon annan
       const host = g.players.find(p => p.id === g.hostId);
@@ -206,7 +246,7 @@ function publicGame(g) {
   const host = g.players.find(p => p.id === g.hostId);
   const seeking = g.status === "seeking", here = active(g);
   return { id: g.id, hostName: host ? host.name : "", hostCity: host ? host.city : "", names: here.map(p => p.name), max: g.max,
-    joined: seeking ? g.max - blocking(g).length : here.length, seeking, n: g.n, dir: g.dir, orderMode: g.orderMode, cat: g.cat };
+    joined: seeking ? g.max - blocking(g).length : here.length, seeking, n: g.n, dir: g.dir, orderMode: g.orderMode, cat: g.cat, time: g.time, power: g.power };
 }
 function stateFor(g, me) {
   const out = {
@@ -218,6 +258,18 @@ function stateFor(g, me) {
     turns: g.turns, current: g.current, home: g.home, face: g.face,
     name: g.name, what: g.what, galleryId: g.galleryId, revealAt: g.revealAt
   };
+  if (g.power) {
+    const mid = ["drawing", "paused", "seeking"].includes(g.status);
+    Object.assign(out, { power: true, round: g.round, assign: g.assign, hands: g.handsF, names: g.names, galleryIds: g.galleryIds,
+      drawn: g.figs.map(f => Array.from({ length: g.n }, (_, r) => !!f[r])) });
+    // Remsan från förra delen, bara för de gubbar jag ska rita i den här rundan
+    if (mid && g.round > 0) {
+      out.prevP = {};
+      g.assign[g.round].forEach((id, f) => { if (id === me.id) out.prevP[f] = g.figs[f][g.round - 1] || []; });
+    }
+    if (g.status === "saved" || ((g.status === "done" || g.status === "revealed") && me.id === g.hostId)) out.figs = g.figs;
+    return out;
+  }
   // Bara den som ska rita nästa del får se remsan från förra delen
   if (["drawing", "paused", "seeking"].includes(g.status) && g.turns[g.current] === me.id && g.current > 0) out.prev = g.parts[g.current - 1] || [];
   // Medan värden bestämmer om gubben ska sparas ser bara värden den. Raderas den får ingen annan se den.
@@ -342,6 +394,19 @@ module.exports = function makeGamesApi({ send, readJson, str, cleanStroke }) {
       send(req, res, 200, stateFor(g, me));
       return true;
     }
+    if (action === "part" && g.power) {
+      const b = await readJson(req) || {};
+      const f = +b.i === g.round ? Math.floor(+b.f) : -1, r = g.round;
+      if (!["drawing", "paused", "seeking"].includes(g.status) || !(f >= 0 && f < g.n) || g.assign[r][f] !== me.id || g.figs[f][r]) { deny(req, res, 409, "Det är inte din tur."); return true; }
+      if (!Array.isArray(b.s) || b.s.length > 3000) { deny(req, res, 400, "Delen gick inte att läsa."); return true; }
+      g.figs[f][r] = b.s.map(cleanStroke).filter(Boolean);
+      g.handsF[f][r] = typeof b.hands === "boolean" ? b.hands : null;
+      if (g.figs.every(fig => fig[r])) { g.round++; if (g.round >= g.n) g.status = "done"; }
+      if (g.status !== "done") settle(g);
+      touch(g);
+      send(req, res, 200, stateFor(g, me));
+      return true;
+    }
     if (action === "part") {
       const b = await readJson(req) || {};
       // Den som redan ritar får rita klart sin del även om någon annan har lämnat under tiden
@@ -382,7 +447,7 @@ module.exports = function makeGamesApi({ send, readJson, str, cleanStroke }) {
       }
       if (games.size >= MAX_GAMES) sweep();
       if (games.size >= MAX_GAMES) { deny(req, res, 503, "För många omgångar just nu. Försök snart igen."); return true; }
-      n = newGame({ players: g.max, dir: g.dir, order: g.orderMode, cat: g.cat, time: g.time });
+      n = newGame({ players: g.max, dir: g.dir, order: g.orderMode, cat: g.cat, time: g.time, power: g.power });
       n.near = nearFrom(req, b);
       const host = addPlayer(n, cleanName(b.name), cleanCity(b.city), n.near);
       n.hostId = host.playerId;
@@ -398,7 +463,7 @@ module.exports = function makeGamesApi({ send, readJson, str, cleanStroke }) {
       if (g.status !== "paused" && g.status !== "seeking") { deny(req, res, 409, "Ingen har lämnat."); return true; }
       if (b.choice === "share") { shareParts(g); settle(g); }
       else if (b.choice === "wait") g.status = "seeking";
-      else if (b.choice === "end") { g.status = "ended"; g.parts = []; }
+      else if (b.choice === "end") { g.status = "ended"; g.parts = []; g.figs = []; }
       else { deny(req, res, 400, "Okänt val."); return true; }
       touch(g);
       send(req, res, 200, stateFor(g, me));
@@ -413,10 +478,14 @@ module.exports = function makeGamesApi({ send, readJson, str, cleanStroke }) {
         g.name = str(b.name, 80);
         g.what = str(b.what, 60);
         g.galleryId = str(b.galleryId, 40);
+        if (g.power) {
+          g.names = (Array.isArray(b.names) ? b.names : []).slice(0, g.n).map(x => str(x, 80));
+          g.galleryIds = (Array.isArray(b.galleryIds) ? b.galleryIds : []).slice(0, g.n).map(x => str(x, 40));
+        }
         pushAll(g, "done");
       } else {
         g.status = "deleted";
-        g.parts = [];
+        g.parts = []; g.figs = [];
       }
       touch(g);
       send(req, res, 200, stateFor(g, me));

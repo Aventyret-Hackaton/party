@@ -14,9 +14,10 @@ function clockText(ms) {
 }
 
 /* ---------- Den som ritar ---------- */
-function startDrawTimer(sec) {
+// at: när tiden började (power-läget: när rundan började), annars nu
+function startDrawTimer(sec, at) {
   stopDrawTimer();
-  TM.limit = sec; TM.start = Date.now(); TM.over = false;
+  TM.limit = sec; TM.start = at || Date.now(); TM.over = false;
   if (!sec) return;
   $("drawTimer").hidden = false;
   tickDraw();
@@ -52,8 +53,10 @@ function renderWaitTimer() {
   const show = g && g.status === "drawing" && g.time && g.turnStart && currentScreen === "s-wait";
   el.hidden = !show;
   if (!show) return;
-  const left = g.time * 1000 - (serverNow() - g.turnStart), who = nameOf(g.turns[g.current]);
+  const left = g.time * 1000 - (serverNow() - g.turnStart);
   el.classList.toggle("over", left <= 0);
+  if (g.power) { el.textContent = left > 0 ? t("roundLeft", { t: clockText(left) }) : t("roundOver", { t: clockText(-left) }); return; }
+  const who = nameOf(g.turns[g.current]);
   el.textContent = left > 0 ? t("waitLeft", { name: who, t: clockText(left) }) : t("waitOvertime", { name: who, t: clockText(-left) });
 }
 setInterval(() => { if (currentScreen === "s-wait" && typeof ON !== "undefined" && ON) renderWaitTimer(); }, 500);

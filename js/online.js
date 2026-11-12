@@ -53,7 +53,7 @@ function needName(errEl) {
   return true;
 }
 const gameSummary = g => [g.dir === "v" ? "↓ " + t("vertical") : "→ " + t("horizontal"), g.orderMode === "random" ? t("random") : t("strict"), g.cat === "staff" ? t("staff") : t("free"),
-  "⏱ " + timeLabel(g.time ?? 60)].join(" · ");
+  "⏱ " + timeLabel(g.time ?? 60), ...(g.power ? ["⚡ " + t("powerOn")] : [])].join(" · ");
 
 /* ---------- Listan med öppna omgångar ---------- */
 let openTimer = null;
@@ -105,7 +105,7 @@ async function createOnline() {
   if (needName($("setupErr"))) return;
   $("setupNext").disabled = true;
   try {
-    enterGame(await api("POST", "/api/games", { name: myName(), city: await locate(), loc: HERE.loc || null, players: S.players, dir: S.dir, order: S.order, cat: S.cat, time: S.time }));
+    enterGame(await api("POST", "/api/games", { name: myName(), city: await locate(), loc: HERE.loc || null, players: S.players, dir: S.dir, order: S.order, cat: S.cat, time: S.time, power: S.power }));
   } catch (e) {
     $("setupErr").textContent = onlineError(e);
     if (e.code === "pw") $("onPw").focus();
@@ -157,7 +157,7 @@ const meId = () => ON?.me.playerId;
 // Gissa vilken Äventyrare: alla utom den som ritade huvudet
 const gHead = g => g.keys?.length ? g.keys.findIndex(k => k === "head" || k === "headfront") : headIndex(g.dir, g.n);
 const guessFor = g => g.face && g.turns[gHead(g)] !== meId() ? { answer: g.face.name } : null;
-const drawers = g => [...new Set(g.turns)].map(id => g.players.find(p => p.id === id)?.name).filter(Boolean);
+const drawers = g => [...new Set(g.power ? g.assign.flat() : g.turns)].map(id => g.players.find(p => p.id === id)?.name).filter(Boolean);
 const isHost = () => ON?.game?.hostId === meId();
 function nameOf(id) {
   if (!ON?.game) return "";
@@ -239,6 +239,7 @@ function handleGame() {
   renderNext();
   if (ON.view === "lobby" && g.status !== "lobby") notify(t("notifyFullTitle"), t("notifyFullBody"), "full-" + g.id);
   if (g.status === "lobby") { if (ON.view !== "lobby") { ON.view = "lobby"; show("s-lobby"); } renderLobby(); return; }
+  if (g.power) { handlePower(g); return; }   // js/power.js
   if (g.status === "drawing") {
     const i = g.current;
     if (g.turns[i] === meId() && !ON.sent[i]) {
@@ -312,7 +313,7 @@ function renderWait() {
   $("waitParts").textContent = partsInfo(g.dir, g.n, g.keys);
   $("waitParts").hidden = end;
   $("waitLeave").hidden = gone;
-  $("waitProg").innerHTML = Array.from({ length: g.n }, (_, i) => `<span class="${end || i < g.current ? "done" : ""}"></span>`).join("");
+  $("waitProg").innerHTML = Array.from({ length: g.n }, (_, i) => `<span class="${end || i < (g.power ? g.round : g.current) ? "done" : ""}"></span>`).join("");
   renderBand("waitBand");
   if (typeof startDancers === "function") startDancers("waitDancers");
   if (end) {
@@ -322,6 +323,7 @@ function renderWait() {
     return;
   }
   renderWaitTimer();   // js/timer.js
+  if (g.power) { renderPowerWait(g); return; }
   $("waitText").textContent = t("waitTurn", { name: nameOf(g.turns[g.current]), part: lc(t(gPart(g, g.current))) });
   // Vad jag ska rita, och hur många som ritar före mig
   const mineIdx = g.turns.map((u, i) => u === meId() && i > g.current ? i : -1).filter(i => i >= 0);

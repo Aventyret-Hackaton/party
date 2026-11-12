@@ -82,6 +82,11 @@
 
   <!-- Inställningar för en ny omgång, i rummet eller online -->
   <div id="setupOpts">
+    <!-- Power-läget: lika många gubbar som spelare, alla ritar samtidigt (js/power.js). Bara online. -->
+    <div id="powerRow">
+      <div class="lbl" data-i="powerLabel"></div><div class="chips" id="c-power"></div>
+      <p class="fine" data-i="powerHint"></p>
+    </div>
     <div class="lbl" data-i="playersParts"></div><div class="chips" id="c-players"></div>
     <div class="lbl" data-i="dir"></div><div class="chips" id="c-dir"></div>
     <p class="fine" data-i="dirHint"></p>
@@ -282,6 +287,36 @@
   </div>
 </section>
 
+<!-- Power-läget: gruppbilden med alla gubbar (js/power.js) -->
+<section id="s-group" class="screen">
+  <div class="stage group-stage" id="groupStage">
+    <div class="beam l"></div><div class="beam r"></div>
+    <div id="groupPre">
+      <div class="andnow" data-i="andNow"></div>
+      <p id="groupWait"></p>
+      <button class="btn primary" id="groupUnfold" data-i="unfold"></button>
+    </div>
+    <div class="group" id="groupFigs"></div>
+    <div id="groupPost" hidden>
+      <div class="figname" data-i="groupTitle"></div>
+      <p class="place" id="groupPlace"></p>
+      <div class="decide" id="groupDecide" hidden>
+        <p class="place" data-i="groupAsk"></p>
+        <div class="actions">
+          <button class="btn primary" id="groupKeep" data-i="groupKeep"></button>
+          <button class="btn" id="groupDrop" data-i="groupDrop"></button>
+        </div>
+      </div>
+      <p class="place" id="groupMsg"></p>
+      <div class="actions" id="groupActions" hidden>
+        <button class="btn primary" id="groupAgain" data-i="playAgain"></button>
+        <button class="btn" id="groupGallery" data-i="toGallery"></button>
+        <button class="btn" id="groupHome" data-i="home"></button>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- Galleri -->
 <section id="s-gallery" class="screen">
   <button class="back-link" data-i="back"></button>
@@ -365,6 +400,7 @@
 <script src="js/ai-namn.js"></script>
 <script src="js/galleri.js"></script>
 <script src="js/online.js"></script>
+<script src="js/power.js"></script>
 <script src="js/notiser.js"></script>
 <script src="js/ultraljud.js"></script>
 <script src="js/narhet.js"></script>

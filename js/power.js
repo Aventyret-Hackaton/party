@@ -54,13 +54,12 @@ function handlePower(g) {
         canUnfold: g.status === "done",
         onUnfoldClick: () => api("POST", `/api/games/${id}/reveal`).then(s => ON && applyGame(s)).catch(() => {}),
         decide: {
+          // Hela gänget sparas som en enda gruppbild i galleriet
           keep: async () => {
-            const R = GR.rec, ids = [];
-            for (let f = 0; f < R.figs.length; f++) {
-              ids.push(await saveGallery({ name: R.gang, what: "", dir: R.dir, parts: R.figs[f].map(s => ({ s })), home: R.home,
-                names: R.by[f], staff: "", mode: "online", gang: R.gang, createdAt: new Date().toISOString() }) || "");
-            }
-            const s = await api("POST", `/api/games/${id}/save`, { name: R.gang, galleryIds: ids });
+            const R = GR.rec;
+            const gid = await saveGallery({ kind: "group", name: R.gang, dir: R.dir, figs: R.figs.map(f => f.map(s => ({ s }))), by: R.by,
+              names: [...new Set(R.by.flat())], home: R.home, staff: "", mode: "online", createdAt: new Date().toISOString() });
+            const s = await api("POST", `/api/games/${id}/save`, { name: R.gang, galleryId: gid || "" });
             if (ON) applyGame(s);
           },
           drop: async () => { const s = await api("POST", `/api/games/${id}/discard`); if (ON) applyGame(s); }
@@ -121,6 +120,10 @@ function openGroup(rec, opts) {
   $("gangIn").value = "";
   $("groupPre").hidden = false; $("groupPost").hidden = true;
   $("groupUnfold").hidden = !opts.canUnfold;
+  $("groupUnfold").textContent = t(opts.back ? "replay" : "unfold");
+  // Öppnad från galleriet: bara tillbaka dit
+  $("groupAgain").hidden = !!opts.back; $("groupHome").hidden = !!opts.back;
+  $("groupGallery").textContent = t(opts.back ? "backGallery" : "toGallery");
   $("groupWait").textContent = opts.canUnfold ? "" : t("stageWait");
   $("groupDecide").hidden = true; $("groupActions").hidden = true; $("groupMsg").textContent = "";
   $("groupKeep").disabled = $("groupDrop").disabled = false;
@@ -182,5 +185,5 @@ async function decideGroup(keep) {
 $("groupKeep").onclick = () => decideGroup(true);
 $("groupDrop").onclick = () => decideGroup(false);
 $("groupAgain").onclick = () => playAgainOnline();
-$("groupGallery").onclick = () => { leaveOnline(); openGallery(); };
+$("groupGallery").onclick = () => { if (GR.opts?.back) history.back(); else { leaveOnline(); openGallery(); } };
 $("groupHome").onclick = () => { leaveOnline(); show("s-home"); };

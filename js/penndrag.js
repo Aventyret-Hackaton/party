@@ -45,18 +45,18 @@ function inkLightness(parts) {
   return weight ? sum / weight : 0;
 }
 // Hela gubben i en bild. Delarna överlappar med remsan nedanför vikningen (GAP), som på papper.
-function figureCanvas(parts, dir, scale) {
+function figureCanvas(parts, dir, scale, clear = false) {
   const { W, H } = DIMS[dir], n = parts.length, step = (dir === "v" ? H : W) - GAP, c = document.createElement("canvas");
   c.width = Math.round((dir === "v" ? W : W + step * (n - 1)) * scale);
   c.height = Math.round((dir === "v" ? H + step * (n - 1) : H) * scale);
   const x = c.getContext("2d");
   x.scale(scale, scale);
-  x.fillStyle = "#ffffff"; x.fillRect(0, 0, c.width / scale, c.height / scale);
+  if (!clear) { x.fillStyle = "#ffffff"; x.fillRect(0, 0, c.width / scale, c.height / scale); }
   parts.forEach((s, i) => {
     x.save();
     if (dir === "v") x.translate(0, i * step); else x.translate(i * step, 0);
     x.beginPath(); x.rect(0, 0, W, H); x.clip();
-    (s || []).forEach(st => drawStroke(x, st));
+    (s || []).forEach(st => drawStroke(x, st, clear));
     x.restore();
   });
   return c;
@@ -70,6 +70,33 @@ function compact(strokes, step = 1) {
     if (p[p.length - 2] !== s.p[s.p.length - 2]) p.push(s.p[s.p.length - 2], s.p[s.p.length - 1]);
     return { ...s, p };
   });
+}
+// Gruppbilden: alla gubbar ihop får vara högst cirka 900 kB
+function fitGroup(rec) {
+  let step = 1, out = rec;
+  while (JSON.stringify(out).length > 900000 && step < 8) {
+    step++;
+    out = { ...rec, figs: rec.figs.map(f => f.map(pt => ({ s: compact(pt.s, step) }))) };
+  }
+  return out;
+}
+// Gruppbilden som en bild: gubbarna bredvid varandra, lika höga (height i punkter), utan papper bakom
+function groupCanvas(figs, dir, height, scale, clear = true) {
+  const { W, H } = DIMS[dir], gap = height * .08;
+  const size = n => { const step = (dir === "v" ? H : W) - GAP; return dir === "v" ? [W, H + step * (n - 1)] : [W + step * (n - 1), H]; };
+  const ks = figs.map(f => height / size(f.length)[1]);
+  const width = figs.reduce((a, f, i) => a + size(f.length)[0] * ks[i], 0) + gap * (figs.length - 1);
+  const c = document.createElement("canvas");
+  c.width = Math.round(width * scale); c.height = Math.round(height * scale);
+  const x = c.getContext("2d"); x.scale(scale, scale);
+  if (!clear) { x.fillStyle = "#ffffff"; x.fillRect(0, 0, width, height); }
+  let left = 0;
+  figs.forEach((f, i) => {
+    const one = figureCanvas(f.map(p => p.s || p), dir, Math.max(1, ks[i] * scale), true);
+    x.drawImage(one, left, 0, size(f.length)[0] * ks[i], height);
+    left += size(f.length)[0] * ks[i] + gap;
+  });
+  return c;
 }
 function fitSize(obj, partsKey) {
   let step = 1, out = obj;

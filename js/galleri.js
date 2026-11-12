@@ -8,11 +8,14 @@ const myKeys = (() => { try { return JSON.parse(localStorage.getItem("party-keys
 function rememberKey(id, token) { myKeys[id] = token; try { localStorage.setItem("party-keys", JSON.stringify(myKeys)); } catch (e) {} }
 const apiId = id => typeof id === "string" && id.startsWith("api:") ? id.slice(4) : null;
 
+// En gruppbild (power-läget) har flera gubbar i figs, en vanlig gubbe har sina delar i parts
+const isGroup = r => r && r.kind === "group" && Array.isArray(r.figs);
+const fitRec = rec => isGroup(rec) ? fitGroup(rec) : fitSize(rec, "parts");
 async function saveGallery(rec) {
   await apiReady;
   if (caps.api) {
     try {
-      const r = await fetch("/api/gallery", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(fitSize(rec, "parts")) });
+      const r = await fetch("/api/gallery", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(fitRec(rec)) });
       if (r.ok) {
         const { id, token } = await r.json();
         rememberKey(id, token);
@@ -22,7 +25,7 @@ async function saveGallery(rec) {
       console.warn("Galleriet svarade", r.status);
     } catch (e) { console.warn(e); }
   } else if (caps.db && caps.canWrite) {
-    try { const ref = await caps.db.collection("gallery").add(fitSize(rec, "parts")); return ref.id; }
+    try { const ref = await caps.db.collection("gallery").add(fitRec(rec)); return ref.id; }
     catch (e) { console.warn(e); }
   }
   localGallery.unshift({ id: "local" + Date.now(), ...rec });
@@ -92,7 +95,10 @@ function renderGallery() {
   const inCountry = inCont.filter(x => !fco.value || x.c[1] === fco.value);
   const cities = [...new Set(inCountry.map(x => cityKey(x.c)))].map(k => [k, k.split("|")[0]]).sort((a, b) => a[1].localeCompare(b[1]));
   fill(fci, cities, "", keep.ci);
-  const shown = inCountry.filter(x => !fci.value || cityKey(x.c) === fci.value).map(x => x.r);
+  // Visa: alla, bara gubbar eller bara gruppbilder
+  const kind = $("fKind").value;
+  const shown = inCountry.filter(x => !fci.value || cityKey(x.c) === fci.value).map(x => x.r)
+    .filter(r => !kind || (kind === "group") === isGroup(r));
   // Kartan visar alla gubbar. Trycker man på en stad visas bara den stadens gubbar i rutnätet.
   if (sheetPos !== "peek") renderMap(items, fci.value);
   renderSheetHint();
@@ -102,11 +108,12 @@ function renderGallery() {
   galPage = Math.min(galPage, pages - 1);
   renderPager(pages);
   shown.slice(galPage * GAL_PAGE, (galPage + 1) * GAL_PAGE).forEach(r => {
-    const b = document.createElement("button"); b.className = "card";
+    const b = document.createElement("button"); b.className = "card" + (isGroup(r) ? " group" : "");
     const th = document.createElement("div"); th.className = "thumb";
     try {
-      const parts = r.parts.map(p => p.s), c = figureCanvas(parts, r.dir, thumbScale(parts.length, r.dir));
-      th.appendChild(c);
+      // Gruppbilden tar två kolumner i rutnätet
+      if (isGroup(r)) th.appendChild(groupCanvas(r.figs, r.dir, 1000, Math.min(2, Math.max(1, devicePixelRatio || 1)) * .32, false));
+      else { const parts = r.parts.map(p => p.s); th.appendChild(figureCanvas(parts, r.dir, thumbScale(parts.length, r.dir))); }
     } catch (e) {}
     const nm = document.createElement("b"); nm.textContent = r.name || t("nameless");
     const pl = document.createElement("span"); pl.textContent = placeLabel(r.home);
@@ -115,7 +122,7 @@ function renderGallery() {
     grid.appendChild(b);
   });
 }
-["fCont", "fCountry", "fCity"].forEach(id => $(id).onchange = () => { galPage = 0; renderGallery(); });
+["fCont", "fCountry", "fCity", "fKind"].forEach(id => $(id).onchange = () => { galPage = 0; renderGallery(); });
 // Bläddra: Föregående, Sida 2 av 5, Nästa. Syns bara när gubbarna inte får plats på en sida.
 function renderPager(pages) {
   $("galPager").hidden = pages < 2;
@@ -281,6 +288,13 @@ async function byLabel(r) {
 // på samma ställe och med samma filter.
 let galScroll = 0;
 async function openGalleryItem(r) {
+  if (isGroup(r)) {
+    // Gruppbilden från ett power-läge: alla gubbar på scenen igen
+    galScroll = scrollY;
+    navPush({ party: "item" });
+    openGroup({ figs: r.figs.map(f => f.map(p => p.s)), dir: r.dir, home: r.home, by: r.by || [], gang: r.name }, { canUnfold: true, back: true });
+    return;
+  }
   const rec = { parts: r.parts.map(p => p.s), dir: r.dir, home: r.home, by: await byLabel(r), name: r.name, staff: r.staff, gang: r.gang || "", mid: r.mode === "online", galleryId: r.id, voiceUrl: voiceUrlFor(r) };
   galScroll = scrollY;   // sidan i galleriet (galPage) står kvar
   navPush({ party: "item" });

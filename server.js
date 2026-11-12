@@ -22,7 +22,7 @@ const zlib = require("zlib");
 
 const PORT = process.env.PORT || 3000;
 const ROOT = __dirname;
-const MAX_BODY = 400 * 1024;      // största tillåtna gubbe i byte
+const MAX_BODY = 1024 * 1024;     // största tillåtna gubbe (eller gruppbild från power-läget) i byte
 const LIST_LIMIT = 300;           // hur många gubbar galleriet visar (spelet visar dem en sida i taget)
 const POSTS_PER_HOUR = 40;        // per IP-adress, mot spam
 const MAX_VOICE = 300 * 1024;     // största catchphrase i byte (sex sekunder brukar vara 30–60 kB)
@@ -131,9 +131,33 @@ function cleanStroke(s) {
   else return null;
   return out;
 }
+// Delarna i en gubbe: [{ s: [penndrag] }, ...], 3–6 delar
+function cleanParts(list) {
+  if (!Array.isArray(list) || list.length < 3 || list.length > 6) return null;
+  const parts = [];
+  for (const pt of list) {
+    if (!pt || !Array.isArray(pt.s) || pt.s.length > 3000) return null;
+    parts.push({ s: pt.s.map(cleanStroke).filter(Boolean) });
+  }
+  return parts;
+}
+// En gruppbild från power-läget: 3–6 gubbar som sparas tillsammans, med gängets namn.
+// figs: [[{ s }, ...], ...], by: vilka som ritade varje gubbe
+function cleanGroup(b) {
+  if (!Array.isArray(b.figs) || b.figs.length < 3 || b.figs.length > 6) return null;
+  const figs = b.figs.map(cleanParts);
+  if (figs.some(f => !f)) return null;
+  const names = list => Array.isArray(list) ? list.slice(0, 6).map(n => str(n, 40)) : [];
+  return {
+    kind: "group", name: str(b.name, 80), dir: b.dir, figs, home: str(b.home, 60),
+    by: figs.map((_, i) => names(Array.isArray(b.by) ? b.by[i] : [])), names: names(b.names),
+    staff: "", mode: "online"
+  };
+}
 function cleanRecord(b) {
   if (!b || typeof b !== "object") return null;
   if (b.dir !== "v" && b.dir !== "h") return null;
+  if (b.kind === "group") return cleanGroup(b);
   if (!Array.isArray(b.parts) || b.parts.length < 3 || b.parts.length > 6) return null;
   const parts = [];
   for (const pt of b.parts) {

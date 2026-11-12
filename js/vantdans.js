@@ -26,7 +26,9 @@ function stopDancers() {
   WD.box = null;
 }
 function fillDancers(box) {
-  const list = allGallery().filter(r => Array.isArray(r.parts) && r.parts.length > 1);
+  // Gubbarna i gruppbilderna får också dansa
+  const list = allGallery().flatMap(r => isGroup(r) ? r.figs.map(f => ({ ...r, parts: f })) : [r])
+    .filter(r => Array.isArray(r.parts) && r.parts.length > 1);
   box.innerHTML = "";
   if (!list.length) return;
   box.insertAdjacentHTML("beforeend", '<div class="disco-beam a"></div><div class="disco-beam b"></div><div class="disco-beam c"></div><div class="disco-dots"></div><div class="disco-ball"></div><div class="disco-floor"></div>');

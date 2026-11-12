@@ -93,7 +93,7 @@ function renderGallery() {
     const b = document.createElement("button"); b.className = "card";
     const th = document.createElement("div"); th.className = "thumb";
     try {
-      const parts = r.parts.map(p => p.s), c = figureCanvas(parts, r.dir, 0.4);
+      const parts = r.parts.map(p => p.s), c = figureCanvas(parts, r.dir, thumbScale(parts.length, r.dir));
       th.appendChild(c);
     } catch (e) {}
     const nm = document.createElement("b"); nm.textContent = r.name || t("nameless");
@@ -104,6 +104,13 @@ function renderGallery() {
   });
 }
 ["fCont", "fCountry", "fCity"].forEach(id => $(id).onchange = renderGallery);
+// Rita galleribilden i den storlek den visas (rutan är högst cirka 240 × 320), gånger skärmens pixeltäthet,
+// så att strecken blir skarpa. Högst 2× för att inte äta minne när galleriet har många gubbar.
+function thumbScale(n, dir) {
+  const { W, H } = DIMS[dir], step = (dir === "v" ? H : W) - GAP;
+  const fw = dir === "v" ? W : W + step * (n - 1), fh = dir === "v" ? H + step * (n - 1) : H;
+  return Math.min(2, Math.max(1, devicePixelRatio || 1)) * Math.min(240 / fw, 320 / fh);
+}
 
 /* ---------- Kartpanelen: dra i greppet eller tryck på det ---------- */
 // Tre lägen: "peek" (bara greppet syns), "half" (halva skärmen) och "full".

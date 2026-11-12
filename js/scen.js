@@ -7,7 +7,8 @@ function openStage(rec, opts) {
   // guess: { answer, hint } – man gissar vilken Äventyrare huvudet föreställer innan namnet visas.
   ST = { rec, opts, shown: false, decided: !opts.decide, guessing: false, guessed: !opts.guess };
   const fig = $("figure"); fig.className = "figure " + rec.dir; fig.innerHTML = ""; fig.style.setProperty("--n", rec.parts.length);
-  const scale = Math.min(2, (devicePixelRatio || 1) * 1.2);
+  // En del visas aldrig bredare än 600 punkter på skärmen, så skärmens pixeltäthet räcker för skarpa streck
+  const scale = Math.min(3, Math.max(1, devicePixelRatio || 1));
   // Mörkt bläck får en ljus strålkastare bakom sig, ljust bläck står på den mörka scenen.
   $("stage").dataset.ink = inkLightness(rec.parts) < 0.12 ? "dark" : "light";
   rec.parts.forEach((s, i) => {

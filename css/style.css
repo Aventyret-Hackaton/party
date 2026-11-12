@@ -221,6 +221,9 @@ body.night .guess-opts .btn.wrong{border-color:var(--accent);color:var(--accent)
 .invite-card{width:100%;max-width:24rem;padding:1.75rem 1.5rem;text-align:center;background:var(--card);color:var(--ink);animation:rise .35s ease both}
 .invite-from{margin:0;font-family:var(--script);font-size:1.6rem;color:var(--accent)}
 .invite-card h2{margin:.25rem 0 .5rem}
+/* På scenen (mörkt tema) blir knapparna annars vita på den vita rutan */
+body.night .invite-card .btn:not(.primary){background:var(--btn-bg);color:var(--accent-text);border-color:var(--accent)}
+body.night .invite-card h2{color:var(--head)}
 .update-bar{position:fixed;left:0;right:0;top:0;z-index:60;display:flex;gap:.75rem;align-items:center;justify-content:center;flex-wrap:wrap;padding:.6rem 1rem;background:var(--accent);color:#fff;font-weight:600;text-align:center}
 .update-bar[hidden]{display:none}
 .update-bar .btn{background:#fff;color:var(--accent);border-color:#fff}

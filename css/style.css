@@ -75,7 +75,7 @@ button{font:inherit;cursor:pointer}
 .lbl::after{content:"";flex:1;height:1px;background:var(--accent)}
 .chips{display:flex;flex-wrap:wrap;gap:.5rem}
 .chip{border-radius:2.25rem;padding:.5rem 1.1rem;border:1px solid var(--line);background:var(--btn-bg);color:var(--ink);font-size:1rem}
-.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.chip[aria-pressed="true"],.chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .chip:disabled{opacity:.5;cursor:default}
 .diamonds{list-style:none;padding:0;margin:.5rem 0}
 .diamonds li{position:relative;padding-left:1.25rem;margin:.35rem 0}

@@ -5,8 +5,9 @@ function applyI18n() {
   document.documentElement.lang = lang;
   document.querySelectorAll("[data-i]").forEach(el => el.textContent = t(el.dataset.i));
   document.querySelectorAll("[data-ph]").forEach(el => el.placeholder = t(el.dataset.ph));
-  $("soundBtn").textContent = soundOn ? "♪ " + t("soundOn") : t("soundOff");
-  $("soundBtn").setAttribute("aria-pressed", soundOn);
+  // Knappen säger vad som händer när man trycker: "Ljud av" när ljudet är på, "Ljud på" när det är av
+  $("soundBtn").textContent = soundOn ? t("soundOff") : "♪ " + t("soundOn");
+  $("soundBtn").classList.toggle("on", soundOn);
   renderWhere();
   renderSetupChips();
   if (currentScreen === "s-names") renderNameInputs();

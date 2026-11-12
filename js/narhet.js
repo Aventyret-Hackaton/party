@@ -6,28 +6,45 @@
 // 3. Ultraljud. Den som är i väntrummet trycker "Ropa ut inbjudan", och telefoner i samma rum
 //    som letar hör koden med mikrofonen. Se js/ultraljud.js.
 // Den som letar trycker "Hitta party i närheten" på startskärmen. Då frågar telefonen om plats och mikrofon.
+//
+// Är man mitt i en omgång sparas inbjudan och visas först när omgången är klar: när gubben har
+// visats på scenen och knapparna syns. Man blir aldrig avbruten mitt i ritandet.
 
 /* ---------- Party i närheten ---------- */
-const NEAR = { searching: false, until: 0, timer: null, shown: new Set(), open: null, status: "" };
+const NEAR = { searching: false, until: 0, timer: null, shown: new Set(), open: null, status: "", pending: [] };
 const SEARCH_MS = 60 * 1000;
 
+// Får en inbjudan visas nu? På startskärmen, eller på scenen när den egna omgången är klar.
+function canInvite() {
+  if (NEAR.open || document.hidden || !$("intro").hidden) return false;
+  if (currentScreen === "s-home") return true;
+  return currentScreen === "s-stage" && !$("postShow").hidden && !$("stageActions").hidden;
+}
 // Fråga servern om öppna omgångar i närheten. Platsen skickas bara om den redan är känd.
+// Är man mitt i en omgång sparas svaret tills omgången är klar.
 async function pollNearby() {
-  if (currentScreen !== "s-home" || document.hidden || NEAR.open || !$("intro").hidden) return;
+  if (document.hidden || NEAR.open) return;
   await apiReady;
   if (!caps.api) return;
   try {
+    const mine = [ON?.game?.id, ON?.game?.next].filter(Boolean);   // den egna omgången och nästa
     const list = await api("POST", "/api/games/nearby", { loc: HERE.loc || null });
-    const g = list.find(x => !NEAR.shown.has(x.id));
-    if (g) showInvite(g.id, g.hostName, g.how);
+    NEAR.pending = list.filter(x => !NEAR.shown.has(x.id) && !mine.includes(x.id));
   } catch (e) {}
+  showPending();
 }
-// Var femte sekund på startskärmen, oftare medan man letar
+function showPending() {
+  if (!canInvite() || !NEAR.pending.length) return;
+  const g = NEAR.pending.shift();
+  showInvite(g.id, g.hostName, g.how);
+}
+// Var femte sekund på startskärmen och efter en omgång, oftare medan man letar, mer sällan mitt i en omgång
 function nearbyTick() {
   clearTimeout(NEAR.timer);
   if (NEAR.searching && Date.now() > NEAR.until) endSearch(t("nearbyDone"));
   pollNearby();
-  NEAR.timer = setTimeout(nearbyTick, NEAR.searching ? 2500 : 5000);
+  const busy = currentScreen !== "s-home" && currentScreen !== "s-stage";
+  NEAR.timer = setTimeout(nearbyTick, NEAR.searching ? 2500 : busy ? 10000 : 5000);
 }
 
 /* ---------- Leta: plats och mikrofon ---------- */
@@ -104,8 +121,9 @@ $("shoutBtn").onclick = () => {
   else if (ON?.game) startShout(ON.game.id, renderShout);
   renderShout();
 };
-// Sluta ropa och lyssna när man lämnar skärmen
+// Sluta ropa och lyssna när man lämnar skärmen. Visa sparade inbjudningar när omgången är klar.
 setInterval(() => {
+  showPending();
   if (ulShout && currentScreen !== "s-lobby") { stopShout(); renderShout(); }
   if (NEAR.searching && currentScreen !== "s-home") endSearch("");
 }, 500);

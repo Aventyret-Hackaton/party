@@ -96,6 +96,7 @@ Bra att veta:
 
 - På mobilnät delar många telefoner samma IP-adress. Då kan någon längre bort räknas som "samma nätverk". Det är ofarligt, eftersom listan med öppna omgångar ändå är öppen för alla.
 - Ultraljudet fungerar olika bra på olika telefoner, beroende på högtalare och mikrofon. Det kräver att den som letar tillåter mikrofonen.
+- Är man mitt i en omgång sparas inbjudan och visas först när omgången är klar, när gubben har visats och knapparna syns på scenen. Den egna omgången räknas aldrig som en inbjudan.
 - Inget nytt behöver ställas in på Heroku.
 
 ## Kartvyn

@@ -9,6 +9,7 @@
 //   GET   /api/gallery         – de senaste gubbarna
 //   POST  /api/gallery         – spara en ny gubbe, svarar med id och en nyckel
 //   PATCH /api/gallery/:id     – byt namn, kräver nyckeln från POST
+//   GET   /api/gallery/:id.svg – gubben som tryckbar SVG för Tryckskaparen, se tryck-svg.js
 //   /api/games/...             – onlinespel, se online-server.js
 
 const http = require("http");
@@ -46,6 +47,14 @@ async function initDb() {
 
 const hash = s => crypto.createHash("sha256").update(String(s)).digest("hex");
 
+async function getGallery(id) {
+  if (pool) {
+    const r = await pool.query("SELECT data FROM gallery WHERE id = $1", [id]);
+    return r.rows[0] ? r.rows[0].data : null;
+  }
+  const m = memory.find(x => x.id === id);
+  return m ? m.data : null;
+}
 async function listGallery() {
   if (pool) {
     const r = await pool.query("SELECT id, created_at, data FROM gallery ORDER BY id DESC LIMIT $1", [LIST_LIMIT]);
@@ -192,6 +201,9 @@ function serveStatic(req, res, pathname) {
 /* ---------- Onlinespel, se online-server.js ---------- */
 const handleGames = require("./online-server.js")({ send, readJson, str, cleanStroke });
 const { pushKey } = require("./push-server.js");
+const { figureSvg } = require("./tryck-svg.js");
+const TRYCK_ORIGIN = "https://tryckskaparen.tifosi.se";
+const MAX_SVG = 2 * 1024 * 1024;   // Tryckskaparen tar emot högst 2 MB
 
 /* ---------- Routning ---------- */
 const server = http.createServer(async (req, res) => {
@@ -210,6 +222,19 @@ const server = http.createServer(async (req, res) => {
       const rec = cleanRecord(await readJson(req));
       if (!rec) return send(req, res, 400, { error: "Gubben gick inte att läsa." });
       return send(req, res, 201, await addGallery(rec));
+    }
+    // Gubben som SVG till Tryckskaparen. Bara Tryckskaparen får hämta den från en annan sida (CORS).
+    const svgMatch = p.match(/^\/api\/gallery\/(\d{1,15})\.svg$/);
+    if (svgMatch && (req.method === "GET" || req.method === "HEAD")) {
+      const rec = await getGallery(svgMatch[1]);
+      if (!rec) return send(req, res, 404, { error: "Gubben finns inte." }, undefined, { "Access-Control-Allow-Origin": TRYCK_ORIGIN });
+      const svg = figureSvg(rec);
+      if (Buffer.byteLength(svg) > MAX_SVG) return send(req, res, 413, { error: "Gubben är för stor att trycka." }, undefined, { "Access-Control-Allow-Origin": TRYCK_ORIGIN });
+      return send(req, res, 200, svg, "image/svg+xml; charset=utf-8", {
+        "Access-Control-Allow-Origin": TRYCK_ORIGIN,
+        "Cache-Control": "public, max-age=300",
+        "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'"
+      });
     }
     const m = p.match(/^\/api\/gallery\/(\d+)$/);
     if (m && req.method === "PATCH") {

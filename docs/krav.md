@@ -21,7 +21,7 @@ Koden ligger i `index.html`, `css/` och `js/` (HTML, CSS och JavaScript med `<ca
 | 12 | Kategori där man ritar en Äventyrare ur minnet efter 5 sekunder | Klart, men bilderna laddas upp i appen | Se beslut nedan |
 | 13 | Tjänsten ger gubben ett namn utifrån en snabbtolkning | Klart via Claude, går att ändra | Flytta till `/api/describe` |
 | 14 | Flera språk: svenska, engelska, franska, spanska, tyska | Klart. Varje enhet väljer eget språk | Lägg till fler språk i samma ordbok |
-| 15 | Tryckbar SVG av gubben | Inte byggt, men förberett | Penndragen sparas redan som vektorer |
+| 15 | Tryckbar SVG av gubben | Byggt | `GET /api/gallery/:id.svg` (tryck-svg.js). Knappen Tryck på tröja öppnar Tryckskaparen, se docs/tryckskaparen-koppling.md |
 
 ## Beslut och avvägningar
 

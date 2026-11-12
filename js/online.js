@@ -246,7 +246,7 @@ function handleGame() {
       if (ON.view !== "stage") {
         ON.view = "stage";
         notify(t("notifyDoneTitle"), t("notifyDoneBody"), "done-" + g.id);
-        openStage({ parts: g.parts || [], dir: g.dir, home: g.home, by: drawers(g).join(", "), staff: g.face?.name || "", name: g.name || "", mid: true }, { canUnfold: false, again: playAgainOnline, guess: guessFor(g) });
+        openStage({ parts: g.parts || [], dir: g.dir, home: g.home, by: drawers(g).join(", "), staff: g.face?.name || "", name: g.name || "", mid: true, galleryId: g.galleryId || "" }, { canUnfold: false, again: playAgainOnline, guess: guessFor(g) });
         playShow();
       }
       return;
@@ -272,7 +272,7 @@ function handleGame() {
         decide: {
           keep: async name => {
             const rec = ST.rec;
-            const gid = await saveGallery({ name, what: rec.what || "", dir: rec.dir, parts: rec.parts.map(s => ({ s })), home: rec.home, names: drawers(ON.game), staff: rec.staff, mode: "online", createdAt: new Date().toISOString() });
+            const gid = ST.rec.galleryId = await saveGallery({ name, what: rec.what || "", dir: rec.dir, parts: rec.parts.map(s => ({ s })), home: rec.home, names: drawers(ON.game), staff: rec.staff, mode: "online", createdAt: new Date().toISOString() });
             const s = await api("POST", `/api/games/${id}/save`, { name, what: rec.what || "", galleryId: gid || "" });
             if (ON) applyGame(s);
           },

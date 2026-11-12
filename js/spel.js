@@ -172,7 +172,7 @@ function roomStage() {
     },
     // Spara med namnet i rutan, eller radera (då sparas ingenting)
     decide: {
-      keep: async name => { G.name = name; G.galleryId = await saveGallery({ name, what: ST.rec.what || "", dir: G.dir, parts: G.parts.map(s => ({ s })), home: G.home, names: G.names, staff: G.face?.name || "", mode: "room", createdAt: new Date().toISOString() }); },
+      keep: async name => { G.name = name; ST.rec.galleryId = G.galleryId = await saveGallery({ name, what: ST.rec.what || "", dir: G.dir, parts: G.parts.map(s => ({ s })), home: G.home, names: G.names, staff: G.face?.name || "", mode: "room", createdAt: new Date().toISOString() }); },
       drop: async () => {}
     },
     again: () => startRoom(G.names)

@@ -30,6 +30,7 @@ function openStage(rec, opts) {
   $("guessMsg").textContent = "";
   $("stageActions").hidden = !ST.decided;
   $("keepBtn").disabled = $("dropBtn").disabled = false;
+  syncPrint();
   show("s-stage");
 }
 $("unfoldBtn").onclick = () => { if (ST.opts.onUnfoldClick) ST.opts.onUnfoldClick(); else playShow(); };
@@ -64,6 +65,7 @@ function revealName() {
   else { $("figName").textContent = t("naming"); $("figName").classList.add("blur"); }
   if (!ST.decided) { $("decideBox").hidden = false; $("keepBtn").disabled = !rec.name; }
   $("stageActions").hidden = !ST.decided;
+  syncPrint();
 }
 function setStageName(name) {
   if (!ST) return;
@@ -132,6 +134,7 @@ async function decideStage(keep) {
   $("decideBox").hidden = true;
   $("decideMsg").textContent = t(keep ? "keptFig" : "droppedFig");
   $("stageActions").hidden = false;
+  syncPrint();
   syncMoreBelow();
 }
 $("keepBtn").onclick = () => decideStage(true);

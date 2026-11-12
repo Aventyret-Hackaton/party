@@ -56,21 +56,41 @@ function toLogical(e) {
   const r = pad.getBoundingClientRect(), { W, H } = DIMS[D.dir];
   return [Math.round((e.clientX - r.left) / r.width * W * 10) / 10, Math.round((e.clientY - r.top) / r.height * H * 10) / 10];
 }
+// Ett finger ritar. Två fingrar zoomar (touch-action: pinch-zoom i CSS) och ritar aldrig:
+// strecket som första fingret hann börja tas bort, och inget ritas förrän alla fingrar har lyfts.
+const fingers = new Set();
+let pinching = false, curId = null;
+function dropStroke() {
+  if (!D.cur) return;
+  const i = D.strokes.lastIndexOf(D.cur);
+  if (i >= 0) D.strokes.splice(i, 1);
+  D.cur = null; curId = null; redraw();
+}
 pad.addEventListener("pointerdown", e => {
-  e.preventDefault(); pad.setPointerCapture(e.pointerId);
+  fingers.add(e.pointerId);
+  if (fingers.size > 1) { pinching = true; dropStroke(); return; }
+  if (pinching) return;
+  e.preventDefault(); try { pad.setPointerCapture(e.pointerId); } catch (err) {}
   const [x, y] = toLogical(e);
+  curId = e.pointerId;
   D.cur = { c: D.color, w: D.erase ? D.size * 2 : D.size, e: D.erase ? 1 : 0, p: [x, y] };
   D.strokes.push(D.cur); drawStroke(pctx, D.cur);
 });
 pad.addEventListener("pointermove", e => {
-  if (!D.cur) return;
+  if (!D.cur || e.pointerId !== curId) return;
   const [x, y] = toLogical(e), p = D.cur.p, lx = p[p.length - 2], ly = p[p.length - 1];
   if (Math.hypot(x - lx, y - ly) < 1.2) return;
   p.push(x, y);
   pctx.strokeStyle = D.cur.e ? "#ffffff" : D.cur.c; pctx.lineWidth = D.cur.w; pctx.lineCap = "round";
   pctx.beginPath(); pctx.moveTo(lx, ly); pctx.lineTo(x, y); pctx.stroke();
 });
-["pointerup", "pointercancel"].forEach(ev => pad.addEventListener(ev, () => { if (D.cur) { D.cur = null; redraw(); } }));
+// pointercancel betyder att webbläsaren tog över, till exempel för att zooma. Då ska strecket inte bli kvar.
+pad.addEventListener("pointercancel", e => { fingers.delete(e.pointerId); if (e.pointerId === curId) dropStroke(); if (!fingers.size) pinching = false; });
+pad.addEventListener("pointerup", e => {
+  fingers.delete(e.pointerId);
+  if (!fingers.size) pinching = false;
+  if (D.cur && e.pointerId === curId) { D.cur = null; curId = null; redraw(); }
+});
 addEventListener("resize", () => { if ($("s-draw").classList.contains("active")) fitPad(); });
 
 function buildPalette() {

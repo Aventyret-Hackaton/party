@@ -115,7 +115,7 @@ button{font:inherit;cursor:pointer}
 .sheet.h{display:flex}
 .paperclip{clip-path:polygon(8px 0,calc(100% - 8px) 0,100% 8px,100% calc(100% - 8px),calc(100% - 8px) 100%,8px 100%,0 calc(100% - 8px),0 8px)}
 .stage-box{position:relative}
-#pad{display:block;touch-action:none;cursor:crosshair;background:transparent;mix-blend-mode:multiply}
+#pad{display:block;touch-action:pinch-zoom;cursor:crosshair;background:transparent;mix-blend-mode:multiply}
 .sheet.v #pad{width:100%;aspect-ratio:600/340}
 .sheet.h #pad{height:min(56vh,520px);aspect-ratio:340/600}
 .foldline{position:absolute;pointer-events:none}

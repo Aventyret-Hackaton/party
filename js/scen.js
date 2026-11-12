@@ -5,6 +5,7 @@ let ST = null;
 function openStage(rec, opts) {
   // decide: värden väljer att spara eller radera gubben efter avtäckningen. Utan decide är det redan bestämt.
   // guess: { answer, hint } – man gissar vilken Äventyrare huvudet föreställer innan namnet visas.
+  if (typeof stopDance === "function") stopDance();
   ST = { rec, opts, shown: false, decided: !opts.decide, guessing: false, guessed: !opts.guess };
   const fig = $("figure"); fig.className = "figure " + rec.dir; fig.innerHTML = ""; fig.style.setProperty("--n", rec.parts.length);
   // En del visas aldrig bredare än 600 punkter på skärmen, så skärmens pixeltäthet räcker för skarpa streck
@@ -148,7 +149,7 @@ $("stageBack").onclick = () => history.back();
 // Då syns en knapp längst ned som rullar dit.
 function syncMoreBelow() {
   const btn = $("moreBelow");
-  if (currentScreen !== "s-stage" || $("postShow").hidden) { btn.hidden = true; return; }
+  if (currentScreen !== "s-stage" || $("postShow").hidden || document.body.classList.contains("dancing")) { btn.hidden = true; return; }
   const last = [...$("postShow").children].filter(el => !el.hidden && el.offsetHeight).pop();
   btn.hidden = !last || last.getBoundingClientRect().bottom <= innerHeight - 8;
 }

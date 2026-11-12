@@ -46,6 +46,7 @@ function show(id, fromNav) {
   currentScreen = id;
   if (id !== "s-home") stopIntro();
   if (typeof syncMusic === "function") syncMusic(id);
+  if (typeof stopDance === "function") stopDance();   // dansen slutar när man byter skärm
   if (typeof syncMoreBelow === "function") setTimeout(syncMoreBelow);
   $("mapSheet").hidden = id !== "s-gallery";   // kartpanelen hör bara till galleriet
   document.body.classList.toggle("has-sheet", id === "s-gallery");

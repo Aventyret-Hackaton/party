@@ -241,6 +241,7 @@
       <p class="place" id="decideMsg"></p>
       <p class="place" id="againNote"></p>
       <div class="actions" id="stageActions">
+        <button class="btn dance-btn" id="danceBtn" data-i="dance"></button>
         <button class="btn primary" id="againBtn" data-i="playAgain"></button>
         <button class="btn" id="stageGallery" data-i="toGallery"></button>
         <button class="btn" id="stageHome" data-i="home"></button>
@@ -281,6 +282,11 @@
 </section>
 
 </main>
+<!-- Dansläget: visas medan gubben dansar (js/dans.js) -->
+<div class="dance-bar" id="danceBar" hidden>
+  <span id="danceHint"></span>
+  <button class="btn primary small" id="danceStop" data-i="danceStop"></button>
+</div>
 <!-- Syns på scenen när resultatet fortsätter nedanför skärmen (js/scen.js) -->
 <button class="more-below" id="moreBelow" hidden><span aria-hidden="true">↓</span> <span data-i="moreBelow"></span></button>
 <!-- Galleriets karta: en panel längst ned som man drar upp och ned i greppet (js/galleri.js).
@@ -313,6 +319,7 @@
 <script src="js/notiser.js"></script>
 <script src="js/ansikten.js"></script>
 <script src="js/intro.js"></script>
+<script src="js/dans.js"></script>
 <script src="js/start.js"></script>
 </body>
 </html>

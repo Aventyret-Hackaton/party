@@ -110,7 +110,7 @@ function stopMusic() {
   clearInterval(m.timer);
   const a = AC, t = a.currentTime;
   m.master.gain.cancelScheduledValues(t);
-  m.master.gain.setValueAtTime(m.master.gain.value, t);
+  m.master.gain.setValueAtTime(document.hidden ? 0 : m.master.gain.value, t);   // dold sida: tyst direkt, ingen uttoning när man kommer tillbaka
   m.master.gain.linearRampToValueAtTime(0, t + .8);
   setTimeout(() => { m.drone.oscs.forEach(o => { try { o.stop(); } catch (e) {} }); m.master.disconnect(); }, 1000);
 }

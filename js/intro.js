@@ -39,4 +39,8 @@ $("introBtn").onclick = () => {
 // (setTimeout: vänta tills start.js har hunnit växla soundOn)
 $("soundBtn").addEventListener("click", () => setTimeout(() => { if (soundOn) playIntro(); else introAudio.pause(); }));
 
+// Stänger man fönstret eller byter flik eller app tystnar introlåten, och den fortsätter när man kommer tillbaka
+document.addEventListener("visibilitychange", () => { if (document.hidden) introAudio.pause(); else playIntro(); });
+addEventListener("pagehide", () => introAudio.pause());
+
 $("introPlay").focus();

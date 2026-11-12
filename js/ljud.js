@@ -11,6 +11,15 @@ function ac() {
   return AC;
 }
 document.addEventListener("pointerdown", () => { if (soundOn) ac(); }, { once: true });
+// Stänger man fönstret, byter flik eller app blir allt syntetiserat ljud tyst direkt (fanfar, trumvirvel,
+// pausmusik). Det startar igen när man kommer tillbaka.
+function soundVisibility() {
+  if (!AC) return;
+  if (document.hidden) AC.suspend().catch(() => {});
+  else if (soundOn) AC.resume().catch(() => {});
+}
+document.addEventListener("visibilitychange", soundVisibility);
+addEventListener("pagehide", () => { if (AC) AC.suspend().catch(() => {}); });
 function noiseBuffer(a) {
   const b = a.createBuffer(1, a.sampleRate * 0.2, a.sampleRate), d = b.getChannelData(0);
   for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;

@@ -44,9 +44,12 @@
   </div>
   <div class="stack">
     <button class="btn primary" id="goSetup" data-i="newGame"></button>
+    <!-- Party i närheten: wifi, plats och ultraljud (js/narhet.js) -->
+    <button class="btn" id="nearbyBtn" aria-pressed="false"></button>
     <button class="btn" id="goGallery" data-i="gallery"></button>
     <button class="btn secondary" id="goFaces" data-i="manageFaces" hidden></button>
   </div>
+  <p class="fine nearby-status" id="nearbyStatus" aria-live="polite"></p>
 </section>
 
 <!-- Inställningar -->
@@ -175,6 +178,11 @@
   <ul class="diamonds" id="lobbyList"></ul>
   <div class="progress" id="lobbySeats"></div>
   <p class="fine" id="lobbyNote"></p>
+  <!-- Ropa ut inbjudan med ultraljud (js/narhet.js, js/ultraljud.js) -->
+  <div id="shoutRow" hidden>
+    <div class="chips"><button class="chip" id="shoutBtn" aria-pressed="false"></button></div>
+    <p class="fine" data-i="shoutHint"></p>
+  </div>
   <button class="leave-link" id="lobbyLeave" data-i="leave"></button>
 </section>
 
@@ -299,6 +307,18 @@
   <div class="galmap" id="galMap"></div>
 </div>
 <!-- Skripten delar variabler med varandra och måste laddas i den här ordningen. -->
+<!-- Inbjudan till ett party i närheten (js/narhet.js) -->
+<div class="invite" id="invite" role="dialog" aria-modal="true" aria-labelledby="inviteTitle" hidden>
+  <div class="invite-card paperclip">
+    <p class="invite-from" id="inviteFrom"></p>
+    <h2 id="inviteTitle" data-i="inviteTitle"></h2>
+    <p class="fine" id="inviteHow"></p>
+    <div class="actions">
+      <button class="btn primary" id="inviteYes" data-i="inviteYes"></button>
+      <button class="btn" id="inviteNo" data-i="inviteNo"></button>
+    </div>
+  </div>
+</div>
 <script src="js/ordbok.js"></script>
 <script src="js/grund.js"></script>
 <script src="js/stader.js"></script>
@@ -317,6 +337,8 @@
 <script src="js/galleri.js"></script>
 <script src="js/online.js"></script>
 <script src="js/notiser.js"></script>
+<script src="js/ultraljud.js"></script>
+<script src="js/narhet.js"></script>
 <script src="js/ansikten.js"></script>
 <script src="js/intro.js"></script>
 <script src="js/dans.js"></script>

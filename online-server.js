@@ -16,6 +16,7 @@
 //   POST /api/games/:id/reveal       – värden vecklar ut (bara värden ser gubben)
 //   POST /api/games/:id/save         – värden sparar gubben {name, what, galleryId}, alla får se den
 //   POST /api/games/:id/discard      – värden raderar gubben, de andra får veta det
+//   POST /api/games/nearby           – öppna omgångar i närheten {loc: {lat, lon, acc}}, se nara-server.js
 //   POST /api/games/:id/again        – spela igen: gå med i nästa omgång, eller starta den med samma inställningar {name, city}
 //   POST /api/games/:id/resolve      – värden väljer hur omgången fortsätter när någon har lämnat {choice}
 // Läget (status): lobby → drawing → done → revealed → saved eller deleted.
@@ -31,6 +32,7 @@ const path = require("path");
 const vm = require("vm");
 const crypto = require("crypto");
 const { savePush, pushAll } = require("./push-server.js");
+const { nearFrom, howNear } = require("./nara-server.js");
 
 const PASSWORD = process.env.ONLINE_PASSWORD || "";
 const LOBBY_IDLE_MS = 25 * 1000;        // en spelare i väntrummet som inte hörs av på 25 s tas bort
@@ -238,12 +240,24 @@ module.exports = function makeGamesApi({ send, readJson, str, cleanStroke }) {
       send(req, res, 200, list, undefined, { "Cache-Control": "no-store" });
       return true;
     }
+    // Party i närheten: öppna omgångar på samma nätverk eller inom 250 meter
+    if (p === "/api/games/nearby" && req.method === "POST") {
+      const b = await readJson(req) || {};
+      const me = nearFrom(req, b);
+      const list = [...games.values()].filter(g => g.status === "lobby" && g.players.length < g.max)
+        .map(g => ({ g, how: howNear(g, me) })).filter(x => x.how)
+        .sort((a, b) => b.g.createdAt - a.g.createdAt).slice(0, 5)
+        .map(({ g, how }) => ({ id: g.id, hostName: publicGame(g).hostName, how }));
+      send(req, res, 200, list, undefined, { "Cache-Control": "no-store" });
+      return true;
+    }
     // Starta en ny omgång
     if (p === "/api/games" && req.method === "POST") {
       if (games.size >= MAX_GAMES) sweep();
       if (games.size >= MAX_GAMES) { deny(req, res, 503, "För många omgångar just nu. Försök snart igen."); return true; }
       const b = await readJson(req) || {};
       const g = newGame(b);
+      g.near = nearFrom(req, b);   // för Party i närheten
       const me = addPlayer(g, cleanName(b.name), cleanCity(b.city));
       g.hostId = me.playerId;
       games.set(g.id, g);
@@ -340,6 +354,7 @@ module.exports = function makeGamesApi({ send, readJson, str, cleanStroke }) {
       if (games.size >= MAX_GAMES) sweep();
       if (games.size >= MAX_GAMES) { deny(req, res, 503, "För många omgångar just nu. Försök snart igen."); return true; }
       n = newGame({ players: g.max, dir: g.dir, order: g.orderMode, cat: g.cat });
+      n.near = nearFrom(req, b);
       const host = addPlayer(n, cleanName(b.name), cleanCity(b.city));
       n.hostId = host.playerId;
       games.set(n.id, n);

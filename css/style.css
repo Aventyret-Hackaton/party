@@ -215,6 +215,12 @@ body.night input[type=text]{background:#1a1721;color:#fff;border-color:#3d3746}
 .guess-opts .btn{width:100%;padding-inline:.5rem}
 body.night .guess-opts .btn.right{background:#2f7d4f;border-color:#2f7d4f}
 body.night .guess-opts .btn.wrong{border-color:var(--accent);color:var(--accent)}
+/* Party i närheten */
+.nearby-status{text-align:center;min-height:1.5em}
+.invite{position:fixed;inset:0;z-index:38;display:grid;place-items:center;padding:1rem;background:rgba(16,14,22,.6);animation:fadein .25s ease}
+.invite-card{width:100%;max-width:24rem;padding:1.75rem 1.5rem;text-align:center;background:var(--card);color:var(--ink);animation:rise .35s ease both}
+.invite-from{margin:0;font-family:var(--script);font-size:1.6rem;color:var(--accent)}
+.invite-card h2{margin:.25rem 0 .5rem}
 .update-bar{position:fixed;left:0;right:0;top:0;z-index:60;display:flex;gap:.75rem;align-items:center;justify-content:center;flex-wrap:wrap;padding:.6rem 1rem;background:var(--accent);color:#fff;font-weight:600;text-align:center}
 .update-bar[hidden]{display:none}
 .update-bar .btn{background:#fff;color:var(--accent);border-color:#fff}

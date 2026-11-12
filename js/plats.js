@@ -28,7 +28,10 @@ function locate() {
     };
     if (!navigator.geolocation) return none();
     navigator.geolocation.getCurrentPosition(
-      p => done(nearestCity(p.coords.latitude, p.coords.longitude), "found"),
+      p => {
+        HERE.loc = { lat: p.coords.latitude, lon: p.coords.longitude, acc: p.coords.accuracy };   // för Party i närheten
+        done(nearestCity(p.coords.latitude, p.coords.longitude), "found");
+      },
       none,
       { timeout: 15000, maximumAge: 10 * 60 * 1000 }
     );

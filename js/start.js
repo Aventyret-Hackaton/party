@@ -15,6 +15,7 @@ function applyI18n() {
   if (currentScreen === "s-face") $("faceText").textContent = t("faceText", { name: $("faceText").dataset.face || "" });
   if (currentScreen === "s-draw") renderDrawTexts(), buildPalette(), syncTools();
   if (currentScreen === "s-lobby") renderLobby();
+  if (typeof renderNearby === "function") { renderNearby(); renderInvite(); }
   if (currentScreen === "s-wait") renderWait();
   if (currentScreen === "s-pause") renderPause();
   if (currentScreen === "s-gallery") renderGallery();

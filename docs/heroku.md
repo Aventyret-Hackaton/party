@@ -80,6 +80,24 @@ Under **Online** i Nytt spel finns knappen **Tillåt notiser**. Den som tillåte
 
 **Nycklar (VAPID):** servern skapar ett nytt nyckelpar vid varje start. Det räcker, eftersom omgångarna ändå försvinner vid en omstart. Vill man ha samma nycklar hela tiden kan man lägga in `VAPID_PUBLIC_KEY` och `VAPID_PRIVATE_KEY` under **Config Vars**. **Den privata nyckeln får aldrig hamna i koden eller i repot.**
 
+### Party i närheten
+
+På startskärmen kan man få en inbjudan: **"Signe undrar: Vill du komma på mitt party?"** Svarar man **Ja!** hamnar man direkt i väntrummet. Logiken i spelet ligger i `js/narhet.js`.
+
+Party hittar omgångar i närheten på tre sätt:
+
+1. **Samma nätverk.** Servern jämför spelarnas IP-adresser (`nara-server.js`). Det sker av sig själv på startskärmen och kräver inget tillstånd. IP-adressen sparas bara som en hash med ett salt som byts vid varje omstart.
+2. **Plats.** Har både värden och den som letar delat sin plats räknas omgångar inom 250 meter. Platsen sparas bara i minnet medan omgången är öppen och lämnas aldrig ut.
+3. **Ultraljud** (`js/ultraljud.js`). I väntrummet trycker man **📢 Ropa ut inbjudan**. Telefonen spelar då omgångens kod med toner mellan 17 och 20 kHz, som är för ljusa för att höras. Den som har tryckt **👂 Hitta party i närheten** på startskärmen lyssnar med mikrofonen i en minut och fångar upp koden.
+
+Adressen är `POST /api/games/nearby` med `{ loc: { lat, lon, acc } }`. Platsen skickas i en POST och aldrig i adressen. Svaret innehåller bara omgångens kod, värdens namn och hur den hittades.
+
+Bra att veta:
+
+- På mobilnät delar många telefoner samma IP-adress. Då kan någon längre bort räknas som "samma nätverk". Det är ofarligt, eftersom listan med öppna omgångar ändå är öppen för alla.
+- Ultraljudet fungerar olika bra på olika telefoner, beroende på högtalare och mikrofon. Det kräver att den som letar tillåter mikrofonen.
+- Inget nytt behöver ställas in på Heroku.
+
 ## Kartvyn
 
 Galleriets karta använder Leaflet (från cdnjs) och kartbilder från OpenStreetMap. Gubbarna placeras i staden de bor i, med koordinaterna i `js/stader.js`. Ingen nyckel behövs.

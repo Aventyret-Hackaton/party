@@ -89,7 +89,7 @@ async function createOnline() {
   if (needName($("setupErr"))) return;
   $("setupNext").disabled = true;
   try {
-    enterGame(await api("POST", "/api/games", { name: myName(), city: await locate(), players: S.players, dir: S.dir, order: S.order, cat: S.cat }));
+    enterGame(await api("POST", "/api/games", { name: myName(), city: await locate(), loc: HERE.loc || null, players: S.players, dir: S.dir, order: S.order, cat: S.cat }));
   } catch (e) {
     $("setupErr").textContent = onlineError(e);
     if (e.code === "pw") $("onPw").focus();
@@ -154,6 +154,7 @@ function renderLobby() {
   $("lobbyInfo").textContent = gameSummary(g);
   $("lobbyParts").textContent = partsInfo(g.dir, g.n, g.keys);
   $("joinedLbl").textContent = t("joined", { n: g.players.length, m: g.max });
+  if (typeof renderShout === "function") renderShout();
   $("lobbyList").innerHTML = "";
   g.players.forEach(p => {
     const li = document.createElement("li");
@@ -174,7 +175,7 @@ async function playAgainOnline() {
   const btns = [$("againBtn"), $("waitAgain")];
   btns.forEach(b => b.disabled = true);
   try {
-    const r = await api("POST", `/api/games/${ON.game.id}/again`, { name: lsGet(NAME_KEY) || myName() || t("player", { n: 1 }), city: await locate() });
+    const r = await api("POST", `/api/games/${ON.game.id}/again`, { name: lsGet(NAME_KEY) || myName() || t("player", { n: 1 }), city: await locate(), loc: HERE.loc || null });
     enterGame(r);
   } catch (e) {
     $(currentScreen === "s-stage" ? "decideMsg" : "waitText").textContent = onlineError(e);

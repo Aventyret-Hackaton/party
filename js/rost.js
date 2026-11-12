@@ -5,7 +5,7 @@
 //
 // Mikrofonen fungerar bara på https (Heroku) eller localhost, inte på en lokal ip-adress.
 
-const VOICE = { blob: null, src: null, buf: null, rec: null, stream: null, timer: null, left: 0, lastSay: 0, msg: "", discard: false };
+const VOICE = { blob: null, src: null, rec: null, stream: null, timer: null, left: 0, lastSay: 0, msg: "", discard: false };
 const VOICE_MAX = 6;          // längsta inspelning i sekunder
 const VOICE_RATE = 1.45;      // högre och snabbare än inspelningen: låter som en tecknad figur
 
@@ -18,7 +18,7 @@ function voiceType() {
 // Anropas från openStage (js/scen.js) varje gång scenen öppnas
 function voiceSetup(rec, opts) {
   voiceStopRec(true);
-  Object.assign(VOICE, { blob: null, buf: null, lastSay: 0, msg: "", src: rec.voiceUrl || null });
+  Object.assign(VOICE, { blob: null, lastSay: 0, msg: "", src: rec.voiceUrl || null });
   // Inspelning bara när man själv ska veckla ut en ny gubbe, inte i galleriet
   const can = opts.canUnfold && !opts.replay && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
   $("voiceBox").hidden = !can;
@@ -49,9 +49,9 @@ async function voiceStartRec() {
     if (VOICE.discard) { VOICE.discard = false; return; }
     const blob = new Blob(chunks, { type: (r.mimeType || type || "audio/webm").split(";")[0] });
     if (blob.size < 500) { voiceRender(); return; }   // för kort, inget sparas
-    Object.assign(VOICE, { blob, src: blob, buf: null, msg: "voiceHint" });
+    Object.assign(VOICE, { blob, src: blob, msg: "voiceHint" });
     voiceRender();
-    voiceSay(true);                                    // spela upp direkt, så att man hör hur det blev
+    voiceSay(true, true);                              // spela upp direkt, så att man hör hur det blev
   };
   VOICE.rec = r; VOICE.left = VOICE_MAX; VOICE.msg = "";
   r.start();
@@ -68,28 +68,28 @@ function voiceStopRec(discard) {
 }
 
 /* ---------- Spela upp med figurröst ---------- */
-async function voiceLoad() {
-  if (VOICE.buf || !VOICE.src) return VOICE.buf;
-  const a = ac(); if (!a) return null;
-  const src = VOICE.src;
-  try {
-    const data = src instanceof Blob ? await src.arrayBuffer() : await (await fetch(src)).arrayBuffer();
-    const buf = await new Promise((res, rej) => a.decodeAudioData(data, res, rej));   // Safari vill ha callback-formen
-    if (VOICE.src === src) VOICE.buf = buf;
-  } catch (e) { console.warn("Catchphrase gick inte att läsa", e); }
-  return VOICE.buf;
+// Spelas med ett vanligt ljudelement i stället för Web Audio: då hörs det även när iPhone har
+// ljudlöst läge på (som introlåten). Snabbare uppspelning utan att behålla tonhöjden ger den tecknade rösten.
+let voiceUrl = null, voiceUrlSrc = null;
+function voiceSrcUrl() {
+  if (!VOICE.src) return null;
+  if (!(VOICE.src instanceof Blob)) return VOICE.src;
+  if (voiceUrlSrc !== VOICE.src) { if (voiceUrl) URL.revokeObjectURL(voiceUrl); voiceUrl = URL.createObjectURL(VOICE.src); voiceUrlSrc = VOICE.src; }
+  return voiceUrl;
 }
 // force: spela även om den nyss spelades (annars högst var tredje och en halv sekund, till exempel när man skakar i dansen)
-async function voiceSay(force) {
-  if (!VOICE.src || !soundOn) return;
+// tapped: man tryckte på Lyssna. Då spelas den även när ljudet är avstängt i spelet.
+function voiceSay(force, tapped) {
+  const url = voiceSrcUrl();
+  if (!url || (!soundOn && !tapped)) return;
   const now = performance.now();
   if (!force && now - VOICE.lastSay < 3500) return;
   VOICE.lastSay = now;
-  const buf = await voiceLoad(), a = ac();
-  if (!buf || !a) return;
-  const s = a.createBufferSource(); s.buffer = buf; s.playbackRate.value = VOICE_RATE;
-  const g = a.createGain(); g.gain.value = 1.4;
-  s.connect(g).connect(a.destination); s.start();
+  const a = new Audio(url);
+  a.preservesPitch = a.mozPreservesPitch = a.webkitPreservesPitch = false;
+  a.playbackRate = VOICE_RATE;
+  a.play().catch(e => console.warn("Catchphrasen gick inte att spela", e));
+  return a;
 }
 
 /* ---------- Spara med gubben i galleriet ---------- */
@@ -107,5 +107,5 @@ async function voiceUpload(galleryId) {
 const voiceUrlFor = r => r.voice && apiId(r.id) ? `/api/gallery/${apiId(r.id)}/voice` : null;
 
 $("voiceRec").onclick = voiceStartRec;
-$("voicePlay").onclick = () => voiceSay(true);
-$("voiceAgain").onclick = () => voiceSay(true);
+$("voicePlay").onclick = () => voiceSay(true, true);
+$("voiceAgain").onclick = () => voiceSay(true, true);

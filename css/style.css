@@ -241,7 +241,7 @@ body.night .invite-card h2{color:var(--head)}
 /* Galleri */
 .filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr));gap:.6rem;margin-top:1rem}
 .filters label{font-size:.9375rem;display:grid;gap:.25rem}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(10rem,40%),1fr));gap:1.125rem;margin-top:1.5rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(10rem,40%),1fr));grid-auto-flow:row dense;align-items:start;gap:1.125rem;margin-top:1.5rem}
 .card{background:none;border:0;padding:0;text-align:left;color:inherit}
 .thumb{background:#fff;aspect-ratio:3/4;display:grid;place-items:center;overflow:hidden;border:1px solid var(--line)}
 /* Hela gubben syns, centrerad och nedskalad så att den får plats i rutan */
@@ -405,7 +405,7 @@ body:has(.intro:not([hidden]):not(.gone)) .brand{visibility:hidden}
 .dancer .mini.h canvas + canvas{margin-left:calc(-1 * var(--h,6rem) * 40 / 600)}
 
 /* Power-läget: gruppbilden */
-.group{display:flex;justify-content:center;align-items:flex-end;margin:1.5rem 0;perspective:1600px}
+.group-figs{display:flex;justify-content:center;align-items:flex-end;margin:1.5rem 0;perspective:1600px}
 .gfig{position:relative;z-index:2;flex:none;transition:transform .4s}
 .gfig.behind{z-index:1;transform:translateY(-6%) scale(.92)}
 .gfig .mini.v,.gfig .mini.h{width:100%}
@@ -415,12 +415,12 @@ body:has(.intro:not([hidden]):not(.gone)) .brand{visibility:hidden}
 .gfig .mini.v canvas.closed{transform:rotateX(-95deg);opacity:0}
 .gfig .mini.h canvas.closed{transform:rotateY(95deg);opacity:0}
 /* Gänget dansar tillsammans */
-.group.dancing .gfig{animation:bop .98s ease-in-out infinite;transform-origin:50% 100%}
-.group.dancing .gfig.behind{animation-name:bopBack}
-.group.dancing .mini.v canvas{transform-origin:50% 0;animation:wig .49s ease-in-out infinite alternate}
-.group.dancing .mini.h canvas{transform-origin:0 50%;animation:wig .49s ease-in-out infinite alternate}
+.group-figs.dancing .gfig{animation:bop .98s ease-in-out infinite;transform-origin:50% 100%}
+.group-figs.dancing .gfig.behind{animation-name:bopBack}
+.group-figs.dancing .mini.v canvas{transform-origin:50% 0;animation:wig .49s ease-in-out infinite alternate}
+.group-figs.dancing .mini.h canvas{transform-origin:0 50%;animation:wig .49s ease-in-out infinite alternate}
 @keyframes bopBack{0%,100%{transform:translateY(-6%) scale(.92) rotate(4deg)}50%{transform:translateY(-10%) scale(.92) rotate(-4deg)}}
-@media (prefers-reduced-motion:reduce){.group.dancing .gfig,.group.dancing .mini canvas{animation:none}}
+@media (prefers-reduced-motion:reduce){.group-figs.dancing .gfig,.group-figs.dancing .mini canvas{animation:none}}
 #groupPost .figname{margin-top:.5rem}
 #groupPre[hidden],#groupPost[hidden],#groupDecide[hidden],#groupActions[hidden],#powerRow[hidden]{display:none}
 
@@ -431,7 +431,9 @@ body:has(.intro:not([hidden]):not(.gone)) .brand{visibility:hidden}
 
 /* Admin i galleriet */
 .admin-row{margin:2rem 0 1rem;text-align:center;font-size:.875rem;color:var(--fine)}
-.card-cell{display:flex;flex-direction:column;gap:.4rem}
+.card-cell{display:flex;flex-direction:column;gap:.5rem;align-self:stretch}
+.card-cell .card{width:100%}
+.card-cell .admin-tools{margin-top:auto}
 .card-cell.group{grid-column:span 2}
 .admin-tools{display:flex;gap:.4rem;flex-wrap:wrap}
 .chip.small{padding:.3rem .7rem;font-size:.8125rem}

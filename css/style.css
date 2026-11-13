@@ -84,7 +84,7 @@ a.btn{text-decoration:none}
 .err{color:var(--accent-text);min-height:1.5em}
 
 /* Startsidan */
-.hero{padding:2.5rem 0 .5rem}
+.hero{padding:2.5rem 0 .5rem;text-align:center} /* logga och slogan centrerade i sidled */
 /* Loggan: transparent på ljus bakgrund, mörk variant i mörkt läge och på scenen */
 .logo{display:block;height:auto}
 .logo.dark{display:none}
@@ -95,10 +95,10 @@ a.btn{text-decoration:none}
 :root[data-theme="dark"] .logo.light,body.night .logo.light{display:none}
 :root[data-theme="dark"] .logo.dark,body.night .logo.dark{display:block}
 .brand .logo{height:2.75rem;width:auto}
-.hero h1 .logo{width:min(100%,28rem)}
+.hero h1 .logo{width:min(100%,28rem);margin-inline:auto}
 .hero h1{font-family:var(--script);color:var(--accent);font-size:clamp(4.5rem,20vw,8rem);line-height:.9;font-weight:400}
 /* Introtexten centrerad under loggan (samma bredd som loggan) och över knapparna */
-.hero p{font-size:1.3125rem;line-height:1.45;width:min(100%,28rem);text-align:center;margin:1rem 0 0;color:var(--ink)}
+.hero p{font-size:1.3125rem;line-height:1.45;width:min(100%,28rem);text-align:center;margin:1rem auto 0;color:var(--ink)}
 
 /* Ritytan */
 .turnhead{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;flex-wrap:wrap}

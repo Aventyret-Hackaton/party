@@ -33,6 +33,7 @@ function openStage(rec, opts) {
   $("stageActions").hidden = !ST.decided;
   $("keepBtn").disabled = $("dropBtn").disabled = false;
   syncPrint();
+  if (typeof syncShare === "function") syncShare();
   show("s-stage");
 }
 $("unfoldBtn").onclick = () => { if (ST.opts.onUnfoldClick) ST.opts.onUnfoldClick(); else playShow(); };
@@ -72,6 +73,7 @@ function revealName() {
   voiceSay(true);          // gubben säger sin catchphrase när namnet visas
   $("stageActions").hidden = !ST.decided;
   syncPrint();
+  if (typeof syncShare === "function") syncShare();
 }
 function setStageName(name) {
   if (!ST) return;
@@ -142,6 +144,7 @@ async function decideStage(keep) {
   $("decideMsg").textContent = t(keep ? "keptFig" : "droppedFig");
   $("stageActions").hidden = false;
   syncPrint();
+  if (typeof syncShare === "function") syncShare();
   syncMoreBelow();
 }
 $("keepBtn").onclick = () => decideStage(true);

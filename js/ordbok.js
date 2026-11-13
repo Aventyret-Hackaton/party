@@ -189,3 +189,25 @@ Object.assign(T.de, { showKind: "Zeigen", kindAll: "Alle", kindFigs: "Figuren", 
   roundLeft: "Noch {t} in dieser Runde.", roundOver: "Die Runde ist in der Verlängerung! +{t}",
   groupTitle: "Gruppenfoto!", groupAsk: "Wollt ihr alle Figuren in der Galerie speichern?", groupKeep: "Alle speichern", groupDrop: "Alle löschen",
   groupKept: "Die Figuren sind in der Galerie gespeichert.", groupDropped: "Die Figuren wurden gelöscht." });
+
+// Gruppdans, dela och adminläget
+Object.assign(T.sv, { danceGroup: "Dansa tillsammans!", share: "Dela", shareText: "Kolla in {name} på Party!", shareCopied: "Länken är kopierad.", shareCopy: "Kopiera länken:", shareGone: "Gubben finns inte längre.",
+  adminLogin: "Logga in som admin", adminLogout: "Logga ut", adminOn: "Du är inloggad som admin.", adminTitle: "Admin", adminHint: "Som admin kan du byta namn på och radera gubbar och gruppbilder i galleriet.",
+  adminUser: "Användarnamn", adminPass: "Lösenord", adminWrong: "Fel användarnamn eller lösenord.", adminTooMany: "För många försök. Vänta en kvart.",
+  adminRename: "Byt namn", adminDelete: "Radera", adminNewName: "Nytt namn:", adminDeleteConfirm: "Radera {name} för alltid? Det går inte att ångra." });
+Object.assign(T.en, { danceGroup: "Dance together!", share: "Share", shareText: "Check out {name} on Party!", shareCopied: "Link copied.", shareCopy: "Copy the link:", shareGone: "That figure no longer exists.",
+  adminLogin: "Log in as admin", adminLogout: "Log out", adminOn: "You’re logged in as admin.", adminTitle: "Admin", adminHint: "As admin you can rename and delete figures and group photos in the gallery.",
+  adminUser: "Username", adminPass: "Password", adminWrong: "Wrong username or password.", adminTooMany: "Too many attempts. Wait 15 minutes.",
+  adminRename: "Rename", adminDelete: "Delete", adminNewName: "New name:", adminDeleteConfirm: "Delete {name} for good? This can’t be undone." });
+Object.assign(T.fr, { danceGroup: "Dansez ensemble !", share: "Partager", shareText: "Regarde {name} sur Party !", shareCopied: "Lien copié.", shareCopy: "Copie le lien :", shareGone: "Cette créature n’existe plus.",
+  adminLogin: "Connexion admin", adminLogout: "Se déconnecter", adminOn: "Tu es connecté·e en admin.", adminTitle: "Admin", adminHint: "En admin, tu peux renommer et supprimer des créatures et des photos de groupe de la galerie.",
+  adminUser: "Nom d’utilisateur", adminPass: "Mot de passe", adminWrong: "Nom d’utilisateur ou mot de passe incorrect.", adminTooMany: "Trop d’essais. Attends un quart d’heure.",
+  adminRename: "Renommer", adminDelete: "Supprimer", adminNewName: "Nouveau nom :", adminDeleteConfirm: "Supprimer {name} pour de bon ? C’est irréversible." });
+Object.assign(T.es, { danceGroup: "¡Bailad juntos!", share: "Compartir", shareText: "¡Mira a {name} en Party!", shareCopied: "Enlace copiado.", shareCopy: "Copia el enlace:", shareGone: "Esa figura ya no existe.",
+  adminLogin: "Entrar como admin", adminLogout: "Cerrar sesión", adminOn: "Has entrado como admin.", adminTitle: "Admin", adminHint: "Como admin puedes renombrar y borrar figuras y fotos de grupo de la galería.",
+  adminUser: "Usuario", adminPass: "Contraseña", adminWrong: "Usuario o contraseña incorrectos.", adminTooMany: "Demasiados intentos. Espera un cuarto de hora.",
+  adminRename: "Renombrar", adminDelete: "Borrar", adminNewName: "Nuevo nombre:", adminDeleteConfirm: "¿Borrar {name} para siempre? No se puede deshacer." });
+Object.assign(T.de, { danceGroup: "Tanzt zusammen!", share: "Teilen", shareText: "Schau dir {name} auf Party an!", shareCopied: "Link kopiert.", shareCopy: "Link kopieren:", shareGone: "Diese Figur gibt es nicht mehr.",
+  adminLogin: "Als Admin anmelden", adminLogout: "Abmelden", adminOn: "Du bist als Admin angemeldet.", adminTitle: "Admin", adminHint: "Als Admin kannst du Figuren und Gruppenfotos in der Galerie umbenennen und löschen.",
+  adminUser: "Benutzername", adminPass: "Passwort", adminWrong: "Falscher Benutzername oder falsches Passwort.", adminTooMany: "Zu viele Versuche. Warte eine Viertelstunde.",
+  adminRename: "Umbenennen", adminDelete: "Löschen", adminNewName: "Neuer Name:", adminDeleteConfirm: "{name} endgültig löschen? Das lässt sich nicht rückgängig machen." });

@@ -115,11 +115,17 @@ function renderGallery() {
       if (isGroup(r)) th.appendChild(groupCanvas(r.figs, r.dir, 1000, Math.min(2, Math.max(1, devicePixelRatio || 1)) * .32, false));
       else { const parts = r.parts.map(p => p.s); th.appendChild(figureCanvas(parts, r.dir, thumbScale(parts.length, r.dir))); }
     } catch (e) {}
-    const nm = document.createElement("b"); nm.textContent = r.name || t("nameless");
+    // Gruppbilder från power-läget får blixten framför namnet
+    const nm = document.createElement("b"); nm.textContent = (isGroup(r) ? "⚡ " : "") + (r.name || t("nameless"));
     const pl = document.createElement("span"); pl.textContent = placeLabel(r.home);
     b.append(th, nm, pl);
     b.onclick = () => openGalleryItem(r);
-    grid.appendChild(b);
+    // Admin: knappar för att byta namn och radera under kortet (js/admin.js)
+    if (typeof isAdminMode === "function" && isAdminMode() && apiId(r.id)) {
+      const cell = document.createElement("div"); cell.className = "card-cell" + (isGroup(r) ? " group" : "");
+      cell.append(b, adminTools(r));
+      grid.appendChild(cell);
+    } else grid.appendChild(b);
   });
 }
 ["fCont", "fCountry", "fCity", "fKind"].forEach(id => $(id).onchange = () => { galPage = 0; renderGallery(); });
@@ -292,7 +298,7 @@ async function openGalleryItem(r) {
     // Gruppbilden från ett power-läge: alla gubbar på scenen igen
     galScroll = scrollY;
     navPush({ party: "item" });
-    openGroup({ figs: r.figs.map(f => f.map(p => p.s)), dir: r.dir, home: r.home, by: r.by || [], gang: r.name }, { canUnfold: true, back: true });
+    openGroup({ figs: r.figs.map(f => f.map(p => p.s)), dir: r.dir, home: r.home, by: r.by || [], gang: r.name, galleryId: r.id }, { canUnfold: true, back: true });
     return;
   }
   const rec = { parts: r.parts.map(p => p.s), dir: r.dir, home: r.home, by: await byLabel(r), name: r.name, staff: r.staff, gang: r.gang || "", mid: r.mode === "online", galleryId: r.id, voiceUrl: voiceUrlFor(r) };

@@ -19,6 +19,8 @@ function applyI18n() {
   if (currentScreen === "s-wait") renderWait();
   if (currentScreen === "s-pause") renderPause();
   if (currentScreen === "s-gallery") renderGallery();
+  if (typeof renderAdminState === "function") renderAdminState();
+  if (typeof groupDancing !== "undefined" && groupDancing) $("groupDance").textContent = t("danceStop");
   if (currentScreen === "s-faces") renderFaces();
   if (currentScreen === "s-stage" && ST) {
     voiceRender();

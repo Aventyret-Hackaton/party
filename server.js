@@ -9,6 +9,8 @@
 //   GET   /api/gallery         – de senaste gubbarna (?since=id: bara de som är nyare än id)
 //   POST  /api/gallery         – spara en ny gubbe, svarar med id och en nyckel
 //   PATCH /api/gallery/:id     – byt namn, kräver nyckeln från POST
+//   GET   /api/gallery/:id     – en gubbe eller gruppbild (för delade länkar)
+//   /api/admin/...             – adminläget: radera och byta namn, se admin-server.js
 //   GET   /api/gallery/:id.svg – gubben som tryckbar SVG för Tryckskaparen, se tryck-svg.js
 //   PUT   /api/gallery/:id/voice – spara gubbens catchphrase (ljud), kräver nyckeln i X-Token
 //   GET   /api/gallery/:id/voice – spela upp catchphrasen
@@ -90,6 +92,20 @@ async function renameGallery(id, token, name) {
     return r.rowCount > 0;
   }
   const m = memory.find(x => x.id === id && x.tokenHash === hash(token));
+  if (m) m.data.name = name;
+  return !!m;
+}
+
+// Adminläget: radera för alltid. Ljudet (gallery_voice) försvinner med, ON DELETE CASCADE.
+async function deleteGallery(id) {
+  if (pool) return (await pool.query("DELETE FROM gallery WHERE id = $1", [id])).rowCount > 0;
+  const i = memory.findIndex(x => x.id === id);
+  if (i >= 0) memory.splice(i, 1);
+  return i >= 0;
+}
+async function adminRename(id, name) {
+  if (pool) return (await pool.query("UPDATE gallery SET data = jsonb_set(data, '{name}', to_jsonb($2::text)) WHERE id = $1", [id, name])).rowCount > 0;
+  const m = memory.find(x => x.id === id);
   if (m) m.data.name = name;
   return !!m;
 }
@@ -273,6 +289,7 @@ function serveStatic(req, res, pathname) {
 const handleGames = require("./online-server.js")({ send, readJson, str, cleanStroke });
 const { pushKey } = require("./push-server.js");
 const { figureSvg } = require("./tryck-svg.js");
+const handleAdmin = require("./admin-server.js")({ send, readJson, str, deleteGallery, adminRename });
 const TRYCK_ORIGIN = "https://tryckskaparen.tifosi.se";
 const MAX_SVG = 2 * 1024 * 1024;   // Tryckskaparen tar emot högst 2 MB
 
@@ -325,13 +342,18 @@ const server = http.createServer(async (req, res) => {
       if (!v) return send(req, res, 404, { error: "Gubben har ingen catchphrase." });
       return send(req, res, 200, v.buf, v.mime, { "Cache-Control": "public, max-age=86400" });
     }
-    const m = p.match(/^\/api\/gallery\/(\d+)$/);
+    const m = p.match(/^\/api\/gallery\/(\d{1,15})$/);
+    if (m && req.method === "GET") {
+      const rec = await getGallery(m[1]);
+      return rec ? send(req, res, 200, { ...rec, id: m[1] }, undefined, { "Cache-Control": "no-store" }) : send(req, res, 404, { error: "Gubben finns inte." });
+    }
     if (m && req.method === "PATCH") {
       const b = await readJson(req), name = str(b && b.name, 80);
       if (!name || !b.token) return send(req, res, 400, { error: "Namn och nyckel behövs." });
       const ok = await renameGallery(m[1], String(b.token), name);
       return send(req, res, ok ? 200 : 403, ok ? { ok: true } : { error: "Bara den som sparade gubben kan byta namn." });
     }
+    if (await handleAdmin(req, res, p)) return;
     if (await handleGames(req, res, p, url)) return;
     if (p.startsWith("/api/")) return send(req, res, 404, { error: "Finns inte." });
     if (req.method === "GET" || req.method === "HEAD") return serveStatic(req, res, p);

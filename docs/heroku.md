@@ -114,3 +114,14 @@ PORT=5173 node server.js
 ```
 
 Öppna sedan http://localhost:5173. Utan `DATABASE_URL` sparas galleriet bara i minnet.
+
+## Adminläget
+
+I galleriet finns längst ned länken **Logga in som admin**. Som admin kan man byta namn på och radera gubbar och gruppbilder. Det som raderas försvinner ur databasen för alltid, med catchphrase och allt.
+
+Det finns ett enda adminkonto. Det ställs in med två config vars på Heroku (Settings → Config Vars):
+
+- `ADMIN_USER` – användarnamnet
+- `ADMIN_HASH` – lösenordet, hashat med scrypt. Själva lösenordet sparas aldrig någonstans på servern.
+
+Nytt lösenord: kör `node tools/admin-hash.js` (eller be Claude göra det). Skriptet slumpar ett starkt lösenord och skriver ut hashen. Lägg hashen i `ADMIN_HASH` och spara lösenordet i en lösenordshanterare. Skriv aldrig lösenordet eller hashen i repot.

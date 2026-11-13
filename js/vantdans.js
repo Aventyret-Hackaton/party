@@ -4,8 +4,10 @@
 // Gubbarna har inget papper bakom sig, bara bläcket med ett ljust sken runt, så att mörkt bläck syns
 // mot det mörka golvet. Varje del vickar för sig, som en marionett. Då och då dansar de i sidled,
 // oregelbundet, och byter plats med varandra. Var tolfte sekund kommer nya dansare.
+// Varannan gång är det ett gäng från en gruppbild (power-läget) som har golvet för sig själva,
+// alla 3–6 gubbarna, och varannan gång tre gubbar från galleriet som dansar med varandra.
 
-const WD = { box: null, timer: 0, move: 0 };
+const WD = { box: null, timer: 0, move: 0, gang: Math.random() < .5 };
 async function startDancers(id) {
   const box = $(id);
   if (WD.box === box) return;
@@ -26,22 +28,32 @@ function stopDancers() {
   WD.box = null;
 }
 function fillDancers(box) {
-  // Gubbarna i gruppbilderna får också dansa
-  const list = allGallery().flatMap(r => isGroup(r) ? r.figs.map(f => ({ ...r, parts: f })) : [r])
-    .filter(r => Array.isArray(r.parts) && r.parts.length > 1);
+  const all = allGallery(), groups = all.filter(isGroup);
+  const singles = all.filter(r => !isGroup(r) && Array.isArray(r.parts) && r.parts.length > 1);
+  WD.gang = !WD.gang;
+  // Ett gäng dansar ensamt, eller tre enskilda gubbar tillsammans
+  let dancers, label = null;
+  if (groups.length && (WD.gang || !singles.length)) {
+    const g = groups[Math.floor(Math.random() * groups.length)];
+    dancers = g.figs.map(f => ({ dir: g.dir, parts: f, name: "" }));
+    label = "⚡ " + (g.name || t("nameless"));
+  } else dancers = shuffle([...singles]).slice(0, 3);
   box.innerHTML = "";
-  if (!list.length) return;
+  if (!dancers.length) return;
   box.insertAdjacentHTML("beforeend", '<div class="disco-beam a"></div><div class="disco-beam b"></div><div class="disco-beam c"></div><div class="disco-dots"></div><div class="disco-ball"></div><div class="disco-floor"></div>');
   const scale = Math.min(2, Math.max(1, devicePixelRatio || 1)) * .3;
-  shuffle([...list]).slice(0, 3).forEach((r, k) => {
+  if (label) box.insertAdjacentHTML("beforeend", '<p class="disco-gang"></p>'), box.querySelector(".disco-gang").textContent = label;
+  const many = dancers.length, tall = many > 3 ? 7.5 : 10;   // fler dansare: lite mindre gubbar
+  dancers.forEach((r, k) => {
     const dir = r.dir === "h" ? "h" : "v", n = r.parts.length;
     const spot = document.createElement("div"); spot.className = "dancer-spot";
-    spot.style.left = (20 + k * 30) + "%";
+    spot.style.left = (many > 1 ? 15 + k * 70 / (many - 1) : 50) + "%";
     const d = document.createElement("figure"); d.className = "dancer";
     d.style.animationDelay = -(Math.random() * 1.9).toFixed(2) + "s";
     const fig = document.createElement("div"); fig.className = "mini " + dir;
     // Lika höga gubbar oavsett hur många delar de har: högst 10 rem
-    if (dir === "v") fig.style.width = Math.min(5.5, 10 * 600 / (340 * n - 40 * (n - 1))).toFixed(2) + "rem";
+    if (dir === "v") fig.style.width = Math.min(5.5, tall * 600 / (340 * n - 40 * (n - 1))).toFixed(2) + "rem";
+    else fig.style.setProperty("--h", (tall * .6).toFixed(2) + "rem");
     try {
       r.parts.forEach((p, i) => {
         const c = partCanvas(p.s, dir, scale, true);   // genomskinlig, inget papper
@@ -49,8 +61,8 @@ function fillDancers(box) {
         fig.appendChild(c);
       });
     } catch (e) { return; }
-    const nm = document.createElement("figcaption"); nm.textContent = r.name || t("nameless");
-    d.append(fig, nm); spot.appendChild(d); box.appendChild(spot);
+    d.appendChild(fig);
+    if (!label) { const nm = document.createElement("figcaption"); nm.textContent = r.name || t("nameless"); d.appendChild(nm); } spot.appendChild(d); box.appendChild(spot);
   });
 }
 // Dansarna glider till nya platser, oregelbundet. Ibland går de förbi varandra och byter plats.

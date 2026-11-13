@@ -22,7 +22,8 @@ It was built in a day and a bit for Äventyret's *Stupid hackathon* by group 7: 
 6. The host chooses **Save**, with the name in the text field, or **Delete**. Online, the others wait and are then shown the figure, or told that it was deleted.
    **Power mode** (online only): as many figures as players, and everyone draws at the same time. In each round everybody draws the same kind of part, but each in a different figure, so nobody draws the same part twice. When everyone is done the next round starts. At the end the host unfolds all the figures at once as a group photo, names the gang and saves or deletes it. A saved group photo is one item in the gallery, two columns wide, and the gallery can show all items, only figures or only group photos (`js/power.js`).
 7. If someone leaves an online game mid-round, everyone is told. The host chooses to finish it among yourselves, wait for a new player to take over, or end the round.
-8. Saved figures appear in the **Gallery**, 24 per page. You can filter them by continent, country and city. A map panel at the bottom can be pulled up by its handle. Tap a city on the map to see only the figures that live there.
+8. Every saved figure and group photo can be **shared** as a link (`?gubbe=<id>`) that opens it straight in the game (`js/dela.js`). Group photos can be printed on a T-shirt too: the figures are spread over the print area to fill as much of it as possible (`tryck-svg.js`).
+9. Saved figures appear in the **Gallery**, 24 per page. You can filter them by continent, country and city. A map panel at the bottom can be pulled up by its handle. Tap a city on the map to see only the figures that live there.
 
 The interface is available in Swedish, English, French, Spanish and German.
 
@@ -47,6 +48,7 @@ Then open http://localhost:5173. Without a database the gallery lives in memory 
 |---|---|
 | `DATABASE_URL` | Set by the Heroku Postgres add-on. Without it the gallery is lost on every restart. |
 | `ONLINE_PASSWORD` | Password for online play. **Never write it in the repo.** |
+| `ADMIN_USER`, `ADMIN_HASH` | The single admin account: the username and an scrypt hash of the password. Make a new password and hash with `node tools/admin-hash.js`. Without them nobody can log in as admin. |
 | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | Optional keys for push notifications. If they are missing, the server generates a new pair at each start. |
 
 ## How it is built
@@ -72,6 +74,7 @@ The scripts share global variables and are loaded in a fixed order at the bottom
 |---|---|
 | `server.js` | Serves only `index.html`, `css/`, `js/` and `assets/`. Handles gzip, range requests (Safari needs them for audio) and `no-cache` for code, so a deploy never mixes old and new files. Provides the gallery API (`/api/gallery`) with Postgres, or memory as a fallback, input validation and a limit of 40 new figures per IP per hour. |
 | `online-server.js` | Online games in server memory: open lobbies, joining, turn order (and the round-by-round assignment in power mode), who may see which strip, the reveal, the host's save or delete, and what happens when someone leaves mid-game (the host picks: the rest share the parts, wait for a new player, or end the round). Clients poll every two seconds. Players are identified by a random id and key sent in headers. Lobby players who go silent for 25 seconds are removed, and games are cleared after three hours. |
+| `admin-server.js` | The admin mode: one account, password checked against an scrypt hash in `ADMIN_HASH`, at most 8 login attempts per 15 minutes per IP, sessions kept in memory for 8 hours. The admin can rename items and delete them for good (with their recorded catchphrase). The admin link is at the bottom of the gallery (`js/admin.js`). |
 | `push-server.js` | Web Push through the `web-push` library. Notifications are sent when a game is full and when the figure is saved. This is needed for iPhones with the game in the background. |
 
 Online games are lost when the server restarts, which happens on every deploy. The gallery is kept in Postgres and survives.

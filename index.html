@@ -277,6 +277,7 @@
       <p class="place" id="againNote"></p>
       <div class="actions" id="stageActions">
         <button class="btn dance-btn" id="danceBtn" data-i="dance"></button>
+        <button class="btn" id="shareBtn" data-i="share" hidden></button>
         <button class="btn primary" id="againBtn" data-i="playAgain"></button>
         <button class="btn" id="stageGallery" data-i="toGallery"></button>
         <button class="btn" id="stageHome" data-i="home"></button>
@@ -285,6 +286,21 @@
       </div>
     </div>
   </div>
+</section>
+
+<!-- Logga in som admin (js/admin.js) -->
+<section id="s-admin" class="screen">
+  <button class="back-link" data-i="back"></button>
+  <h2 data-i="adminTitle"></h2>
+  <p class="fine" data-i="adminHint"></p>
+  <form id="adminForm" class="stack">
+    <label class="lbl" for="adminUser" data-i="adminUser"></label>
+    <input type="text" id="adminUser" autocomplete="username" autocapitalize="off" spellcheck="false" required>
+    <label class="lbl" for="adminPass" data-i="adminPass"></label>
+    <input type="password" id="adminPass" autocomplete="current-password" required>
+    <p class="err" id="adminErr" aria-live="polite"></p>
+    <button class="btn primary wide" id="adminGo" data-i="adminLogin"></button>
+  </form>
 </section>
 
 <!-- Power-läget: gruppbilden med alla gubbar (js/power.js) -->
@@ -300,6 +316,7 @@
     <div id="groupPost" hidden>
       <div class="figname" id="groupName" data-i="groupTitle"></div>
       <p class="place" id="groupPlace"></p>
+      <p class="place fine" id="groupBy"></p>
       <div class="decide" id="groupDecide" hidden>
         <label class="lbl" for="gangIn" data-i="gangLbl"></label>
         <input type="text" id="gangIn" maxlength="80" autocomplete="off">
@@ -311,7 +328,10 @@
       </div>
       <p class="place" id="groupMsg"></p>
       <div class="actions" id="groupActions" hidden>
+        <button class="btn dance-btn" id="groupDance" data-i="danceGroup"></button>
         <button class="btn primary" id="groupAgain" data-i="playAgain"></button>
+        <button class="btn" id="groupShare" data-i="share" hidden></button>
+        <a class="btn" id="groupPrint" data-i="printShirt" target="_blank" rel="noopener" hidden></a>
         <button class="btn" id="groupGallery" data-i="toGallery"></button>
         <button class="btn" id="groupHome" data-i="home"></button>
       </div>
@@ -341,6 +361,8 @@
     <span id="pageNow" aria-live="polite"></span>
     <button class="chip" id="pageNext" data-i="pageNext"></button>
   </nav>
+  <!-- Adminläget: radera och byta namn (js/admin.js, admin-server.js) -->
+  <p class="admin-row"><span id="adminState"></span> <button class="link-btn" id="adminLink" data-i="adminLogin"></button></p>
 </section>
 
 <!-- Ansikten -->
@@ -409,6 +431,8 @@
 <script src="js/online.js"></script>
 <script src="js/power.js"></script>
 <script src="js/notiser.js"></script>
+<script src="js/admin.js"></script>
+<script src="js/dela.js"></script>
 <script src="js/ultraljud.js"></script>
 <script src="js/narhet.js"></script>
 <script src="js/ansikten.js"></script>

@@ -7,7 +7,7 @@ let currentScreen = "s-home";
 // Menyskärmarna läggs i webbläsarens historik, så att bakåt går tillbaka till startskärmen i stället
 // för att lämna spelet. Mitt i ett spel gör bakåt ingenting, så att ingen råkar svepa sig ut.
 // Historiken blir aldrig djupare än: start → meny (→ en gubbe från galleriet).
-const NAV_MENU = ["s-setup", "s-names", "s-gallery", "s-faces"];
+const NAV_MENU = ["s-setup", "s-names", "s-gallery", "s-faces", "s-admin"];
 const NAV_GAME = ["s-lobby", "s-handoff", "s-draw", "s-face", "s-wait", "s-pause", "s-group"];
 let navDepth = 0, navSkip = false;
 function navPush(state) { history.pushState(state, ""); navDepth++; }
@@ -16,7 +16,8 @@ function navTrack(id) {
   if (id === "s-home") {
     if (navDepth) { navSkip = true; history.go(-navDepth); navDepth = 0; }
   } else if (NAV_MENU.includes(id)) {
-    if (st?.party === "screen" && st.id === "s-setup" && id === "s-names") navPush({ party: "screen", id });   // namnen → tillbaka till Nytt spel
+    // namnen → tillbaka till Nytt spel, admininloggningen → tillbaka till galleriet
+    if (st?.party === "screen" && ((st.id === "s-setup" && id === "s-names") || (st.id === "s-gallery" && id === "s-admin"))) navPush({ party: "screen", id });
     else if (st?.party === "screen" || st?.party === "game") history.replaceState({ party: "screen", id }, "");
     else if (!navDepth) navPush({ party: "screen", id });
   } else if (NAV_GAME.includes(id) && st?.party !== "game") {
@@ -49,6 +50,7 @@ function show(id, fromNav) {
   if (id !== "s-home") stopIntro();
   if (typeof syncMusic === "function") syncMusic(id);
   if (typeof stopDance === "function") stopDance();   // dansen slutar när man byter skärm
+  if (id !== "s-group" && typeof stopGroupDance === "function") stopGroupDance();
   if (typeof syncMoreBelow === "function") setTimeout(syncMoreBelow);
   $("mapSheet").hidden = id !== "s-gallery";   // kartpanelen hör bara till galleriet
   document.body.classList.toggle("has-sheet", id === "s-gallery");
